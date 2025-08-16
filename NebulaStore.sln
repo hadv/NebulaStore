@@ -1,0 +1,36 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{D0E78B5A-0D39-4CE8-A836-5FC8C7D60478}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NebulaStore.Core", "src\NebulaStore.Core\NebulaStore.Core.csproj", "{08F6A698-C457-4D0E-8618-28836ABF02FD}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{233B826F-B75E-49E2-9EB7-F4C5C223495D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NebulaStore.Core.Tests", "tests\NebulaStore.Core.Tests\NebulaStore.Core.Tests.csproj", "{2099EB97-32CB-4403-BF84-AD7F965FA520}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{08F6A698-C457-4D0E-8618-28836ABF02FD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{08F6A698-C457-4D0E-8618-28836ABF02FD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{08F6A698-C457-4D0E-8618-28836ABF02FD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{08F6A698-C457-4D0E-8618-28836ABF02FD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2099EB97-32CB-4403-BF84-AD7F965FA520}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2099EB97-32CB-4403-BF84-AD7F965FA520}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2099EB97-32CB-4403-BF84-AD7F965FA520}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2099EB97-32CB-4403-BF84-AD7F965FA520}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{08F6A698-C457-4D0E-8618-28836ABF02FD} = {D0E78B5A-0D39-4CE8-A836-5FC8C7D60478}
+		{2099EB97-32CB-4403-BF84-AD7F965FA520} = {233B826F-B75E-49E2-9EB7-F4C5C223495D}
+	EndGlobalSection
+EndGlobal
