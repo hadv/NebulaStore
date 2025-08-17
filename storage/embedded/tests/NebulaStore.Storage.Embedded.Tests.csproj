@@ -23,6 +23,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\NebulaStore.Storage.Embedded.csproj" />
+    <ProjectReference Include="..\..\embedded-configuration\NebulaStore.Storage.EmbeddedConfiguration.csproj" />
   </ItemGroup>
 
 </Project>

@@ -6,8 +6,9 @@ using System.Threading.Tasks;
 using Xunit;
 using MessagePack;
 using NebulaStore.Storage.Embedded;
+using NebulaStore.Storage.EmbeddedConfiguration;
 
-namespace NebulaStore.Core.Tests.Storage;
+namespace NebulaStore.Storage.Embedded.Tests;
 
 public class EmbeddedStorageTests : IDisposable
 {

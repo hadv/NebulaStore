@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
 using MessagePack;
+using NebulaStore.Storage.EmbeddedConfiguration;
 
 namespace NebulaStore.Storage.Embedded;
 

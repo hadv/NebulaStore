@@ -14,4 +14,8 @@
     <Compile Remove="tests/**" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\embedded-configuration\NebulaStore.Storage.EmbeddedConfiguration.csproj" />
+  </ItemGroup>
+
 </Project>
