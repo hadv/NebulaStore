@@ -32,8 +32,9 @@ NebulaStore follows the Eclipse Store module structure:
 
 - **storage/** - Main storage module (mirrors Eclipse Store)
   - **embedded/** - Embedded storage submodule
-    - **NebulaStore.Storage.Embedded** - Core embedded storage implementation
+    - **src/** - Core embedded storage implementation
     - **tests/** - Comprehensive test suite
+    - **NebulaStore.Storage.Embedded.csproj** - Project file
 - Dependencies: MessagePack for binary serialization
 
 ### Key Components
