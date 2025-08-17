@@ -2,7 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using MessagePack;
+using NebulaStore.Storage;
 using NebulaStore.Storage.Embedded;
+using NebulaStore.Storage.EmbeddedConfiguration;
 
 namespace NebulaStore.Examples;
 
@@ -95,8 +97,7 @@ public class EmbeddedStorageExample
         Console.WriteLine("-------------------------------");
 
         // Create foundation with custom type handler
-        var foundation = EmbeddedStorage.CreateFoundation()
-            .SetStorageDirectory("custom-handler-storage")
+        var foundation = EmbeddedStorage.Foundation("custom-handler-storage")
             .RegisterTypeHandler(new CustomStringTypeHandler());
 
         using var storage = foundation.Start();
