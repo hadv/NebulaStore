@@ -26,6 +26,24 @@ NebulaStore aims to provide .NET developers with the same high-performance, pure
 - 🚧 Thread-safe operations (in progress)
 - 🚧 ACID compliance (in progress)
 
+## Architecture
+
+NebulaStore follows the Eclipse Store module structure:
+
+- **storage/** - Main storage module (mirrors Eclipse Store)
+  - **embedded/** - Embedded storage submodule
+    - **NebulaStore.Storage.Embedded** - Core embedded storage implementation
+    - **tests/** - Comprehensive test suite
+- Dependencies: MessagePack for binary serialization
+
+### Key Components
+- **EmbeddedStorage**: Static factory class for creating storage managers
+- **IEmbeddedStorageManager**: Main interface for storage operations
+- **EmbeddedStorageFoundation**: Builder pattern for configuration
+- **IEmbeddedStorageConfiguration**: Configuration system
+- **Type Handlers**: Pluggable serialization system
+- **Storage Connections**: Connection management and lifecycle
+
 ## Getting Started
 
 ### Prerequisites

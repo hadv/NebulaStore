@@ -3,13 +3,13 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{D0E78B5A-0D39-4CE8-A836-5FC8C7D60478}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "storage", "storage", "{D0E78B5A-0D39-4CE8-A836-5FC8C7D60478}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NebulaStore.Storage.Embedded", "src\NebulaStore.Storage\Embedded\NebulaStore.Storage.Embedded.csproj", "{08F6A698-C457-4D0E-8618-28836ABF02FD}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "embedded", "embedded", "{A1B2C3D4-E5F6-7890-ABCD-EF1234567890}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{233B826F-B75E-49E2-9EB7-F4C5C223495D}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NebulaStore.Storage.Embedded", "storage\embedded\NebulaStore.Storage.Embedded.csproj", "{08F6A698-C457-4D0E-8618-28836ABF02FD}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NebulaStore.Storage.Embedded.Tests", "tests\NebulaStore.Storage.Embedded.Tests\NebulaStore.Storage.Embedded.Tests.csproj", "{2099EB97-32CB-4403-BF84-AD7F965FA520}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NebulaStore.Storage.Embedded.Tests", "storage\embedded\tests\NebulaStore.Storage.Embedded.Tests.csproj", "{2099EB97-32CB-4403-BF84-AD7F965FA520}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -30,7 +30,8 @@ Global
 		{2099EB97-32CB-4403-BF84-AD7F965FA520}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
-		{08F6A698-C457-4D0E-8618-28836ABF02FD} = {D0E78B5A-0D39-4CE8-A836-5FC8C7D60478}
-		{2099EB97-32CB-4403-BF84-AD7F965FA520} = {233B826F-B75E-49E2-9EB7-F4C5C223495D}
+		{A1B2C3D4-E5F6-7890-ABCD-EF1234567890} = {D0E78B5A-0D39-4CE8-A836-5FC8C7D60478}
+		{08F6A698-C457-4D0E-8618-28836ABF02FD} = {A1B2C3D4-E5F6-7890-ABCD-EF1234567890}
+		{2099EB97-32CB-4403-BF84-AD7F965FA520} = {A1B2C3D4-E5F6-7890-ABCD-EF1234567890}
 	EndGlobalSection
 EndGlobal

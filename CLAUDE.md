@@ -31,23 +31,28 @@ tests/
 
 ## Architecture
 
-- **NebulaStore.Storage**: Main storage module using .NET 9.0
-  - **Embedded**: Embedded storage submodule (mirrors Eclipse Store structure)
-    - **EmbeddedStorage**: Static factory class for creating storage managers
-    - **IEmbeddedStorageManager**: Main interface for storage operations
-    - **EmbeddedStorageFoundation**: Builder pattern for configuration
-    - **IEmbeddedStorageConfiguration**: Configuration system
-    - **Type Handlers**: Pluggable serialization system
-    - **Storage Connections**: Connection management and lifecycle
-- **Tests**: xUnit test project with comprehensive tests
+NebulaStore follows the Eclipse Store module structure:
+
+- **storage/** - Main storage module (mirrors Eclipse Store)
+  - **embedded/** - Embedded storage submodule
+    - **NebulaStore.Storage.Embedded** - Core embedded storage implementation
+    - **tests/** - Comprehensive test suite
 - Dependencies: MessagePack for binary serialization
+
+### Key Components
+- **EmbeddedStorage**: Static factory class for creating storage managers
+- **IEmbeddedStorageManager**: Main interface for storage operations
+- **EmbeddedStorageFoundation**: Builder pattern for configuration
+- **IEmbeddedStorageConfiguration**: Configuration system
+- **Type Handlers**: Pluggable serialization system
+- **Storage Connections**: Connection management and lifecycle
 
 ## Key Components
 
 ### Embedded Storage API (Primary)
-- `EmbeddedStorage`: Static factory class (src/NebulaStore.Storage/Embedded/Storage/EmbeddedStorage.cs)
-- `IEmbeddedStorageManager`: Main storage interface (src/NebulaStore.Storage/Embedded/Storage/IEmbeddedStorageManager.cs)
-- `EmbeddedStorageFoundation`: Configuration builder (src/NebulaStore.Storage/Embedded/Storage/EmbeddedStorageFoundation.cs)
-- `IEmbeddedStorageConfiguration`: Configuration interface (src/NebulaStore.Storage/Embedded/Storage/IEmbeddedStorageConfiguration.cs)
-- `ITypeHandler`: Type serialization interface (src/NebulaStore.Storage/Embedded/Storage/IEmbeddedStorageFoundation.cs)
-- `MessagePackTypeHandler`: Built-in type handlers (src/NebulaStore.Storage/Embedded/Storage/TypeHandlers/MessagePackTypeHandler.cs)
+- `EmbeddedStorage`: Static factory class (storage/embedded/Storage/EmbeddedStorage.cs)
+- `IEmbeddedStorageManager`: Main storage interface (storage/embedded/Storage/IEmbeddedStorageManager.cs)
+- `EmbeddedStorageFoundation`: Configuration builder (storage/embedded/Storage/EmbeddedStorageFoundation.cs)
+- `IEmbeddedStorageConfiguration`: Configuration interface (storage/embedded/Storage/IEmbeddedStorageConfiguration.cs)
+- `ITypeHandler`: Type serialization interface (storage/embedded/Storage/IEmbeddedStorageFoundation.cs)
+- `MessagePackTypeHandler`: Built-in type handlers (storage/embedded/Storage/TypeHandlers/MessagePackTypeHandler.cs)

@@ -22,7 +22,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\NebulaStore.Storage\Embedded\NebulaStore.Storage.Embedded.csproj" />
+    <ProjectReference Include="..\NebulaStore.Storage.Embedded.csproj" />
   </ItemGroup>
 
 </Project>
