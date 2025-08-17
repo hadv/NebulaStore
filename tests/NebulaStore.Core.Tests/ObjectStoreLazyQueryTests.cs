@@ -39,7 +39,7 @@ public class ObjectStoreLazyQueryTests
     }
 }
 
-[MessagePackObject]
+[MessagePackObject(AllowPrivate = true)]
 internal class Order
 {
     [Key(0)]
@@ -49,7 +49,7 @@ internal class Order
     public List<Product> Items { get; set; } = new();
 }
 
-[MessagePackObject]
+[MessagePackObject(AllowPrivate = true)]
 internal class Product
 {
     [Key(0)]
