@@ -10,4 +10,13 @@
     <PackageReference Include="MessagePack" Version="3.1.4" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Compile Remove="tests/**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\embedded-configuration\NebulaStore.Storage.EmbeddedConfiguration.csproj" />
+    <ProjectReference Include="..\storage\NebulaStore.Storage.csproj" />
+  </ItemGroup>
+
 </Project>

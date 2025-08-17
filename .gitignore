@@ -52,3 +52,9 @@ CodeCoverage/
 *.VisualState.xml
 TestResult.xml
 nunit-*.xml
+
+# NebulaStore generated storage files
+*.msgpack
+*-storage/
+storage/data.msgpack
+storage/root.msgpack

@@ -4,7 +4,17 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-NebulaStore is a .NET 9.0 class library that ports EclipseStore functionality to .NET Core. It provides ultra-fast object graph persistence without object-relational mapping overhead.
+NebulaStore is a .NET 9.0 class library that ports [Eclipse Store](https://github.com/eclipse-store/store) functionality to .NET Core. It provides ultra-fast object graph persistence without object-relational mapping overhead.
+
+### Eclipse Store Modules Ported
+
+This project ports the following core modules from the Eclipse Store Java repository:
+
+- **storage/embedded** - Core embedded storage engine with object graph persistence
+- **storage/embedded-configuration** - Configuration system for storage settings
+- **storage/storage** - Core storage types, interfaces, and connection management
+
+The .NET implementation maintains the same module structure and design patterns as the original Eclipse Store Java code.
 
 ## Development Commands
 
@@ -31,16 +41,35 @@ tests/
 
 ## Architecture
 
-- **NebulaStore.Core**: Core class library using .NET 9.0
-- **ObjectStore**: Main persistence engine that provides EclipseStore-like functionality
-  - File-based object graph storage using MessagePack serialization
-  - Lazy query traversal with `Query<T>()` method
-  - Root object management with `Root<T>()` method
-  - Transactional commits with `Commit()` method
-- **Tests**: xUnit test project with comprehensive ObjectStore tests
+NebulaStore follows the Eclipse Store module structure:
+
+- **storage/** - Main storage module (mirrors Eclipse Store)
+  - **embedded/** - Embedded storage submodule
+    - **src/** - Core embedded storage implementation
+    - **tests/** - Comprehensive test suite
+    - **NebulaStore.Storage.Embedded.csproj** - Project file
+  - **embedded-configuration/** - Configuration module (mirrors Eclipse Store)
+    - **src/** - Configuration classes and interfaces
+    - **NebulaStore.Storage.EmbeddedConfiguration.csproj** - Project file
+  - **storage/** - Core storage types module (mirrors Eclipse Store)
+    - **src/types/** - Storage interfaces and implementations
+    - **NebulaStore.Storage.csproj** - Project file
 - Dependencies: MessagePack for binary serialization
+
+### Key Components
+- **EmbeddedStorage**: Static factory class for creating storage managers
+- **IEmbeddedStorageManager**: Main interface for storage operations
+- **EmbeddedStorageFoundation**: Builder pattern for configuration
+- **IEmbeddedStorageConfiguration**: Configuration system
+- **Type Handlers**: Pluggable serialization system
+- **Storage Connections**: Connection management and lifecycle
 
 ## Key Components
 
-- `ObjectStore`: Main persistence class (src/NebulaStore.Core/ObjectStore.cs:7)
-- `RootWrapper`: Internal wrapper for type-safe persistence (src/NebulaStore.Core/ObjectStore.cs:123)
+### Embedded Storage API (Primary)
+- `EmbeddedStorage`: Static factory class (storage/embedded/src/EmbeddedStorage.cs)
+- `IEmbeddedStorageManager`: Main storage interface (storage/embedded/src/IEmbeddedStorageManager.cs)
+- `EmbeddedStorageFoundation`: Configuration builder (storage/embedded/src/EmbeddedStorageFoundation.cs)
+- `IEmbeddedStorageConfiguration`: Configuration interface (storage/embedded/src/IEmbeddedStorageConfiguration.cs)
+- `ITypeHandler`: Type serialization interface (storage/embedded/src/IEmbeddedStorageFoundation.cs)
+- `MessagePackTypeHandler`: Built-in type handlers (storage/embedded/src/TypeHandlers/MessagePackTypeHandler.cs)
