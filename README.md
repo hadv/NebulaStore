@@ -12,14 +12,19 @@ NebulaStore aims to provide .NET developers with the same high-performance, pure
 
 🚧 **In Development** - Currently porting core EclipseStore functionality to .NET Core
 
-## Features (Planned)
+## Features
 
-- Pure object graph persistence
-- Ultra-fast storage and retrieval
-- No object-relational mapping overhead
-- Native .NET integration
-- Thread-safe operations
-- ACID compliance
+- ✅ Pure object graph persistence
+- ✅ Ultra-fast storage and retrieval
+- ✅ No object-relational mapping overhead
+- ✅ Native .NET integration
+- ✅ Embedded storage manager with builder pattern
+- ✅ Configurable storage options
+- ✅ Type handler system for custom serialization
+- ✅ Lazy query traversal
+- ✅ Backup and restore capabilities
+- 🚧 Thread-safe operations (in progress)
+- 🚧 ACID compliance (in progress)
 
 ## Getting Started
 
@@ -54,7 +59,7 @@ dotnet test --verbosity normal
 dotnet test tests/NebulaStore.Core.Tests/
 ```
 
-### Using ObjectStore
+### Using ObjectStore (Legacy API)
 
 ```csharp
 // Create or open an ObjectStore
@@ -71,4 +76,40 @@ store.Commit();
 
 // Query objects
 var results = store.Query<SomeType>().Where(x => x.Condition).ToList();
+```
+
+### Using Embedded Storage (New API)
+
+```csharp
+using NebulaStore.Core.Storage;
+
+// Simple usage with default configuration
+using var storage = EmbeddedStorage.Start();
+var root = storage.Root<MyDataClass>();
+root.SomeProperty = "value";
+storage.StoreRoot();
+
+// Advanced configuration
+var config = EmbeddedStorageConfiguration.New()
+    .SetStorageDirectory("my-storage")
+    .SetChannelCount(4)
+    .SetEntityCacheThreshold(2000000)
+    .Build();
+
+using var storage = EmbeddedStorage.Start(config);
+
+// Custom root object
+var myRoot = new MyDataClass { SomeProperty = "initial" };
+using var storage = EmbeddedStorage.Start(myRoot, "storage-dir");
+
+// Batch operations
+using var storer = storage.CreateStorer();
+var objectIds = storer.StoreAll(obj1, obj2, obj3);
+storer.Commit();
+
+// Query objects
+var results = storage.Query<SomeType>().Where(x => x.Condition).ToList();
+
+// Backup
+await storage.CreateBackupAsync("backup-directory");
 ```

@@ -3,6 +3,9 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using MessagePack;
+using NebulaStore.Core.Storage;
+
+namespace NebulaStore.Core;
 
 public class ObjectStore : IDisposable
 {
@@ -118,6 +121,24 @@ public class ObjectStore : IDisposable
     {
         // cleanup if needed
     }
+
+    /// <summary>
+    /// Creates an embedded storage manager that wraps this ObjectStore's functionality.
+    /// </summary>
+    /// <returns>An embedded storage manager instance</returns>
+    public IEmbeddedStorageManager AsEmbeddedStorage()
+    {
+        var configuration = EmbeddedStorageConfiguration.New()
+            .SetStorageDirectory(Path.GetDirectoryName(_filePath) ?? "storage")
+            .Build();
+
+        var foundation = EmbeddedStorage.Foundation(configuration);
+        if (_root != null)
+        {
+            foundation.SetRoot(_root);
+        }
+        return foundation.CreateEmbeddedStorageManager();
+    }
 }
 
 [MessagePackObject(AllowPrivate = true)]
@@ -125,7 +146,7 @@ internal class RootWrapper
 {
     [Key(0)]
     public object? Data { get; set; }
-    
+
     [Key(1)]
     public string TypeName { get; set; } = string.Empty;
 }

@@ -32,15 +32,31 @@ tests/
 ## Architecture
 
 - **NebulaStore.Core**: Core class library using .NET 9.0
-- **ObjectStore**: Main persistence engine that provides EclipseStore-like functionality
+- **ObjectStore**: Legacy persistence engine (maintained for compatibility)
   - File-based object graph storage using MessagePack serialization
   - Lazy query traversal with `Query<T>()` method
   - Root object management with `Root<T>()` method
   - Transactional commits with `Commit()` method
-- **Tests**: xUnit test project with comprehensive ObjectStore tests
+- **Embedded Storage**: New advanced persistence system
+  - **EmbeddedStorage**: Static factory class for creating storage managers
+  - **IEmbeddedStorageManager**: Main interface for storage operations
+  - **EmbeddedStorageFoundation**: Builder pattern for configuration
+  - **IEmbeddedStorageConfiguration**: Configuration system
+  - **Type Handlers**: Pluggable serialization system
+  - **Storage Connections**: Connection management and lifecycle
+- **Tests**: xUnit test project with comprehensive tests for both APIs
 - Dependencies: MessagePack for binary serialization
 
 ## Key Components
 
-- `ObjectStore`: Main persistence class (src/NebulaStore.Core/ObjectStore.cs:7)
-- `RootWrapper`: Internal wrapper for type-safe persistence (src/NebulaStore.Core/ObjectStore.cs:123)
+### Legacy API
+- `ObjectStore`: Main persistence class (src/NebulaStore.Core/ObjectStore.cs:10)
+- `RootWrapper`: Internal wrapper for type-safe persistence (src/NebulaStore.Core/ObjectStore.cs:143)
+
+### Embedded Storage API
+- `EmbeddedStorage`: Static factory class (src/NebulaStore.Core/Storage/EmbeddedStorage.cs)
+- `IEmbeddedStorageManager`: Main storage interface (src/NebulaStore.Core/Storage/IEmbeddedStorageManager.cs)
+- `EmbeddedStorageFoundation`: Configuration builder (src/NebulaStore.Core/Storage/EmbeddedStorageFoundation.cs)
+- `IEmbeddedStorageConfiguration`: Configuration interface (src/NebulaStore.Core/Storage/IEmbeddedStorageConfiguration.cs)
+- `ITypeHandler`: Type serialization interface (src/NebulaStore.Core/Storage/IEmbeddedStorageFoundation.cs)
+- `MessagePackTypeHandler`: Built-in type handlers (src/NebulaStore.Core/Storage/TypeHandlers/MessagePackTypeHandler.cs)
