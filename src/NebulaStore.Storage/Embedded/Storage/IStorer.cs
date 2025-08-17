@@ -1,6 +1,6 @@
 using System;
 
-namespace NebulaStore.Core.Storage;
+namespace NebulaStore.Storage.Embedded;
 
 /// <summary>
 /// Interface for storing objects in batch operations.

@@ -5,7 +5,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Xunit;
 using MessagePack;
-using NebulaStore.Core.Storage;
+using NebulaStore.Storage.Embedded;
 
 namespace NebulaStore.Core.Tests.Storage;
 

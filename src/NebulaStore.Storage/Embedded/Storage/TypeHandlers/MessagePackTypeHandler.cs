@@ -1,7 +1,7 @@
 using System;
 using MessagePack;
 
-namespace NebulaStore.Core.Storage.TypeHandlers;
+namespace NebulaStore.Storage.Embedded;
 
 /// <summary>
 /// Generic type handler that uses MessagePack for serialization.

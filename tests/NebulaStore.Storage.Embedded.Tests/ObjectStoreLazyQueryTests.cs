@@ -4,9 +4,9 @@ using System.IO;
 using System.Linq;
 using Xunit;
 using MessagePack;
-using NebulaStore.Core.Storage;
+using NebulaStore.Storage.Embedded;
 
-namespace NebulaStore.Core.Tests;
+namespace NebulaStore.Storage.Embedded.Tests;
 
 public class ObjectStoreLazyQueryTests : IDisposable
 {

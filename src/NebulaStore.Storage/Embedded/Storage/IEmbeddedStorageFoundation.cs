@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace NebulaStore.Core.Storage;
+namespace NebulaStore.Storage.Embedded;
 
 /// <summary>
 /// Foundation interface for building embedded storage managers.

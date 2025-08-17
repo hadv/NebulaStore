@@ -63,7 +63,7 @@ dotnet test tests/NebulaStore.Core.Tests/
 
 #### Simple Usage
 ```csharp
-using NebulaStore.Core.Storage;
+using NebulaStore.Storage.Embedded;
 
 // Start with default configuration
 using var storage = EmbeddedStorage.Start();

@@ -1,7 +1,7 @@
 using System;
 using System.IO;
 
-namespace NebulaStore.Core.Storage;
+namespace NebulaStore.Storage.Embedded;
 
 /// <summary>
 /// Configuration interface for embedded storage.

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using MessagePack;
 
-namespace NebulaStore.Core.Storage;
+namespace NebulaStore.Storage.Embedded;
 
 /// <summary>
 /// Default implementation of storage connection.

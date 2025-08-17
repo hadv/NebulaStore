@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Xunit;
-using NebulaStore.Core.Storage;
+using NebulaStore.Storage.Embedded;
 
-namespace NebulaStore.Core.Tests;
+namespace NebulaStore.Storage.Embedded.Tests;
 
 /// <summary>
 /// Tests for the embedded storage system (formerly ObjectStore tests).

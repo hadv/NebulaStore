@@ -1,10 +1,8 @@
 using System;
 using System.Linq;
 using Xunit;
-using NebulaStore.Core.Storage;
-using NebulaStore.Core.Storage.TypeHandlers;
-
-namespace NebulaStore.Core.Tests.Storage;
+using NebulaStore.Storage.Embedded;
+namespace NebulaStore.Storage.Embedded.Tests.Storage;
 
 public class TypeHandlerTests
 {
