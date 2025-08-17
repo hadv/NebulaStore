@@ -1,16 +1,17 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Threading.Tasks;
 using MessagePack;
 using NebulaStore.Storage.EmbeddedConfiguration;
 
-namespace NebulaStore.Storage.Embedded;
+namespace NebulaStore.Storage;
 
 /// <summary>
 /// Default implementation of storage connection.
 /// Manages the connection to the underlying storage system.
 /// </summary>
-internal class StorageConnection : IStorageConnection
+public class StorageConnection : IStorageConnection
 {
     private readonly IEmbeddedStorageConfiguration _configuration;
     private readonly ITypeHandlerRegistry _typeHandlerRegistry;
@@ -51,6 +52,38 @@ internal class StorageConnection : IStorageConnection
     {
         ThrowIfDisposed();
         return new StorageStatistics(_configuration);
+    }
+
+    public async Task CreateBackupAsync(string backupDirectory)
+    {
+        ThrowIfDisposed();
+
+        if (string.IsNullOrEmpty(backupDirectory))
+            throw new ArgumentException("Backup directory cannot be null or empty", nameof(backupDirectory));
+
+        // Create backup directory if it doesn't exist
+        Directory.CreateDirectory(backupDirectory);
+
+        // Copy storage files to backup directory
+        var storageDir = _configuration.StorageDirectory;
+        if (Directory.Exists(storageDir))
+        {
+            await Task.Run(() =>
+            {
+                var files = Directory.GetFiles(storageDir, "*", SearchOption.AllDirectories);
+                foreach (var file in files)
+                {
+                    var relativePath = Path.GetRelativePath(storageDir, file);
+                    var backupPath = Path.Combine(backupDirectory, relativePath);
+                    var backupDir = Path.GetDirectoryName(backupPath);
+                    if (!string.IsNullOrEmpty(backupDir))
+                    {
+                        Directory.CreateDirectory(backupDir);
+                    }
+                    File.Copy(file, backupPath, true);
+                }
+            });
+        }
     }
 
     internal long GetOrAssignObjectId(object obj)

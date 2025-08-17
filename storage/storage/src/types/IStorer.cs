@@ -1,6 +1,6 @@
 using System;
 
-namespace NebulaStore.Storage.Embedded;
+namespace NebulaStore.Storage;
 
 /// <summary>
 /// Interface for storing objects in batch operations.
@@ -92,40 +92,4 @@ public interface IStorageStatistics
     /// Gets the last modification timestamp.
     /// </summary>
     DateTime LastModificationTime { get; }
-}
-
-/// <summary>
-/// Interface for storage connections.
-/// Manages the connection to the underlying storage system.
-/// </summary>
-public interface IStorageConnection : IDisposable
-{
-    /// <summary>
-    /// Creates a new storer instance.
-    /// </summary>
-    /// <returns>A new storer instance</returns>
-    IStorer CreateStorer();
-
-    /// <summary>
-    /// Gets a value indicating whether this connection is active.
-    /// </summary>
-    bool IsActive { get; }
-
-    /// <summary>
-    /// Issues a full garbage collection.
-    /// </summary>
-    void IssueFullGarbageCollection();
-
-    /// <summary>
-    /// Issues a garbage collection with the specified time budget.
-    /// </summary>
-    /// <param name="timeBudgetNanos">Time budget in nanoseconds</param>
-    /// <returns>True if garbage collection completed within the time budget</returns>
-    bool IssueGarbageCollection(long timeBudgetNanos);
-
-    /// <summary>
-    /// Gets storage statistics.
-    /// </summary>
-    /// <returns>Storage statistics</returns>
-    IStorageStatistics GetStatistics();
 }

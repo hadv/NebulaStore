@@ -16,6 +16,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\embedded-configuration\NebulaStore.Storage.EmbeddedConfiguration.csproj" />
+    <ProjectReference Include="..\storage\NebulaStore.Storage.csproj" />
   </ItemGroup>
 
 </Project>
