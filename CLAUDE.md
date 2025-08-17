@@ -4,7 +4,17 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-NebulaStore is a .NET 9.0 class library that ports EclipseStore functionality to .NET Core. It provides ultra-fast object graph persistence without object-relational mapping overhead.
+NebulaStore is a .NET 9.0 class library that ports [Eclipse Store](https://github.com/eclipse-store/store) functionality to .NET Core. It provides ultra-fast object graph persistence without object-relational mapping overhead.
+
+### Eclipse Store Modules Ported
+
+This project ports the following core modules from the Eclipse Store Java repository:
+
+- **storage/embedded** - Core embedded storage engine with object graph persistence
+- **storage/embedded-configuration** - Configuration system for storage settings
+- **storage/storage** - Core storage types, interfaces, and connection management
+
+The .NET implementation maintains the same module structure and design patterns as the original Eclipse Store Java code.
 
 ## Development Commands
 

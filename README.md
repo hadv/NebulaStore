@@ -2,15 +2,48 @@
 
 [![CI](https://github.com/hadv/NebulaStore/actions/workflows/ci.yml/badge.svg)](https://github.com/hadv/NebulaStore/actions/workflows/ci.yml)
 
-A .NET Core port of EclipseStore, bringing ultra-fast Java object persistence to the .NET ecosystem.
+A .NET port of [Eclipse Store](https://github.com/eclipse-store/store) - Ultra-fast pure object graph persistence. Ports core Eclipse Store modules from Java to .NET Core with native C# integration.
 
 ## Overview
 
-NebulaStore aims to provide .NET developers with the same high-performance, pure object graph storage capabilities that EclipseStore offers to Java developers. This project ports the core concepts and architecture of EclipseStore to work natively with .NET objects and the .NET runtime.
+NebulaStore provides .NET developers with the same high-performance, pure object graph storage capabilities that Eclipse Store offers to Java developers. This project ports the core storage modules and architecture of Eclipse Store to work natively with .NET objects and the .NET runtime.
+
+### Eclipse Store Modules Ported
+
+This project ports the following Eclipse Store modules from the [original Java repository](https://github.com/eclipse-store/store):
+
+- **storage/embedded** - Core embedded storage engine
+- **storage/embedded-configuration** - Configuration system
+- **storage/storage** - Core storage types and interfaces
+
+The module structure exactly mirrors the Eclipse Store Java repository for familiarity and consistency.
+
+### Module Mapping
+
+| Eclipse Store Java | NebulaStore .NET | Status |
+|-------------------|------------------|---------|
+| `storage/embedded` | `storage/embedded/` | ✅ Complete |
+| `storage/embedded-configuration` | `storage/embedded-configuration/` | ✅ Complete |
+| `storage/storage` | `storage/storage/` | ✅ Complete |
 
 ## Project Status
 
-🚧 **In Development** - Currently porting core EclipseStore functionality to .NET Core
+✅ **Core Modules Ported** - Successfully ported 3 core Eclipse Store modules to .NET Core:
+- ✅ `storage/embedded` - Complete with embedded storage engine
+- ✅ `storage/embedded-configuration` - Complete with configuration system
+- ✅ `storage/storage` - Complete with core storage types and interfaces
+
+🚧 **In Progress** - Additional Eclipse Store modules and advanced features
+
+## Source Code References
+
+This project ports code from the [Eclipse Store Java repository](https://github.com/eclipse-store/store). Key source modules:
+
+- **Java Source**: [`storage/embedded`](https://github.com/eclipse-store/store/tree/main/storage/embedded) → **C# Port**: `storage/embedded/`
+- **Java Source**: [`storage/embedded-configuration`](https://github.com/eclipse-store/store/tree/main/storage/embedded-configuration) → **C# Port**: `storage/embedded-configuration/`
+- **Java Source**: [`storage/storage`](https://github.com/eclipse-store/store/tree/main/storage/storage) → **C# Port**: `storage/storage/`
+
+The .NET implementation maintains the same module structure, interfaces, and design patterns as the original Eclipse Store Java code while adapting to .NET conventions and leveraging C# language features.
 
 ## Features
 
