@@ -25,7 +25,7 @@ NebulaStore aims to provide .NET developers with the same high-performance, pure
 
 ### Prerequisites
 
-- .NET 8.0 SDK or later
+- .NET 9.0 SDK or later
 
 ### Building the Project
 
