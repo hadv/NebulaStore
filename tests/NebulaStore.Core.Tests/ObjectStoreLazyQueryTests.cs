@@ -1,33 +1,39 @@
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Xunit;
 using MessagePack;
+using NebulaStore.Core.Storage;
 
 namespace NebulaStore.Core.Tests;
 
-public class ObjectStoreLazyQueryTests
+public class ObjectStoreLazyQueryTests : IDisposable
 {
-    private const string FilePath = "store_lazy_query_test.msgpack";
+    private readonly string _testDirectory;
+
+    public ObjectStoreLazyQueryTests()
+    {
+        _testDirectory = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
+        Directory.CreateDirectory(_testDirectory);
+    }
 
     [Fact]
     public void Query_Is_Lazy_And_Incremental()
     {
-        if (File.Exists(FilePath)) File.Delete(FilePath);
-
-        using (var store = new ObjectStore(FilePath))
+        using (var storage = EmbeddedStorage.Start(_testDirectory))
         {
-            var order = store.Root<Order>();
+            var order = storage.Root<Order>();
             order.CustomerName = "LazyTester";
             order.Items.Add(new Product { Name = "Big Sofa", Price = 500 });
             order.Items.Add(new Product { Name = "Pillow", Price = 20 });
             order.Items.Add(new Product { Name = "Blanket", Price = 80 });
-            store.Commit();
+            storage.StoreRoot();
         }
 
-        using (var store = new ObjectStore(FilePath))
+        using (var storage = EmbeddedStorage.Start(_testDirectory))
         {
-            var query = store.Query<Product>(); // not traversed immediately
+            var query = storage.Query<Product>(); // not traversed immediately
             Assert.NotNull(query);
 
             // Only traversed when enumerated
@@ -35,6 +41,21 @@ public class ObjectStoreLazyQueryTests
 
             Assert.Single(expensive);
             Assert.Equal("Big Sofa", expensive[0].Name);
+        }
+    }
+
+    public void Dispose()
+    {
+        if (Directory.Exists(_testDirectory))
+        {
+            try
+            {
+                Directory.Delete(_testDirectory, true);
+            }
+            catch
+            {
+                // Ignore cleanup errors
+            }
         }
     }
 }

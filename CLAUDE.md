@@ -32,28 +32,19 @@ tests/
 ## Architecture
 
 - **NebulaStore.Core**: Core class library using .NET 9.0
-- **ObjectStore**: Legacy persistence engine (maintained for compatibility)
-  - File-based object graph storage using MessagePack serialization
-  - Lazy query traversal with `Query<T>()` method
-  - Root object management with `Root<T>()` method
-  - Transactional commits with `Commit()` method
-- **Embedded Storage**: New advanced persistence system
+- **Embedded Storage**: Primary persistence system
   - **EmbeddedStorage**: Static factory class for creating storage managers
   - **IEmbeddedStorageManager**: Main interface for storage operations
   - **EmbeddedStorageFoundation**: Builder pattern for configuration
   - **IEmbeddedStorageConfiguration**: Configuration system
   - **Type Handlers**: Pluggable serialization system
   - **Storage Connections**: Connection management and lifecycle
-- **Tests**: xUnit test project with comprehensive tests for both APIs
+- **Tests**: xUnit test project with comprehensive tests
 - Dependencies: MessagePack for binary serialization
 
 ## Key Components
 
-### Legacy API
-- `ObjectStore`: Main persistence class (src/NebulaStore.Core/ObjectStore.cs:10)
-- `RootWrapper`: Internal wrapper for type-safe persistence (src/NebulaStore.Core/ObjectStore.cs:143)
-
-### Embedded Storage API
+### Embedded Storage API (Primary)
 - `EmbeddedStorage`: Static factory class (src/NebulaStore.Core/Storage/EmbeddedStorage.cs)
 - `IEmbeddedStorageManager`: Main storage interface (src/NebulaStore.Core/Storage/IEmbeddedStorageManager.cs)
 - `EmbeddedStorageFoundation`: Configuration builder (src/NebulaStore.Core/Storage/EmbeddedStorageFoundation.cs)

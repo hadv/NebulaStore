@@ -59,37 +59,28 @@ dotnet test --verbosity normal
 dotnet test tests/NebulaStore.Core.Tests/
 ```
 
-### Using ObjectStore (Legacy API)
+### Using NebulaStore
 
-```csharp
-// Create or open an ObjectStore
-using var store = new ObjectStore("data.msgpack");
-
-// Get the root object
-var root = store.Root<MyDataClass>();
-
-// Modify data
-root.SomeProperty = "value";
-
-// Persist changes
-store.Commit();
-
-// Query objects
-var results = store.Query<SomeType>().Where(x => x.Condition).ToList();
-```
-
-### Using Embedded Storage (New API)
-
+#### Simple Usage
 ```csharp
 using NebulaStore.Core.Storage;
 
-// Simple usage with default configuration
+// Start with default configuration
 using var storage = EmbeddedStorage.Start();
+
+// Get the root object
 var root = storage.Root<MyDataClass>();
 root.SomeProperty = "value";
+
+// Persist changes
 storage.StoreRoot();
 
-// Advanced configuration
+// Query objects
+var results = storage.Query<SomeType>().Where(x => x.Condition).ToList();
+```
+
+#### Advanced Configuration
+```csharp
 var config = EmbeddedStorageConfiguration.New()
     .SetStorageDirectory("my-storage")
     .SetChannelCount(4)
@@ -97,19 +88,22 @@ var config = EmbeddedStorageConfiguration.New()
     .Build();
 
 using var storage = EmbeddedStorage.Start(config);
+```
 
-// Custom root object
+#### Custom Root Object
+```csharp
 var myRoot = new MyDataClass { SomeProperty = "initial" };
 using var storage = EmbeddedStorage.Start(myRoot, "storage-dir");
+```
 
-// Batch operations
+#### Batch Operations
+```csharp
 using var storer = storage.CreateStorer();
 var objectIds = storer.StoreAll(obj1, obj2, obj3);
 storer.Commit();
+```
 
-// Query objects
-var results = storage.Query<SomeType>().Where(x => x.Condition).ToList();
-
-// Backup
+#### Backup & Restore
+```csharp
 await storage.CreateBackupAsync("backup-directory");
 ```

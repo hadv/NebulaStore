@@ -44,7 +44,7 @@ public class EmbeddedStorageManager : IEmbeddedStorageManager
     public T Root<T>() where T : new()
     {
         ThrowIfDisposed();
-        
+
         if (_root == null)
         {
             _root = new T();
@@ -53,6 +53,12 @@ public class EmbeddedStorageManager : IEmbeddedStorageManager
         else if (_root is not T)
         {
             throw new InvalidOperationException($"Root object is of type {_root.GetType().Name}, not {typeof(T).Name}");
+        }
+
+        // Ensure root type is set
+        if (_rootType == null)
+        {
+            _rootType = typeof(T);
         }
 
         return (T)_root;
@@ -73,11 +79,17 @@ public class EmbeddedStorageManager : IEmbeddedStorageManager
     public long StoreRoot()
     {
         ThrowIfDisposed();
-        
+
         if (_root == null)
             return 0; // No root to store
 
-        return Store(_root);
+        // Store the root object in the storage system
+        var objectId = Store(_root);
+
+        // Also persist the root to the root file for loading on next startup
+        SaveRootToFile();
+
+        return objectId;
     }
 
     public long Store(object obj)
@@ -228,7 +240,7 @@ public class EmbeddedStorageManager : IEmbeddedStorageManager
     private void LoadExistingRoot()
     {
         var rootFilePath = Path.Combine(_configuration.StorageDirectory, "root.msgpack");
-        
+
         if (!File.Exists(rootFilePath))
             return;
 
@@ -249,6 +261,29 @@ public class EmbeddedStorageManager : IEmbeddedStorageManager
         catch
         {
             // Ignore errors during root loading - will create new root if needed
+        }
+    }
+
+    private void SaveRootToFile()
+    {
+        if (_root == null || _rootType == null)
+            return;
+
+        var rootFilePath = Path.Combine(_configuration.StorageDirectory, "root.msgpack");
+
+        try
+        {
+            var wrapper = new RootWrapper
+            {
+                Data = _root,
+                TypeName = _rootType.AssemblyQualifiedName!
+            };
+            var bytes = MessagePackSerializer.Serialize(wrapper);
+            File.WriteAllBytes(rootFilePath, bytes);
+        }
+        catch
+        {
+            // Ignore errors during root saving
         }
     }
 
