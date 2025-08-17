@@ -56,8 +56,8 @@ public class ObjectStore : IDisposable
     }
 
     /// <summary>
-    /// Lazy, incremental query giống DB cursor.
-    /// Traverse graph on demand, yield từng object.
+    /// Lazy, incremental query similar to DB cursor.
+    /// Traverse graph on demand, yield each object.
     /// </summary>
     public IEnumerable<T> Query<T>()
     {
@@ -76,7 +76,7 @@ public class ObjectStore : IDisposable
         visited.Add(obj);
         yield return obj;
 
-        // Nếu là collection thì duyệt từng phần tử
+        // If it's a collection, traverse each element
         if (obj is System.Collections.IEnumerable enumerable && !(obj is string))
         {
             foreach (var element in enumerable)
@@ -89,7 +89,7 @@ public class ObjectStore : IDisposable
             }
         }
 
-        // Nếu có property thì duyệt tiếp
+        // If it has properties, continue traversing
         var type = obj.GetType();
         foreach (var prop in type.GetProperties())
         {
@@ -116,7 +116,7 @@ public class ObjectStore : IDisposable
 
     public void Dispose()
     {
-        // cleanup nếu cần
+        // cleanup if needed
     }
 }
 
