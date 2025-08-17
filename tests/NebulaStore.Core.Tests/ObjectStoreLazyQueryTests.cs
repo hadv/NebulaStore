@@ -27,10 +27,10 @@ public class ObjectStoreLazyQueryTests
 
         using (var store = new ObjectStore(FilePath))
         {
-            var query = store.Query<Product>(); // chưa duyệt ngay
+            var query = store.Query<Product>(); // not traversed immediately
             Assert.NotNull(query);
 
-            // Khi enumerate thì mới duyệt thật sự
+            // Only traversed when enumerated
             var expensive = query.Where(p => p.Price > 100).ToList();
 
             Assert.Single(expensive);
