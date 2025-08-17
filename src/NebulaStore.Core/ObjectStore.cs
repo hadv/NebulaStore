@@ -120,7 +120,7 @@ public class ObjectStore : IDisposable
     }
 }
 
-[MessagePackObject]
+[MessagePackObject(AllowPrivate = true)]
 internal class RootWrapper
 {
     [Key(0)]

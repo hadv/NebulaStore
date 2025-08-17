@@ -68,7 +68,7 @@ public class ObjectStoreTests : IDisposable
             File.Delete(_testFilePath);
     }
 
-    [MessagePack.MessagePackObject]
+    [MessagePack.MessagePackObject(AllowPrivate = true)]
     internal class TestData
     {
         [MessagePack.Key(0)]
@@ -78,7 +78,7 @@ public class ObjectStoreTests : IDisposable
         public int Value { get; set; }
     }
 
-    [MessagePack.MessagePackObject]
+    [MessagePack.MessagePackObject(AllowPrivate = true)]
     internal class TestContainer
     {
         [MessagePack.Key(0)]
