@@ -79,9 +79,18 @@ echo -e "\n${YELLOW}📊 Locating coverage files...${NC}"
 COVERAGE_FILE=$(find . -name "coverage.cobertura.xml" | head -1)
 if [ -z "$COVERAGE_FILE" ]; then
     echo -e "${RED}❌ No coverage files found!${NC}"
+    echo -e "${YELLOW}Searching for TestResults directories...${NC}"
+    find . -name "TestResults" -type d | while read dir; do
+        echo -e "   Found TestResults: $dir"
+        find "$dir" -name "*.xml" | while read file; do
+            echo -e "     Found file: $file"
+        done
+    done
+    echo -e "${RED}Please ensure tests ran successfully and coverage was collected.${NC}"
     exit 1
 fi
 echo -e "   ${GREEN}✓ Found coverage file: $(basename "$COVERAGE_FILE")${NC}"
+echo -e "   ${BLUE}Full path: $COVERAGE_FILE${NC}"
 
 # Check if reportgenerator is installed
 echo -e "\n${YELLOW}🔧 Checking reportgenerator tool...${NC}"
@@ -90,9 +99,19 @@ if ! command -v reportgenerator &> /dev/null; then
     dotnet tool install -g dotnet-reportgenerator-globaltool
     if [ $? -eq 0 ]; then
         echo -e "   ${GREEN}✓ reportgenerator installed successfully${NC}"
+        # Refresh PATH to ensure tool is available
+        export PATH="$PATH:$HOME/.dotnet/tools"
     else
         echo -e "${RED}❌ Failed to install reportgenerator${NC}"
-        exit 1
+        echo -e "${YELLOW}Trying alternative installation method...${NC}"
+        # Try with explicit path
+        export PATH="$PATH:$HOME/.dotnet/tools"
+        if command -v reportgenerator &> /dev/null; then
+            echo -e "   ${GREEN}✓ reportgenerator found in PATH${NC}"
+        else
+            echo -e "${RED}❌ reportgenerator installation failed${NC}"
+            exit 1
+        fi
     fi
 else
     echo -e "   ${GREEN}✓ reportgenerator is available${NC}"

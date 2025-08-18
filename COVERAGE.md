@@ -108,6 +108,21 @@ The following coverage-related files are automatically ignored by git:
 - .NET 9.0 SDK
 - `dotnet-reportgenerator-globaltool` (automatically installed by scripts)
 
+### Platform-Specific Notes
+
+#### macOS
+- Ensure .NET tools are in PATH: `export PATH="$PATH:$HOME/.dotnet/tools"`
+- You may need to run `chmod +x generate-coverage.sh` to make the script executable
+- If coverage collection fails, ensure you have the latest .NET SDK installed
+
+#### Linux
+- Most distributions work out of the box with the script
+- Ensure `xdg-open` is available for browser opening (usually pre-installed)
+
+#### Windows
+- PowerShell script is recommended for best experience
+- Bash script works in Git Bash, WSL, or Cygwin environments
+
 ## Troubleshooting
 
 ### "dotnet command not found"
@@ -118,6 +133,14 @@ The scripts will automatically install the reportgenerator tool if it's not foun
 
 ### No coverage files found
 Ensure tests are running successfully. The coverage collector only generates files when tests execute.
+
+### macOS-specific issues
+If you encounter issues on macOS:
+
+1. **Permission denied**: Run `chmod +x generate-coverage.sh`
+2. **reportgenerator not found**: Add to PATH: `export PATH="$PATH:$HOME/.dotnet/tools"`
+3. **Coverage not collected**: Ensure .NET SDK is properly installed: `dotnet --version`
+4. **Browser not opening**: The script will try `open` command, or provide manual file path
 
 ## Integration with CI/CD
 
