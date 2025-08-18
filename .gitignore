@@ -53,6 +53,11 @@ CodeCoverage/
 TestResult.xml
 nunit-*.xml
 
+# Test Coverage Reports
+coverage-report/
+TestResults/
+*.cobertura.xml
+
 # NebulaStore generated storage files
 *.msgpack
 *-storage/
