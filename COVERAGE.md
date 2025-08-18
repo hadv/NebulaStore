@@ -44,6 +44,23 @@ Examples:
 .\coverage.ps1 -OpenReport $false
 ```
 
+### Bash Script (`generate-coverage.sh`)
+- Default behavior - Opens the report in browser automatically
+- `--no-open` or `--no-browser` - Generates report without opening browser
+- `-h` or `--help` - Shows usage information
+
+Examples:
+```bash
+# Generate and open report
+./generate-coverage.sh
+
+# Generate report only (don't open browser)
+./generate-coverage.sh --no-open
+
+# Show help
+./generate-coverage.sh --help
+```
+
 ## Fresh Generation Process
 
 The scripts ensure coverage reports are **always generated from scratch** by:

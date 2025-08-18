@@ -2,6 +2,28 @@
 # NebulaStore Test Coverage Generator (Bash version)
 # This script runs tests with coverage and generates an HTML report
 
+# Parse command line arguments
+OPEN_REPORT=true
+while [[ $# -gt 0 ]]; do
+    case $1 in
+        --no-open|--no-browser)
+            OPEN_REPORT=false
+            shift
+            ;;
+        -h|--help)
+            echo "Usage: $0 [--no-open|--no-browser]"
+            echo "  --no-open, --no-browser    Don't open the report in browser"
+            echo "  -h, --help                 Show this help message"
+            exit 0
+            ;;
+        *)
+            echo "Unknown option: $1"
+            echo "Use -h or --help for usage information"
+            exit 1
+            ;;
+    esac
+done
+
 # Colors
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
@@ -95,19 +117,50 @@ if [ -f "coverage-report/Summary.txt" ]; then
     done
 fi
 
-# Open report (platform-specific)
+# Open report in browser
 if [ -f "coverage-report/index.html" ]; then
-    echo -e "\n${YELLOW}🌐 Coverage report ready!${NC}"
     REPORT_PATH="$(pwd)/coverage-report/index.html"
-    echo -e "   ${GREEN}✓ Report location: $REPORT_PATH${NC}"
-    
-    # Try to open in browser (platform-specific)
-    if command -v xdg-open &> /dev/null; then
-        xdg-open "$REPORT_PATH" 2>/dev/null &
-    elif command -v open &> /dev/null; then
-        open "$REPORT_PATH" 2>/dev/null &
+
+    if [ "$OPEN_REPORT" = true ]; then
+        echo -e "\n${YELLOW}🌐 Opening coverage report in browser...${NC}"
+
+        # Try different browser opening commands based on platform
+        OPENED=false
+
+        # Linux
+        if command -v xdg-open &> /dev/null; then
+            xdg-open "file://$REPORT_PATH" 2>/dev/null &
+            OPENED=true
+        # macOS
+        elif command -v open &> /dev/null; then
+            open "file://$REPORT_PATH" 2>/dev/null &
+            OPENED=true
+        # Windows with WSL
+        elif command -v cmd.exe &> /dev/null; then
+            cmd.exe /c start "file://$REPORT_PATH" 2>/dev/null &
+            OPENED=true
+        # Try common browsers directly
+        elif command -v firefox &> /dev/null; then
+            firefox "file://$REPORT_PATH" 2>/dev/null &
+            OPENED=true
+        elif command -v google-chrome &> /dev/null; then
+            google-chrome "file://$REPORT_PATH" 2>/dev/null &
+            OPENED=true
+        elif command -v chromium &> /dev/null; then
+            chromium "file://$REPORT_PATH" 2>/dev/null &
+            OPENED=true
+        fi
+
+        if [ "$OPENED" = true ]; then
+            echo -e "   ${GREEN}✓ Report opened: $REPORT_PATH${NC}"
+        else
+            echo -e "   ${YELLOW}⚠️  Could not auto-open browser${NC}"
+            echo -e "   ${YELLOW}💡 Please open this file manually: file://$REPORT_PATH${NC}"
+        fi
     else
-        echo -e "   ${YELLOW}💡 Open this file in your browser: file://$REPORT_PATH${NC}"
+        echo -e "\n${YELLOW}🌐 Coverage report ready!${NC}"
+        echo -e "   ${GREEN}✓ Report location: $REPORT_PATH${NC}"
+        echo -e "   ${BLUE}💡 Open in browser: file://$REPORT_PATH${NC}"
     fi
 fi
 
