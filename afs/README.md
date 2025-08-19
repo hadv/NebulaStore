@@ -203,13 +203,13 @@ The AFS implementation includes comprehensive tests:
 
 ```bash
 # Run AFS-specific tests
-dotnet test tests/NebulaStore.Storage.Afs.Tests/
+dotnet test afs/tests/
 
 # Run integration tests
-dotnet test tests/NebulaStore.Storage.Afs.Tests/AfsIntegrationTests.cs
+dotnet test afs/tests/AfsIntegrationTests.cs
 
 # Run performance tests
-dotnet test tests/NebulaStore.Storage.Afs.Tests/ --filter Category=Performance
+dotnet test afs/tests/ --filter Category=Performance
 ```
 
 ## Migration from Traditional Storage

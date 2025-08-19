@@ -24,7 +24,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="../../afs/NebulaStore.Storage.Afs.csproj" />
+    <ProjectReference Include="../NebulaStore.Storage.Afs.csproj" />
     <RootNamespace>NebulaStore.Afs.Tests</RootNamespace>
   </ItemGroup>
 
