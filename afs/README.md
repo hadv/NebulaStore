@@ -202,14 +202,17 @@ catch (UnauthorizedAccessException ex)
 The AFS implementation includes comprehensive tests:
 
 ```bash
-# Run AFS-specific tests
+# Run blobstore unit tests
+dotnet test afs/blobstore/test/
+
+# Run AFS integration tests
 dotnet test afs/tests/
 
-# Run integration tests
+# Run specific integration test
 dotnet test afs/tests/AfsIntegrationTests.cs
 
 # Run performance tests
-dotnet test afs/tests/ --filter Category=Performance
+dotnet test afs/blobstore/test/ --filter Category=Performance
 ```
 
 ## Migration from Traditional Storage

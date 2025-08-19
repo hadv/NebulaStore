@@ -117,7 +117,10 @@ dotnet test
 # Run tests with detailed output
 dotnet test --verbosity normal
 
-# Run AFS-specific tests
+# Run AFS blobstore tests
+dotnet test afs/blobstore/test/
+
+# Run AFS integration tests
 dotnet test afs/tests/
 
 # Run specific test project
