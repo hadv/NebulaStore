@@ -259,9 +259,9 @@ public class LocalBlobStoreConnector : BlobStoreConnectorBase
 
         // Files are created implicitly when data is written
         var directory = file.ParentPath;
-        if (directory != null)
+        if (directory != null && directory is BlobStorePath parentPath)
         {
-            return CreateDirectory(directory);
+            return CreateDirectory(parentPath);
         }
         return true;
     }
@@ -354,9 +354,9 @@ public class LocalBlobStoreConnector : BlobStoreConnectorBase
 
         // Ensure parent directory exists
         var parentPath = file.ParentPath;
-        if (parentPath != null)
+        if (parentPath != null && parentPath is BlobStorePath blobParentPath)
         {
-            CreateDirectory(parentPath);
+            CreateDirectory(blobParentPath);
         }
 
         var blobNumber = GetNextBlobNumber(file);
