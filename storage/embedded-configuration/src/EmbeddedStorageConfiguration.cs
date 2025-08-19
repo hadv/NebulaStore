@@ -26,6 +26,10 @@ public class EmbeddedStorageConfiguration : IEmbeddedStorageConfiguration
     public bool ValidateOnStartup { get; init; } = true;
     public string? BackupDirectory { get; init; }
     public bool DeleteBackupFilesAfterRestore { get; init; } = false;
+    public bool UseAfs { get; init; } = false;
+    public string AfsStorageType { get; init; } = "blobstore";
+    public string? AfsConnectionString { get; init; }
+    public bool AfsUseCache { get; init; } = true;
 
     /// <summary>
     /// Creates a new configuration builder.
@@ -59,6 +63,10 @@ public class EmbeddedStorageConfiguration : IEmbeddedStorageConfiguration
         private long _housekeepingIntervalMs = 1000;
         private string? _backupDirectory;
         private bool _validateOnStartup = true;
+        private bool _useAfs = false;
+        private string _afsStorageType = "blobstore";
+        private string? _afsConnectionString;
+        private bool _afsUseCache = true;
 
         public IEmbeddedStorageConfigurationBuilder SetStorageDirectory(string directory)
         {
@@ -128,6 +136,30 @@ public class EmbeddedStorageConfiguration : IEmbeddedStorageConfiguration
             return this;
         }
 
+        public IEmbeddedStorageConfigurationBuilder SetUseAfs(bool enabled)
+        {
+            _useAfs = enabled;
+            return this;
+        }
+
+        public IEmbeddedStorageConfigurationBuilder SetAfsStorageType(string storageType)
+        {
+            _afsStorageType = storageType ?? throw new ArgumentNullException(nameof(storageType));
+            return this;
+        }
+
+        public IEmbeddedStorageConfigurationBuilder SetAfsConnectionString(string? connectionString)
+        {
+            _afsConnectionString = connectionString;
+            return this;
+        }
+
+        public IEmbeddedStorageConfigurationBuilder SetAfsUseCache(bool useCache)
+        {
+            _afsUseCache = useCache;
+            return this;
+        }
+
         public IEmbeddedStorageConfiguration Build()
         {
             return new EmbeddedStorageConfiguration
@@ -141,7 +173,11 @@ public class EmbeddedStorageConfiguration : IEmbeddedStorageConfiguration
                 HousekeepingOnStartup = _housekeepingOnStartup,
                 HousekeepingIntervalMs = _housekeepingIntervalMs,
                 BackupDirectory = _backupDirectory,
-                ValidateOnStartup = _validateOnStartup
+                ValidateOnStartup = _validateOnStartup,
+                UseAfs = _useAfs,
+                AfsStorageType = _afsStorageType,
+                AfsConnectionString = _afsConnectionString,
+                AfsUseCache = _afsUseCache
             };
         }
     }

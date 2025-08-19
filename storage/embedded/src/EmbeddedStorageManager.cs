@@ -265,6 +265,19 @@ public class EmbeddedStorageManager : IEmbeddedStorageManager, IMonitorableStora
 
     private void LoadExistingRoot()
     {
+        // Use AFS storage connection if available
+        if (_connection is NebulaStore.Afs.Blobstore.AfsStorageConnection afsConnection)
+        {
+            var loadedRoot = afsConnection.LoadRoot(_rootType);
+            if (loadedRoot != null)
+            {
+                _root = loadedRoot;
+                _rootType = loadedRoot.GetType();
+                return;
+            }
+        }
+
+        // Fallback to traditional file-based loading
         var rootFilePath = Path.Combine(_configuration.StorageDirectory, "root.msgpack");
 
         if (!File.Exists(rootFilePath))
@@ -295,6 +308,14 @@ public class EmbeddedStorageManager : IEmbeddedStorageManager, IMonitorableStora
         if (_root == null || _rootType == null)
             return;
 
+        // Use AFS storage connection if available
+        if (_connection is NebulaStore.Afs.Blobstore.AfsStorageConnection afsConnection)
+        {
+            afsConnection.SaveRoot(_root);
+            return;
+        }
+
+        // Fallback to traditional file-based saving
         var rootFilePath = Path.Combine(_configuration.StorageDirectory, "root.msgpack");
 
         try

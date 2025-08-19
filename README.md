@@ -86,6 +86,7 @@ NebulaStore follows the Eclipse Store module structure:
 - **IEmbeddedStorageConfiguration**: Configuration system
 - **Type Handlers**: Pluggable serialization system
 - **Storage Connections**: Connection management and lifecycle
+- **Abstract File System (AFS)**: Pluggable storage backends with blob support
 
 ## Getting Started
 
@@ -115,6 +116,12 @@ dotnet test
 
 # Run tests with detailed output
 dotnet test --verbosity normal
+
+# Run AFS blobstore tests
+dotnet test afs/blobstore/test/
+
+# Run AFS integration tests
+dotnet test afs/tests/
 
 # Run specific test project
 dotnet test tests/NebulaStore.Core.Tests/
@@ -149,6 +156,22 @@ var config = EmbeddedStorageConfiguration.New()
     .Build();
 
 using var storage = EmbeddedStorage.Start(config);
+```
+
+#### AFS (Abstract File System) Usage
+```csharp
+// Start with AFS blob storage
+using var storage = EmbeddedStorage.StartWithAfs("afs-storage");
+
+// Custom AFS configuration
+var afsConfig = EmbeddedStorageConfiguration.New()
+    .SetStorageDirectory("my-afs-storage")
+    .SetUseAfs(true)
+    .SetAfsStorageType("blobstore")
+    .SetAfsUseCache(true)
+    .Build();
+
+using var afsStorage = EmbeddedStorage.StartWithAfs(afsConfig);
 ```
 
 #### Custom Root Object

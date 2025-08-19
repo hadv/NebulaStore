@@ -1,0 +1,34 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <LangVersion>latest</LangVersion>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <WarningsAsErrors />
+    <WarningsNotAsErrors>CS1591</WarningsNotAsErrors>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <AssemblyTitle>NebulaStore Abstract File System</AssemblyTitle>
+    <AssemblyDescription>Abstract File System implementation for NebulaStore with blob storage support</AssemblyDescription>
+    <AssemblyCompany>NebulaStore</AssemblyCompany>
+    <AssemblyProduct>NebulaStore</AssemblyProduct>
+    <Copyright>Copyright © NebulaStore 2025</Copyright>
+    <AssemblyVersion>1.0.0.0</AssemblyVersion>
+    <FileVersion>1.0.0.0</FileVersion>
+    <RootNamespace>NebulaStore.Afs.Blobstore</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="test/**/*.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../../storage/storage/NebulaStore.Storage.csproj" />
+    <ProjectReference Include="../../storage/embedded-configuration/NebulaStore.Storage.EmbeddedConfiguration.csproj" />
+  </ItemGroup>
+
+</Project>
