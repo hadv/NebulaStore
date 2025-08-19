@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using NebulaStore.Storage.EmbeddedConfiguration;
+using NebulaStore.Afs;
 
 namespace NebulaStore.Storage.Embedded;
 
@@ -91,8 +92,10 @@ public class EmbeddedStorageFoundation : IEmbeddedStorageFoundation
             typeHandlerRegistry.RegisterTypeHandler(handler);
         }
 
-        // Create storage connection
-        var connection = new StorageConnection(configuration, typeHandlerRegistry);
+        // Create storage connection (AFS or traditional)
+        var connection = configuration.UseAfs
+            ? new AfsStorageConnection(configuration, typeHandlerRegistry)
+            : new StorageConnection(configuration, typeHandlerRegistry);
 
         // Create the storage manager
         var manager = new EmbeddedStorageManager(configuration, connection, rootObject, _typeEvaluator);

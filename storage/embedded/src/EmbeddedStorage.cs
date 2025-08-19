@@ -196,4 +196,52 @@ public static class EmbeddedStorage
     {
         return EmbeddedStorageConfiguration.WithStorageDirectory(storageDirectory);
     }
+
+    /// <summary>
+    /// Creates and starts an embedded storage manager with AFS blob store.
+    /// </summary>
+    /// <param name="storageDirectory">The storage directory path</param>
+    /// <returns>A started storage manager instance using AFS</returns>
+    public static IEmbeddedStorageManager StartWithAfs(string? storageDirectory = null)
+    {
+        var config = EmbeddedStorageConfiguration.New()
+            .SetStorageDirectory(storageDirectory ?? DefaultStorageDirectory)
+            .SetUseAfs(true)
+            .SetAfsStorageType("blobstore")
+            .Build();
+
+        return Foundation(config).Start();
+    }
+
+    /// <summary>
+    /// Creates and starts an embedded storage manager with AFS blob store and custom configuration.
+    /// </summary>
+    /// <param name="configurationBuilder">The configuration builder with AFS settings</param>
+    /// <returns>A started storage manager instance using AFS</returns>
+    public static IEmbeddedStorageManager StartWithAfs(IEmbeddedStorageConfigurationBuilder configurationBuilder)
+    {
+        var config = configurationBuilder
+            .SetUseAfs(true)
+            .SetAfsStorageType("blobstore")
+            .Build();
+
+        return Foundation(config).Start();
+    }
+
+    /// <summary>
+    /// Creates and starts an embedded storage manager with AFS blob store and root object.
+    /// </summary>
+    /// <param name="root">The root object</param>
+    /// <param name="storageDirectory">The storage directory path</param>
+    /// <returns>A started storage manager instance using AFS</returns>
+    public static IEmbeddedStorageManager StartWithAfs(object? root, string? storageDirectory = null)
+    {
+        var config = EmbeddedStorageConfiguration.New()
+            .SetStorageDirectory(storageDirectory ?? DefaultStorageDirectory)
+            .SetUseAfs(true)
+            .SetAfsStorageType("blobstore")
+            .Build();
+
+        return Foundation(config).Start(root);
+    }
 }

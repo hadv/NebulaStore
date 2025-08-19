@@ -97,6 +97,26 @@ public interface IEmbeddedStorageConfiguration
     /// Gets a value indicating whether to delete backup files after successful restore.
     /// </summary>
     bool DeleteBackupFilesAfterRestore { get; }
+
+    /// <summary>
+    /// Gets a value indicating whether to use Abstract File System (AFS) for storage.
+    /// </summary>
+    bool UseAfs { get; }
+
+    /// <summary>
+    /// Gets the AFS storage type (e.g., "blobstore", "nio", "sql").
+    /// </summary>
+    string AfsStorageType { get; }
+
+    /// <summary>
+    /// Gets the AFS connection string or configuration.
+    /// </summary>
+    string? AfsConnectionString { get; }
+
+    /// <summary>
+    /// Gets a value indicating whether to use caching in AFS operations.
+    /// </summary>
+    bool AfsUseCache { get; }
 }
 
 /// <summary>
@@ -167,6 +187,34 @@ public interface IEmbeddedStorageConfigurationBuilder
     /// <param name="enabled">Whether to enable validation on startup</param>
     /// <returns>This builder instance for method chaining</returns>
     IEmbeddedStorageConfigurationBuilder SetValidateOnStartup(bool enabled);
+
+    /// <summary>
+    /// Enables or disables Abstract File System (AFS) usage.
+    /// </summary>
+    /// <param name="enabled">Whether to use AFS</param>
+    /// <returns>This builder instance for method chaining</returns>
+    IEmbeddedStorageConfigurationBuilder SetUseAfs(bool enabled);
+
+    /// <summary>
+    /// Sets the AFS storage type.
+    /// </summary>
+    /// <param name="storageType">The AFS storage type (e.g., "blobstore", "nio", "sql")</param>
+    /// <returns>This builder instance for method chaining</returns>
+    IEmbeddedStorageConfigurationBuilder SetAfsStorageType(string storageType);
+
+    /// <summary>
+    /// Sets the AFS connection string.
+    /// </summary>
+    /// <param name="connectionString">The AFS connection string</param>
+    /// <returns>This builder instance for method chaining</returns>
+    IEmbeddedStorageConfigurationBuilder SetAfsConnectionString(string? connectionString);
+
+    /// <summary>
+    /// Enables or disables AFS caching.
+    /// </summary>
+    /// <param name="useCache">Whether to use caching in AFS operations</param>
+    /// <returns>This builder instance for method chaining</returns>
+    IEmbeddedStorageConfigurationBuilder SetAfsUseCache(bool useCache);
 
     /// <summary>
     /// Builds the configuration.
