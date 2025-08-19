@@ -93,7 +93,7 @@ public class EmbeddedStorageFoundation : IEmbeddedStorageFoundation
         }
 
         // Create storage connection (AFS or traditional)
-        var connection = configuration.UseAfs
+        IStorageConnection connection = configuration.UseAfs
             ? new AfsStorageConnection(configuration, typeHandlerRegistry)
             : new StorageConnection(configuration, typeHandlerRegistry);
 
