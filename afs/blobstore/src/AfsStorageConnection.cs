@@ -320,9 +320,11 @@ internal class AfsStorageStatistics : IStorageStatistics
         _configuration = configuration;
         _fileSystem = fileSystem;
         CreationTime = DateTime.UtcNow;
+        LastModificationTime = DateTime.UtcNow;
     }
 
     public DateTime CreationTime { get; }
+    public DateTime LastModificationTime { get; private set; }
     public long TotalObjectCount => GetObjectCount();
     public long TotalStorageSize => GetTotalStorageSize();
     public int DataFileCount => GetDataFileCount();
@@ -369,12 +371,5 @@ internal class AfsStorageStatistics : IStorageStatistics
         // This would calculate live data length in the AFS
         // For now, return the used storage size
         return GetUsedStorageSize();
-    }
-
-    private long GetUsedStorageSize()
-    {
-        // This would calculate the used storage size from the AFS
-        // For now, return a placeholder value
-        return 1024 * 1024; // 1MB
     }
 }
