@@ -11,7 +11,7 @@ namespace NebulaStore.Examples;
 /// </summary>
 public class MonitoringExample
 {
-    public static void Main(string[] args)
+    public static void RunExample()
     {
         Console.WriteLine("NebulaStore Monitoring Example");
         Console.WriteLine("==============================");
@@ -20,13 +20,13 @@ public class MonitoringExample
         // Run different monitoring examples
         BasicMonitoringExample();
         Console.WriteLine();
-        
+
         MultiChannelMonitoringExample();
         Console.WriteLine();
-        
+
         HousekeepingMonitoringExample();
         Console.WriteLine();
-        
+
         MonitoringManagerExample();
         Console.WriteLine();
 
@@ -250,52 +250,4 @@ public class MonitoringExample
     }
 }
 
-// Example domain classes
-[MessagePackObject(AllowPrivate = true)]
-public class Library
-{
-    [Key(0)]
-    public string Name { get; set; } = string.Empty;
 
-    [Key(1)]
-    public List<Book> Books { get; set; } = new();
-}
-
-[MessagePackObject(AllowPrivate = true)]
-public class Book
-{
-    [Key(0)]
-    public string Title { get; set; } = string.Empty;
-
-    [Key(1)]
-    public string Author { get; set; } = string.Empty;
-
-    [Key(2)]
-    public int Year { get; set; }
-}
-
-[MessagePackObject(AllowPrivate = true)]
-public class DataContainer
-{
-    [Key(0)]
-    public List<DataItem> Items { get; set; } = new();
-}
-
-[MessagePackObject(AllowPrivate = true)]
-public class DataItem
-{
-    [Key(0)]
-    public int Id { get; set; }
-
-    [Key(1)]
-    public string Name { get; set; } = string.Empty;
-
-    [Key(2)]
-    public double Value { get; set; }
-
-    [Key(3)]
-    public DateTime Timestamp { get; set; }
-
-    [Key(4)]
-    public List<string> Tags { get; set; } = new();
-}
