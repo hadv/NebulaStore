@@ -1,7 +1,5 @@
-using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
 using NebulaStore.Storage.EmbeddedConfiguration;
+using NebulaStore.Storage.Monitoring;
 
 namespace NebulaStore.Storage.Embedded;
 
@@ -114,4 +112,10 @@ public interface IEmbeddedStorageManager : IDisposable
     /// </summary>
     /// <returns>Storage statistics</returns>
     IStorageStatistics GetStatistics();
+
+    /// <summary>
+    /// Gets the monitoring manager for this storage instance.
+    /// </summary>
+    /// <returns>The monitoring manager</returns>
+    IStorageMonitoringManager GetMonitoringManager();
 }

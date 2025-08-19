@@ -18,7 +18,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Compile Include="..\SharedDomainClasses.cs" Link="SharedDomainClasses.cs" />
     <Compile Include="..\EmbeddedStorageExample.cs" Link="EmbeddedStorageExample.cs" />
+    <Compile Include="..\MonitoringExample.cs" Link="MonitoringExample.cs" />
   </ItemGroup>
 
 </Project>

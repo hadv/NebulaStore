@@ -1,9 +1,6 @@
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Threading.Tasks;
 using MessagePack;
 using NebulaStore.Storage.EmbeddedConfiguration;
+using NebulaStore.Storage.Monitoring;
 
 namespace NebulaStore.Storage.Embedded;
 
@@ -11,7 +8,7 @@ namespace NebulaStore.Storage.Embedded;
 /// Default implementation of the embedded storage manager.
 /// Manages object persistence and provides high-level storage operations.
 /// </summary>
-public class EmbeddedStorageManager : IEmbeddedStorageManager
+public class EmbeddedStorageManager : IEmbeddedStorageManager, IMonitorableStorageManager
 {
     private readonly IEmbeddedStorageConfiguration _configuration;
     private readonly IStorageConnection _connection;
@@ -20,6 +17,7 @@ public class EmbeddedStorageManager : IEmbeddedStorageManager
     private Type? _rootType;
     private bool _isRunning;
     private bool _isDisposed;
+    private IStorageMonitoringManager? _monitoringManager;
 
     internal EmbeddedStorageManager(
         IEmbeddedStorageConfiguration configuration,
@@ -222,6 +220,33 @@ public class EmbeddedStorageManager : IEmbeddedStorageManager
         return _connection.GetStatistics();
     }
 
+    public IStorageMonitoringManager GetMonitoringManager()
+    {
+        ThrowIfDisposed();
+
+        if (_monitoringManager == null)
+        {
+            _monitoringManager = CreateMonitoringManager();
+        }
+
+        return _monitoringManager;
+    }
+
+    // IMonitorableStorageManager implementation
+    void IMonitorableStorageManager.IssueFullFileCheck()
+    {
+        // For now, this is a placeholder as the current implementation
+        // doesn't have specific file check functionality
+        // This would be implemented when the full storage system is developed
+    }
+
+    void IMonitorableStorageManager.IssueFullCacheCheck()
+    {
+        // For now, this is a placeholder as the current implementation
+        // doesn't have specific cache check functionality
+        // This would be implemented when the full cache system is developed
+    }
+
     public void Dispose()
     {
         if (_isDisposed)
@@ -297,10 +322,47 @@ public class EmbeddedStorageManager : IEmbeddedStorageManager
     private static bool DefaultTypeEvaluator(Type type)
     {
         // Default logic for determining if a type is persistable
-        return !type.IsPrimitive && 
-               type != typeof(string) && 
+        return !type.IsPrimitive &&
+               type != typeof(string) &&
                !type.IsEnum &&
                type.IsClass;
+    }
+
+    private IStorageMonitoringManager CreateMonitoringManager()
+    {
+        // Create placeholder monitors for the current implementation
+        // These will be enhanced when the full storage system is implemented
+
+        // Create storage manager monitor
+        var storageManagerMonitor = new StorageManagerMonitor(this);
+
+        // Create placeholder object registry monitor
+        var objectRegistryMonitor = new ObjectRegistryMonitor(new PlaceholderObjectRegistry());
+
+        // Create entity cache monitors for each channel
+        var entityCacheMonitors = new List<EntityCacheMonitor>();
+        var housekeepingMonitors = new List<StorageChannelHousekeepingMonitor>();
+
+        for (int i = 0; i < _configuration.ChannelCount; i++)
+        {
+            // Create placeholder entity cache monitor
+            var entityCache = new PlaceholderEntityCache(i);
+            entityCacheMonitors.Add(new EntityCacheMonitor(entityCache));
+
+            // Create housekeeping monitor
+            housekeepingMonitors.Add(new StorageChannelHousekeepingMonitor(i));
+        }
+
+        // Create entity cache summary monitor
+        var entityCacheSummaryMonitor = new EntityCacheSummaryMonitor(entityCacheMonitors);
+
+        return new StorageMonitoringManager(
+            storageManagerMonitor,
+            entityCacheSummaryMonitor,
+            objectRegistryMonitor,
+            entityCacheMonitors,
+            housekeepingMonitors
+        );
     }
 
     private IEnumerable<object> TraverseGraphLazy(object obj, HashSet<object> visited)
@@ -356,7 +418,35 @@ internal class RootWrapper
 {
     [Key(0)]
     public object? Data { get; set; }
-    
+
     [Key(1)]
     public string TypeName { get; set; } = string.Empty;
+}
+
+/// <summary>
+/// Placeholder implementation of object registry for monitoring.
+/// This will be replaced when the actual object registry is implemented.
+/// </summary>
+internal class PlaceholderObjectRegistry : IPersistenceObjectRegistry
+{
+    public long Capacity => 1000000; // Default capacity
+    public long Size => 0; // No objects registered yet
+}
+
+/// <summary>
+/// Placeholder implementation of entity cache for monitoring.
+/// This will be replaced when the actual entity cache is implemented.
+/// </summary>
+internal class PlaceholderEntityCache : IStorageEntityCache
+{
+    public int ChannelIndex { get; }
+    public long LastSweepStart => DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+    public long LastSweepEnd => DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+    public long EntityCount => 0; // No entities cached yet
+    public long CacheSize => 0; // No cache size yet
+
+    public PlaceholderEntityCache(int channelIndex)
+    {
+        ChannelIndex = channelIndex;
+    }
 }
