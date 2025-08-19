@@ -15,6 +15,7 @@ This project ports the following Eclipse Store modules from the [original Java r
 - **storage/embedded** - Core embedded storage engine
 - **storage/embedded-configuration** - Configuration system
 - **storage/storage** - Core storage types and interfaces
+- **afs/blobstore** - Abstract File System blob storage backend
 
 The module structure exactly mirrors the Eclipse Store Java repository for familiarity and consistency.
 
@@ -25,13 +26,15 @@ The module structure exactly mirrors the Eclipse Store Java repository for famil
 | `storage/embedded` | `storage/embedded/` | ✅ Complete |
 | `storage/embedded-configuration` | `storage/embedded-configuration/` | ✅ Complete |
 | `storage/storage` | `storage/storage/` | ✅ Complete |
+| `afs/blobstore` | `afs/blobstore/` | ✅ Complete |
 
 ## Project Status
 
-✅ **Core Modules Ported** - Successfully ported 3 core Eclipse Store modules to .NET Core:
+✅ **Core Modules Ported** - Successfully ported 4 core Eclipse Store modules to .NET Core:
 - ✅ `storage/embedded` - Complete with embedded storage engine
 - ✅ `storage/embedded-configuration` - Complete with configuration system
 - ✅ `storage/storage` - Complete with core storage types and interfaces
+- ✅ `afs/blobstore` - Complete with Abstract File System blob storage backend
 
 🚧 **In Progress** - Additional Eclipse Store modules and advanced features
 
@@ -42,6 +45,7 @@ This project ports code from the [Eclipse Store Java repository](https://github.
 - **Java Source**: [`storage/embedded`](https://github.com/eclipse-store/store/tree/main/storage/embedded) → **C# Port**: `storage/embedded/`
 - **Java Source**: [`storage/embedded-configuration`](https://github.com/eclipse-store/store/tree/main/storage/embedded-configuration) → **C# Port**: `storage/embedded-configuration/`
 - **Java Source**: [`storage/storage`](https://github.com/eclipse-store/store/tree/main/storage/storage) → **C# Port**: `storage/storage/`
+- **Java Source**: [`afs/blobstore`](https://github.com/eclipse-store/store/tree/main/afs/blobstore) → **C# Port**: `afs/blobstore/`
 
 The .NET implementation maintains the same module structure, interfaces, and design patterns as the original Eclipse Store Java code while adapting to .NET conventions and leveraging C# language features.
 
@@ -77,6 +81,12 @@ NebulaStore follows the Eclipse Store module structure:
   - **storage/** - Core storage types module (mirrors Eclipse Store)
     - **src/types/** - Storage interfaces and implementations
     - **NebulaStore.Storage.csproj** - Project file
+- **afs/** - Abstract File System module (mirrors Eclipse Store)
+  - **blobstore/** - Blob storage backend implementation
+    - **src/** - Core AFS blobstore implementation
+    - **test/** - Unit tests for blobstore functionality
+    - **NebulaStore.Afs.Blobstore.csproj** - Project file
+  - **tests/** - Integration tests for AFS functionality
 - Dependencies: MessagePack for binary serialization
 
 ### Key Components
