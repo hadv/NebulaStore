@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using NebulaStore.Storage;
 using NebulaStore.Storage.EmbeddedConfiguration;
 
@@ -70,6 +71,30 @@ public class AfsStorageConnection : IStorageConnection
         // AFS-specific time-budgeted garbage collection logic would go here
         // For now, return true indicating completion
         return true;
+    }
+
+    /// <summary>
+    /// Creates a backup of the storage data.
+    /// </summary>
+    /// <param name="backupDirectory">The backup directory path</param>
+    /// <returns>A task representing the backup operation</returns>
+    public async Task CreateBackupAsync(string backupDirectory)
+    {
+        ThrowIfDisposed();
+
+        if (string.IsNullOrEmpty(backupDirectory))
+            throw new ArgumentException("Backup directory cannot be null or empty", nameof(backupDirectory));
+
+        // AFS-specific backup logic would go here
+        // For now, this is a simple placeholder implementation
+        await Task.Run(() =>
+        {
+            // Create backup directory if it doesn't exist
+            System.IO.Directory.CreateDirectory(backupDirectory);
+
+            // In a real implementation, this would copy all blob files
+            // to the backup directory with proper structure preservation
+        });
     }
 
     /// <summary>
@@ -240,6 +265,29 @@ internal class AfsStorer : IStorer
         return committedCount;
     }
 
+    public IStorer Skip(object obj)
+    {
+        ThrowIfDisposed();
+
+        if (obj != null)
+        {
+            _storedObjects.Add(obj);
+        }
+        return this;
+    }
+
+    public long Ensure(object obj)
+    {
+        ThrowIfDisposed();
+
+        if (obj == null)
+            throw new ArgumentNullException(nameof(obj));
+
+        // Remove from stored objects to force re-storage
+        _storedObjects.Remove(obj);
+        return Store(obj);
+    }
+
     private void ThrowIfDisposed()
     {
         if (_disposed)
@@ -275,11 +323,11 @@ internal class AfsStorageStatistics : IStorageStatistics
     }
 
     public DateTime CreationTime { get; }
+    public long TotalObjectCount => GetObjectCount();
     public long TotalStorageSize => GetTotalStorageSize();
-    public long UsedStorageSize => GetUsedStorageSize();
-    public long AvailableStorageSize => TotalStorageSize - UsedStorageSize;
-    public int ObjectCount => GetObjectCount();
-    public int TypeCount => GetTypeCount();
+    public int DataFileCount => GetDataFileCount();
+    public int TransactionFileCount => GetTransactionFileCount();
+    public long LiveDataLength => GetLiveDataLength();
 
     private long GetTotalStorageSize()
     {
@@ -302,10 +350,31 @@ internal class AfsStorageStatistics : IStorageStatistics
         return 0;
     }
 
-    private int GetTypeCount()
+    private int GetDataFileCount()
     {
-        // This would count types in the AFS
+        // This would count data files in the AFS
+        // For now, return a placeholder value
+        return 1;
+    }
+
+    private int GetTransactionFileCount()
+    {
+        // This would count transaction files in the AFS
         // For now, return a placeholder value
         return 0;
+    }
+
+    private long GetLiveDataLength()
+    {
+        // This would calculate live data length in the AFS
+        // For now, return the used storage size
+        return GetUsedStorageSize();
+    }
+
+    private long GetUsedStorageSize()
+    {
+        // This would calculate the used storage size from the AFS
+        // For now, return a placeholder value
+        return 1024 * 1024; // 1MB
     }
 }
