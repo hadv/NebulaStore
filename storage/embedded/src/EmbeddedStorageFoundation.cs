@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using NebulaStore.Storage.EmbeddedConfiguration;
-using NebulaStore.Afs;
+using NebulaStore.Afs.Blobstore;
 
 namespace NebulaStore.Storage.Embedded;
 

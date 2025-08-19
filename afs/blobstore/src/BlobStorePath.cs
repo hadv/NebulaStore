@@ -1,6 +1,6 @@
 using System;
 using System.Linq;
-using NebulaStore.Afs.Types;
+using NebulaStore.Afs.Blobstore.Types;
 
 namespace NebulaStore.Afs.Blobstore;
 

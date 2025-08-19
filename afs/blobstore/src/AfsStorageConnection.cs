@@ -1,8 +1,7 @@
 using System;
-using NebulaStore.Afs.Blobstore;
 using NebulaStore.Storage.EmbeddedConfiguration;
 
-namespace NebulaStore.Afs;
+namespace NebulaStore.Afs.Blobstore;
 
 /// <summary>
 /// Storage connection that uses Abstract File System (AFS) for storage operations.

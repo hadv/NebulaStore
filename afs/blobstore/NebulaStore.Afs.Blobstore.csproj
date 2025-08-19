@@ -19,11 +19,11 @@
     <Copyright>Copyright © NebulaStore 2025</Copyright>
     <AssemblyVersion>1.0.0.0</AssemblyVersion>
     <FileVersion>1.0.0.0</FileVersion>
-    <RootNamespace>NebulaStore.Afs</RootNamespace>
+    <RootNamespace>NebulaStore.Afs.Blobstore</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="../storage/storage/NebulaStore.Storage.csproj" />
+    <ProjectReference Include="../../storage/storage/NebulaStore.Storage.csproj" />
   </ItemGroup>
 
 </Project>

@@ -1,9 +1,9 @@
 using FluentAssertions;
 using NebulaStore.Afs.Blobstore;
-using NebulaStore.Afs.Types;
+using NebulaStore.Afs.Blobstore.Types;
 using Xunit;
 
-namespace NebulaStore.Afs.Tests;
+namespace NebulaStore.Afs.Blobstore.Tests;
 
 /// <summary>
 /// Tests for BlobStorePath functionality.

@@ -1,6 +1,6 @@
 using System;
 
-namespace NebulaStore.Afs.Types;
+namespace NebulaStore.Afs.Blobstore.Types;
 
 /// <summary>
 /// Interface for abstract file system paths.

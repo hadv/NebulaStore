@@ -6,7 +6,7 @@ using FluentAssertions;
 using NebulaStore.Afs.Blobstore;
 using Xunit;
 
-namespace NebulaStore.Afs.Tests;
+namespace NebulaStore.Afs.Blobstore.Tests;
 
 /// <summary>
 /// Tests for LocalBlobStoreConnector functionality.

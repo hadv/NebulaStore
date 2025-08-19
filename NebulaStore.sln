@@ -15,11 +15,11 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NebulaStore.Storage.Embedde
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NebulaStore.Storage", "storage\storage\NebulaStore.Storage.csproj", "{C2D3E4F5-G6H7-8901-IJKL-MN2345678901}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NebulaStore.Storage.Afs", "afs\NebulaStore.Storage.Afs.csproj", "{E4F5G6H7-I8J9-0123-KLMN-OP4567890123}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NebulaStore.Afs.Blobstore", "afs\blobstore\NebulaStore.Afs.Blobstore.csproj", "{E4F5G6H7-I8J9-0123-KLMN-OP4567890123}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NebulaStore.Storage.Embedded.Tests", "storage\embedded\tests\NebulaStore.Storage.Embedded.Tests.csproj", "{2099EB97-32CB-4403-BF84-AD7F965FA520}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NebulaStore.Afs.Tests", "afs\tests\NebulaStore.Storage.Afs.Tests.csproj", "{F5G6H7I8-J9K0-1234-LMNO-PQ5678901234}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NebulaStore.Afs.Blobstore.Tests", "afs\blobstore\test\NebulaStore.Afs.Blobstore.Tests.csproj", "{F5G6H7I8-J9K0-1234-LMNO-PQ5678901234}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NebulaStore.Examples.ConsoleApp", "examples\ConsoleApp\NebulaStore.Examples.ConsoleApp.csproj", "{D3E4F5G6-H7I8-9012-JKLM-NO3456789012}"
 EndProject
