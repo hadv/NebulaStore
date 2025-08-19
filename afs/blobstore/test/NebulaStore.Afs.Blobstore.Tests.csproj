@@ -7,6 +7,7 @@
     <LangVersion>latest</LangVersion>
     <IsPackable>false</IsPackable>
     <IsTestProject>true</IsTestProject>
+    <RootNamespace>NebulaStore.Afs.Blobstore.Tests</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>
@@ -25,7 +26,6 @@
 
   <ItemGroup>
     <ProjectReference Include="../NebulaStore.Afs.Blobstore.csproj" />
-    <RootNamespace>NebulaStore.Afs.Blobstore.Tests</RootNamespace>
   </ItemGroup>
 
 </Project>
