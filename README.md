@@ -117,6 +117,9 @@ dotnet test
 # Run tests with detailed output
 dotnet test --verbosity normal
 
+# Run AFS-specific tests
+dotnet test afs/tests/
+
 # Run specific test project
 dotnet test tests/NebulaStore.Core.Tests/
 ```
