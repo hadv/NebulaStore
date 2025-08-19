@@ -222,7 +222,6 @@ public static class EmbeddedStorage
     {
         var config = configurationBuilder
             .SetUseAfs(true)
-            .SetAfsStorageType("blobstore")
             .Build();
 
         return Foundation(config).Start();

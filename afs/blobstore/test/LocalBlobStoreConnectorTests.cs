@@ -326,7 +326,7 @@ public class LocalBlobStoreConnectorTests : IDisposable
 
         // Assert
         visitedDirectories.Should().Contain("subfolder");
-        visitedFiles.Should().Contain("file");
+        visitedFiles.Should().Contain("file.txt");
     }
 
     public void Dispose()

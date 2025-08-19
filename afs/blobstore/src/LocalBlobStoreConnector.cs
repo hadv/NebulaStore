@@ -58,13 +58,15 @@ public class LocalBlobStoreConnector : BlobStoreConnectorBase
     /// <returns>Enumerable of blob file paths</returns>
     private IEnumerable<string> GetBlobFiles(BlobStorePath file)
     {
-        var directory = Path.GetDirectoryName(ToLocalPath(file));
+        var localPath = ToLocalPath(file);
+        var directory = Path.GetDirectoryName(localPath);
         if (directory == null || !Directory.Exists(directory))
             return Enumerable.Empty<string>();
 
-        var prefix = ToBlobKeyPrefix(file);
+        var fileName = Path.GetFileName(localPath);
+        var prefix = $"{fileName}{NumberSuffixSeparator}";
         var pattern = $"{prefix}*";
-        
+
         try
         {
             return Directory.GetFiles(directory, pattern)
@@ -360,9 +362,10 @@ public class LocalBlobStoreConnector : BlobStoreConnectorBase
         }
 
         var blobNumber = GetNextBlobNumber(file);
-        var blobFileName = ToBlobKey(file, blobNumber);
         var localPath = ToLocalPath(file);
         var directory = Path.GetDirectoryName(localPath);
+        var fileName = Path.GetFileName(localPath);
+        var blobFileName = $"{fileName}{NumberSuffixSeparator}{blobNumber}";
         var blobFilePath = Path.Combine(directory!, blobFileName);
 
         long totalWritten = 0;

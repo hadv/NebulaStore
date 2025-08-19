@@ -1,6 +1,8 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using FluentAssertions;
+using MessagePack;
 using NebulaStore.Storage.Embedded;
 using NebulaStore.Storage.EmbeddedConfiguration;
 using Xunit;
@@ -240,22 +242,36 @@ public class AfsIntegrationTests : IDisposable
     }
 
     // Test data classes
+    [MessagePackObject]
     public class TestDataClass
     {
+        [Key(0)]
         public string Name { get; set; } = string.Empty;
+
+        [Key(1)]
         public int Value { get; set; }
     }
 
+    [MessagePackObject]
     public class Library
     {
+        [Key(0)]
         public string Name { get; set; } = string.Empty;
+
+        [Key(1)]
         public List<Book> Books { get; set; } = new();
     }
 
+    [MessagePackObject]
     public class Book
     {
+        [Key(0)]
         public string Title { get; set; } = string.Empty;
+
+        [Key(1)]
         public string Author { get; set; } = string.Empty;
+
+        [Key(2)]
         public int Year { get; set; }
     }
 }

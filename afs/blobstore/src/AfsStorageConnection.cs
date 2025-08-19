@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using MessagePack;
 using NebulaStore.Storage;
 using NebulaStore.Storage.EmbeddedConfiguration;
 
@@ -115,13 +117,78 @@ public class AfsStorageConnection : IStorageConnection
     public long GetOrAssignObjectId(object obj)
     {
         ThrowIfDisposed();
-        
+
         if (obj == null)
             throw new ArgumentNullException(nameof(obj));
 
         // Simple hash-based ID assignment for now
         // In a real implementation, this would use a proper ID management system
         return obj.GetHashCode();
+    }
+
+    /// <summary>
+    /// Saves the root object to AFS storage.
+    /// </summary>
+    /// <param name="root">The root object to save</param>
+    public void SaveRoot(object root)
+    {
+        ThrowIfDisposed();
+
+        if (root == null)
+            return;
+
+        try
+        {
+            var rootPath = BlobStorePath.New("root.msgpack");
+            var wrapper = new RootWrapper
+            {
+                TypeName = root.GetType().AssemblyQualifiedName!,
+                Data = root
+            };
+
+            var data = MessagePackSerializer.Serialize(wrapper);
+            _fileSystem.IoHandler.WriteData(rootPath, data);
+        }
+        catch
+        {
+            // Ignore errors during root saving
+        }
+    }
+
+    /// <summary>
+    /// Loads the root object from AFS storage.
+    /// </summary>
+    /// <param name="rootType">The expected root type</param>
+    /// <returns>The loaded root object, or null if not found</returns>
+    public object? LoadRoot(Type? rootType)
+    {
+        ThrowIfDisposed();
+
+        try
+        {
+            var rootPath = BlobStorePath.New("root.msgpack");
+            if (!_fileSystem.IoHandler.FileExists(rootPath))
+                return null;
+
+            var data = _fileSystem.IoHandler.ReadData(rootPath, 0, -1);
+            if (data.Length == 0)
+                return null;
+
+            var wrapper = MessagePackSerializer.Deserialize<RootWrapper>(data);
+            var actualType = Type.GetType(wrapper.TypeName);
+
+            if (actualType != null && wrapper.Data != null)
+            {
+                var dataBytes = MessagePackSerializer.Serialize(wrapper.Data);
+                return MessagePackSerializer.Deserialize(actualType, dataBytes);
+            }
+        }
+        catch
+        {
+            // Ignore errors during root loading
+        }
+
+        return null;
     }
 
     /// <summary>
@@ -242,17 +309,23 @@ internal class AfsStorer : IStorer
                 
                 // Get type handler for serialization
                 var typeHandler = _typeHandlerRegistry.GetTypeHandler(obj.GetType());
+
+                byte[] data;
                 if (typeHandler != null)
                 {
-                    // Serialize object (simplified - would use proper serialization)
-                    var data = System.Text.Json.JsonSerializer.SerializeToUtf8Bytes(obj);
-                    
-                    // Write to AFS
-                    _fileSystem.IoHandler.WriteData(path, data);
-                    
-                    _storedObjects.Add(obj);
-                    committedCount++;
+                    data = typeHandler.Serialize(obj);
                 }
+                else
+                {
+                    // Fallback to MessagePack
+                    data = MessagePack.MessagePackSerializer.Serialize(obj);
+                }
+
+                // Write to AFS
+                _fileSystem.IoHandler.WriteData(path, data);
+
+                _storedObjects.Add(obj);
+                committedCount++;
             }
             catch
             {
@@ -372,4 +445,17 @@ internal class AfsStorageStatistics : IStorageStatistics
         // For now, return the used storage size
         return GetUsedStorageSize();
     }
+}
+
+/// <summary>
+/// Wrapper class for root object serialization.
+/// </summary>
+[MessagePackObject(AllowPrivate = true)]
+internal class RootWrapper
+{
+    [Key(0)]
+    public object? Data { get; set; }
+
+    [Key(1)]
+    public string TypeName { get; set; } = string.Empty;
 }
