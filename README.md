@@ -56,6 +56,9 @@ The .NET implementation maintains the same module structure, interfaces, and des
 - ✅ Type handler system for custom serialization
 - ✅ Lazy query traversal
 - ✅ Backup and restore capabilities
+- ✅ Comprehensive monitoring and metrics system
+- ✅ Real-time storage statistics and performance monitoring
+- ✅ Memory-safe monitoring with WeakReference pattern
 - 🚧 Thread-safe operations (in progress)
 - 🚧 ACID compliance (in progress)
 
@@ -165,3 +168,43 @@ storer.Commit();
 ```csharp
 await storage.CreateBackupAsync("backup-directory");
 ```
+
+#### Monitoring & Metrics
+```csharp
+// Access comprehensive monitoring
+var monitoringManager = storage.GetMonitoringManager();
+
+// Storage statistics
+var stats = monitoringManager.StorageManagerMonitor.StorageStatistics;
+Console.WriteLine($"Usage Ratio: {stats.UsageRatio:P2}");
+
+// Entity cache metrics
+var cacheMonitor = monitoringManager.EntityCacheSummaryMonitor;
+Console.WriteLine($"Cached Entities: {cacheMonitor.EntityCount}");
+
+// Trigger housekeeping operations
+monitoringManager.StorageManagerMonitor.IssueFullGarbageCollection();
+```
+
+## Examples
+
+The `examples/` directory contains comprehensive examples demonstrating various NebulaStore features:
+
+- **`EmbeddedStorageExample.cs`** - Basic storage operations, configuration, and batch processing
+- **`MonitoringExample.cs`** - Complete monitoring and metrics demonstration including:
+  - Basic monitoring access and storage statistics
+  - Multi-channel monitoring with per-channel metrics
+  - Housekeeping operations and monitoring
+  - Monitoring manager usage and monitor discovery
+
+Run the examples:
+```bash
+cd examples/ConsoleApp
+dotnet run
+```
+
+## Documentation
+
+- **[Monitoring Documentation](storage/storage/src/monitoring/README.md)** - Comprehensive guide to the monitoring system
+- **[Configuration Guide](storage/embedded-configuration/README.md)** - Storage configuration options
+- **[API Documentation](docs/)** - Generated API documentation (coming soon)
