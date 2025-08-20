@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using NebulaStore.GigaMap.Performance;
 
 namespace NebulaStore.GigaMap;
 
@@ -150,7 +151,13 @@ internal class DefaultGigaQuery<T> : IGigaQuery<T> where T : class
     public IReadOnlyList<T> Execute()
     {
         var entityIds = GetMatchingEntityIds();
-        var results = new List<T>();
+
+        // Pre-calculate result size for better memory allocation
+        var totalCount = entityIds.Count();
+        var estimatedResultSize = _limit > 0 ? Math.Min(_limit, totalCount - _offset) : totalCount - _offset;
+        estimatedResultSize = Math.Max(0, estimatedResultSize);
+
+        var results = new List<T>(estimatedResultSize);
 
         var skipped = 0;
         var taken = 0;
