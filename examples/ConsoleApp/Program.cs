@@ -4,7 +4,7 @@ namespace NebulaStore.Examples.ConsoleApp;
 
 class Program
 {
-    static void Main(string[] args)
+    static async Task Main(string[] args)
     {
         Console.WriteLine("NebulaStore Examples");
         Console.WriteLine("===================");
@@ -15,10 +15,11 @@ class Program
             Console.WriteLine("Choose an example to run:");
             Console.WriteLine("1. Embedded Storage Example");
             Console.WriteLine("2. Monitoring Example");
-            Console.WriteLine("3. Run Both Examples");
+            Console.WriteLine("3. GigaMap Integration Example");
+            Console.WriteLine("4. Run All Examples");
             Console.WriteLine("0. Exit");
             Console.WriteLine();
-            Console.Write("Enter your choice (0-3): ");
+            Console.Write("Enter your choice (0-4): ");
 
             var input = Console.ReadLine();
             Console.WriteLine();
@@ -40,8 +41,14 @@ class Program
                         break;
 
                     case "3":
-                        Console.WriteLine("Running Both Examples...");
-                        Console.WriteLine("========================");
+                        Console.WriteLine("Running GigaMap Integration Example...");
+                        Console.WriteLine("======================================");
+                        await GigaMapExample.RunAsync();
+                        break;
+
+                    case "4":
+                        Console.WriteLine("Running All Examples...");
+                        Console.WriteLine("=======================");
                         Console.WriteLine();
 
                         Console.WriteLine("1. Embedded Storage Example:");
@@ -52,6 +59,11 @@ class Program
                         Console.WriteLine("2. Monitoring Example:");
                         Console.WriteLine("======================");
                         MonitoringExample.RunExample();
+
+                        Console.WriteLine();
+                        Console.WriteLine("3. GigaMap Integration Example:");
+                        Console.WriteLine("===============================");
+                        await GigaMapExample.RunAsync();
                         break;
 
                     case "0":
@@ -59,7 +71,7 @@ class Program
                         return;
 
                     default:
-                        Console.WriteLine("Invalid choice. Please enter 0, 1, 2, or 3.");
+                        Console.WriteLine("Invalid choice. Please enter 0, 1, 2, 3, or 4.");
                         continue;
                 }
             }

@@ -31,6 +31,12 @@ public class EmbeddedStorageConfiguration : IEmbeddedStorageConfiguration
     public string? AfsConnectionString { get; init; }
     public bool AfsUseCache { get; init; } = true;
 
+    // ========== GigaMap Configuration ==========
+    public bool EnableGigaMap { get; init; } = true;
+    public int DefaultGigaMapSegmentSize { get; init; } = 16; // 2^16 = 65536 entities per segment
+    public bool UseOffHeapGigaMapIndices { get; init; } = false; // Start with in-heap for simplicity
+    public string GigaMapIndexDirectory { get; init; } = "gigamap-indices";
+
     /// <summary>
     /// Creates a new configuration builder.
     /// </summary>
@@ -67,6 +73,12 @@ public class EmbeddedStorageConfiguration : IEmbeddedStorageConfiguration
         private string _afsStorageType = "blobstore";
         private string? _afsConnectionString;
         private bool _afsUseCache = true;
+
+        // GigaMap builder fields
+        private bool _enableGigaMap = true;
+        private int _defaultGigaMapSegmentSize = 16;
+        private bool _useOffHeapGigaMapIndices = false;
+        private string _gigaMapIndexDirectory = "gigamap-indices";
 
         public IEmbeddedStorageConfigurationBuilder SetStorageDirectory(string directory)
         {
@@ -160,6 +172,34 @@ public class EmbeddedStorageConfiguration : IEmbeddedStorageConfiguration
             return this;
         }
 
+        // ========== GigaMap Builder Methods ==========
+
+        public IEmbeddedStorageConfigurationBuilder SetGigaMapEnabled(bool enabled)
+        {
+            _enableGigaMap = enabled;
+            return this;
+        }
+
+        public IEmbeddedStorageConfigurationBuilder SetGigaMapDefaultSegmentSize(int segmentSize)
+        {
+            if (segmentSize <= 0)
+                throw new ArgumentException("Segment size must be positive", nameof(segmentSize));
+            _defaultGigaMapSegmentSize = segmentSize;
+            return this;
+        }
+
+        public IEmbeddedStorageConfigurationBuilder SetGigaMapUseOffHeapIndices(bool useOffHeap)
+        {
+            _useOffHeapGigaMapIndices = useOffHeap;
+            return this;
+        }
+
+        public IEmbeddedStorageConfigurationBuilder SetGigaMapIndexDirectory(string directory)
+        {
+            _gigaMapIndexDirectory = directory ?? throw new ArgumentNullException(nameof(directory));
+            return this;
+        }
+
         public IEmbeddedStorageConfiguration Build()
         {
             return new EmbeddedStorageConfiguration
@@ -177,7 +217,11 @@ public class EmbeddedStorageConfiguration : IEmbeddedStorageConfiguration
                 UseAfs = _useAfs,
                 AfsStorageType = _afsStorageType,
                 AfsConnectionString = _afsConnectionString,
-                AfsUseCache = _afsUseCache
+                AfsUseCache = _afsUseCache,
+                EnableGigaMap = _enableGigaMap,
+                DefaultGigaMapSegmentSize = _defaultGigaMapSegmentSize,
+                UseOffHeapGigaMapIndices = _useOffHeapGigaMapIndices,
+                GigaMapIndexDirectory = _gigaMapIndexDirectory
             };
         }
     }

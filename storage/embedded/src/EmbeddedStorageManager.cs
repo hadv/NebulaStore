@@ -1,6 +1,7 @@
 using MessagePack;
 using NebulaStore.Storage.EmbeddedConfiguration;
 using NebulaStore.Storage.Monitoring;
+using NebulaStore.GigaMap;
 
 namespace NebulaStore.Storage.Embedded;
 
@@ -18,6 +19,10 @@ public class EmbeddedStorageManager : IEmbeddedStorageManager, IMonitorableStora
     private bool _isRunning;
     private bool _isDisposed;
     private IStorageMonitoringManager? _monitoringManager;
+
+    // GigaMap management
+    private readonly Dictionary<Type, object> _gigaMaps = new();
+    private readonly object _gigaMapLock = new();
 
     internal EmbeddedStorageManager(
         IEmbeddedStorageConfiguration configuration,
@@ -431,6 +436,205 @@ public class EmbeddedStorageManager : IEmbeddedStorageManager, IMonitorableStora
                     yield return child;
             }
         }
+    }
+
+    // ========== GigaMap Implementation ==========
+
+    public IGigaMapBuilder<T> CreateGigaMap<T>() where T : class
+    {
+        ThrowIfDisposed();
+        return new StorageAwareGigaMapBuilder<T>(_connection);
+    }
+
+    public IGigaMap<T>? GetGigaMap<T>() where T : class
+    {
+        ThrowIfDisposed();
+
+        lock (_gigaMapLock)
+        {
+            return _gigaMaps.TryGetValue(typeof(T), out var gigaMap)
+                ? (IGigaMap<T>)gigaMap
+                : null;
+        }
+    }
+
+    public void RegisterGigaMap<T>(IGigaMap<T> gigaMap) where T : class
+    {
+        ThrowIfDisposed();
+
+        if (gigaMap == null)
+            throw new ArgumentNullException(nameof(gigaMap));
+
+        lock (_gigaMapLock)
+        {
+            _gigaMaps[typeof(T)] = gigaMap;
+        }
+    }
+
+    public async Task StoreGigaMapsAsync()
+    {
+        ThrowIfDisposed();
+
+        lock (_gigaMapLock)
+        {
+            foreach (var kvp in _gigaMaps)
+            {
+                if (kvp.Value is IGigaMap<object> gigaMap)
+                {
+                    // Store the GigaMap using the existing storage system
+                    // For now, we'll use the basic Store method
+                    // In a full implementation, this would be more sophisticated
+                    Store(gigaMap);
+                }
+            }
+        }
+
+        await Task.CompletedTask;
+    }
+}
+
+/// <summary>
+/// A GigaMap builder that automatically sets the storage connection.
+/// </summary>
+/// <typeparam name="T">The entity type</typeparam>
+internal class StorageAwareGigaMapBuilder<T> : IGigaMapBuilder<T> where T : class
+{
+    private readonly IStorageConnection _storageConnection;
+    private readonly GigaMapBuilder<T> _innerBuilder;
+
+    public StorageAwareGigaMapBuilder(IStorageConnection storageConnection)
+    {
+        _storageConnection = storageConnection ?? throw new ArgumentNullException(nameof(storageConnection));
+        _innerBuilder = new GigaMapBuilder<T>();
+    }
+
+    public IGigaMapBuilder<T> WithBitmapIndex<TKey>(IIndexer<T, TKey> indexer)
+    {
+        _innerBuilder.WithBitmapIndex(indexer);
+        return this;
+    }
+
+    public IGigaMapBuilder<T> WithBitmapIndices(IEnumerable<IIndexer<T, object>> indexers)
+    {
+        _innerBuilder.WithBitmapIndices(indexers);
+        return this;
+    }
+
+    public IGigaMapBuilder<T> WithBitmapIndices(params IIndexer<T, object>[] indexers)
+    {
+        _innerBuilder.WithBitmapIndices(indexers);
+        return this;
+    }
+
+    public IGigaMapBuilder<T> WithBitmapIdentityIndex<TKey>(IIndexer<T, TKey> indexer)
+    {
+        _innerBuilder.WithBitmapIdentityIndex(indexer);
+        return this;
+    }
+
+    public IGigaMapBuilder<T> WithBitmapIdentityIndices(IEnumerable<IIndexer<T, object>> indexers)
+    {
+        _innerBuilder.WithBitmapIdentityIndices(indexers);
+        return this;
+    }
+
+    public IGigaMapBuilder<T> WithBitmapIdentityIndices(params IIndexer<T, object>[] indexers)
+    {
+        _innerBuilder.WithBitmapIdentityIndices(indexers);
+        return this;
+    }
+
+    public IGigaMapBuilder<T> WithBitmapUniqueIndex<TKey>(IIndexer<T, TKey> indexer)
+    {
+        _innerBuilder.WithBitmapUniqueIndex(indexer);
+        return this;
+    }
+
+    public IGigaMapBuilder<T> WithBitmapUniqueIndices(IEnumerable<IIndexer<T, object>> indexers)
+    {
+        _innerBuilder.WithBitmapUniqueIndices(indexers);
+        return this;
+    }
+
+    public IGigaMapBuilder<T> WithBitmapUniqueIndices(params IIndexer<T, object>[] indexers)
+    {
+        _innerBuilder.WithBitmapUniqueIndices(indexers);
+        return this;
+    }
+
+    public IGigaMapBuilder<T> WithCustomConstraint(ICustomConstraint<T> constraint)
+    {
+        _innerBuilder.WithCustomConstraint(constraint);
+        return this;
+    }
+
+    public IGigaMapBuilder<T> WithCustomConstraints(IEnumerable<ICustomConstraint<T>> constraints)
+    {
+        _innerBuilder.WithCustomConstraints(constraints);
+        return this;
+    }
+
+    public IGigaMapBuilder<T> WithCustomConstraints(params ICustomConstraint<T>[] constraints)
+    {
+        _innerBuilder.WithCustomConstraints(constraints);
+        return this;
+    }
+
+    public IGigaMapBuilder<T> WithEqualityComparer(IEqualityComparer<T> equalityComparer)
+    {
+        _innerBuilder.WithEqualityComparer(equalityComparer);
+        return this;
+    }
+
+    public IGigaMapBuilder<T> WithValueEquality()
+    {
+        _innerBuilder.WithValueEquality();
+        return this;
+    }
+
+    public IGigaMapBuilder<T> WithIdentityEquality()
+    {
+        _innerBuilder.WithIdentityEquality();
+        return this;
+    }
+
+    public IGigaMapBuilder<T> WithSegmentSize(int segmentSizeExponent)
+    {
+        _innerBuilder.WithSegmentSize(segmentSizeExponent);
+        return this;
+    }
+
+    public IGigaMapBuilder<T> WithSegmentSize(int lowLevelLengthExponent, int midLevelLengthExponent)
+    {
+        _innerBuilder.WithSegmentSize(lowLevelLengthExponent, midLevelLengthExponent);
+        return this;
+    }
+
+    public IGigaMapBuilder<T> WithSegmentSize(int lowLevelLengthExponent, int midLevelLengthExponent, int highLevelMaximumLengthExponent)
+    {
+        _innerBuilder.WithSegmentSize(lowLevelLengthExponent, midLevelLengthExponent, highLevelMaximumLengthExponent);
+        return this;
+    }
+
+    public IGigaMapBuilder<T> WithSegmentSize(int lowLevelLengthExponent, int midLevelLengthExponent, int highLevelMinimumLengthExponent, int highLevelMaximumLengthExponent)
+    {
+        _innerBuilder.WithSegmentSize(lowLevelLengthExponent, midLevelLengthExponent, highLevelMinimumLengthExponent, highLevelMaximumLengthExponent);
+        return this;
+    }
+
+
+
+    public IGigaMap<T> Build()
+    {
+        var gigaMap = _innerBuilder.Build();
+
+        // Set the storage connection on the built GigaMap
+        if (gigaMap is DefaultGigaMap<T> defaultGigaMap)
+        {
+            defaultGigaMap.SetStorageConnection(_storageConnection);
+        }
+
+        return gigaMap;
     }
 }
 

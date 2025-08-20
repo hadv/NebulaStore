@@ -1,5 +1,6 @@
 using NebulaStore.Storage.EmbeddedConfiguration;
 using NebulaStore.Storage.Monitoring;
+using NebulaStore.GigaMap;
 
 namespace NebulaStore.Storage.Embedded;
 
@@ -118,4 +119,33 @@ public interface IEmbeddedStorageManager : IDisposable
     /// </summary>
     /// <returns>The monitoring manager</returns>
     IStorageMonitoringManager GetMonitoringManager();
+
+    // ========== GigaMap Integration ==========
+
+    /// <summary>
+    /// Creates a new GigaMap builder for the specified entity type.
+    /// </summary>
+    /// <typeparam name="T">The entity type</typeparam>
+    /// <returns>A GigaMap builder instance</returns>
+    IGigaMapBuilder<T> CreateGigaMap<T>() where T : class;
+
+    /// <summary>
+    /// Gets an existing GigaMap for the specified entity type.
+    /// </summary>
+    /// <typeparam name="T">The entity type</typeparam>
+    /// <returns>The GigaMap instance, or null if not found</returns>
+    IGigaMap<T>? GetGigaMap<T>() where T : class;
+
+    /// <summary>
+    /// Registers a GigaMap instance with the storage manager for persistence.
+    /// </summary>
+    /// <typeparam name="T">The entity type</typeparam>
+    /// <param name="gigaMap">The GigaMap to register</param>
+    void RegisterGigaMap<T>(IGigaMap<T> gigaMap) where T : class;
+
+    /// <summary>
+    /// Stores all registered GigaMaps to persistent storage.
+    /// </summary>
+    /// <returns>A task representing the asynchronous operation</returns>
+    Task StoreGigaMapsAsync();
 }

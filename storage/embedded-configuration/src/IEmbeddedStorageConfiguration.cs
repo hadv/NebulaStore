@@ -117,6 +117,28 @@ public interface IEmbeddedStorageConfiguration
     /// Gets a value indicating whether to use caching in AFS operations.
     /// </summary>
     bool AfsUseCache { get; }
+
+    // ========== GigaMap Configuration ==========
+
+    /// <summary>
+    /// Gets a value indicating whether GigaMap functionality is enabled.
+    /// </summary>
+    bool EnableGigaMap { get; }
+
+    /// <summary>
+    /// Gets the default segment size for GigaMap collections.
+    /// </summary>
+    int DefaultGigaMapSegmentSize { get; }
+
+    /// <summary>
+    /// Gets a value indicating whether to use off-heap storage for GigaMap indices.
+    /// </summary>
+    bool UseOffHeapGigaMapIndices { get; }
+
+    /// <summary>
+    /// Gets the directory for storing GigaMap index files.
+    /// </summary>
+    string GigaMapIndexDirectory { get; }
 }
 
 /// <summary>
@@ -215,6 +237,36 @@ public interface IEmbeddedStorageConfigurationBuilder
     /// <param name="useCache">Whether to use caching in AFS operations</param>
     /// <returns>This builder instance for method chaining</returns>
     IEmbeddedStorageConfigurationBuilder SetAfsUseCache(bool useCache);
+
+    // ========== GigaMap Configuration Builder Methods ==========
+
+    /// <summary>
+    /// Enables or disables GigaMap functionality.
+    /// </summary>
+    /// <param name="enabled">Whether to enable GigaMap functionality</param>
+    /// <returns>This builder instance for method chaining</returns>
+    IEmbeddedStorageConfigurationBuilder SetGigaMapEnabled(bool enabled);
+
+    /// <summary>
+    /// Sets the default segment size for GigaMap collections.
+    /// </summary>
+    /// <param name="segmentSize">The default segment size (power of 2)</param>
+    /// <returns>This builder instance for method chaining</returns>
+    IEmbeddedStorageConfigurationBuilder SetGigaMapDefaultSegmentSize(int segmentSize);
+
+    /// <summary>
+    /// Enables or disables off-heap storage for GigaMap indices.
+    /// </summary>
+    /// <param name="useOffHeap">Whether to use off-heap storage for indices</param>
+    /// <returns>This builder instance for method chaining</returns>
+    IEmbeddedStorageConfigurationBuilder SetGigaMapUseOffHeapIndices(bool useOffHeap);
+
+    /// <summary>
+    /// Sets the directory for storing GigaMap index files.
+    /// </summary>
+    /// <param name="directory">The directory path for index files</param>
+    /// <returns>This builder instance for method chaining</returns>
+    IEmbeddedStorageConfigurationBuilder SetGigaMapIndexDirectory(string directory);
 
     /// <summary>
     /// Builds the configuration.
