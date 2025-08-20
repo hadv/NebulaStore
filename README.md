@@ -133,6 +133,9 @@ dotnet test afs/blobstore/test/
 # Run AFS integration tests
 dotnet test afs/tests/
 
+# Run Firestore tests (requires emulator or actual Firestore)
+dotnet test afs/googlecloud/firestore/test/
+
 # Run specific test project
 dotnet test tests/NebulaStore.Core.Tests/
 ```
@@ -182,6 +185,22 @@ var afsConfig = EmbeddedStorageConfiguration.New()
     .Build();
 
 using var afsStorage = EmbeddedStorage.StartWithAfs(afsConfig);
+```
+
+#### Google Cloud Firestore Usage
+```csharp
+using NebulaStore.Afs.GoogleCloud.Firestore;
+
+// Start with Firestore
+using var storage = EmbeddedStorageFirestoreExtensions.StartWithFirestore("your-project-id");
+
+// Custom Firestore configuration
+var firestoreConfig = EmbeddedStorageConfiguration.New()
+    .UseFirestore("your-project-id", "my-storage-collection")
+    .SetChannelCount(4)
+    .Build();
+
+using var firestoreStorage = EmbeddedStorage.Foundation(firestoreConfig).Start();
 ```
 
 #### Custom Root Object
