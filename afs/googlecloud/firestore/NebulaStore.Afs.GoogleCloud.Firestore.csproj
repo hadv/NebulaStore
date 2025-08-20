@@ -9,18 +9,17 @@
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <WarningsAsErrors />
     <WarningsNotAsErrors>CS1591</WarningsNotAsErrors>
-
   </PropertyGroup>
 
   <PropertyGroup>
-    <AssemblyTitle>NebulaStore Abstract File System</AssemblyTitle>
-    <AssemblyDescription>Abstract File System implementation for NebulaStore with blob storage support</AssemblyDescription>
+    <AssemblyTitle>NebulaStore AFS Google Cloud Firestore</AssemblyTitle>
+    <AssemblyDescription>Abstract File System implementation for NebulaStore with Google Cloud Firestore support</AssemblyDescription>
     <AssemblyCompany>NebulaStore</AssemblyCompany>
     <AssemblyProduct>NebulaStore</AssemblyProduct>
     <Copyright>Copyright © NebulaStore 2025</Copyright>
     <AssemblyVersion>1.0.0.0</AssemblyVersion>
     <FileVersion>1.0.0.0</FileVersion>
-    <RootNamespace>NebulaStore.Afs.Blobstore</RootNamespace>
+    <RootNamespace>NebulaStore.Afs.GoogleCloud.Firestore</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>
@@ -28,8 +27,12 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="../../storage/storage/NebulaStore.Storage.csproj" />
-    <ProjectReference Include="../../storage/embedded-configuration/NebulaStore.Storage.EmbeddedConfiguration.csproj" />
+    <ProjectReference Include="../../blobstore/NebulaStore.Afs.Blobstore.csproj" />
+    <ProjectReference Include="../../../storage/embedded/NebulaStore.Storage.Embedded.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Google.Cloud.Firestore" Version="3.8.0" />
   </ItemGroup>
 
 </Project>

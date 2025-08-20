@@ -113,6 +113,28 @@ var config = EmbeddedStorageConfiguration.New()
     .Build();
 ```
 
+### Google Cloud Firestore Usage
+
+```csharp
+using NebulaStore.Afs.GoogleCloud.Firestore;
+
+// Start with Firestore using convenience method
+using var storage = EmbeddedStorageFirestoreExtensions.StartWithFirestore("your-project-id");
+
+// Custom Firestore configuration
+var firestoreConfig = EmbeddedStorageConfiguration.New()
+    .UseFirestore("your-project-id", "my-storage-collection")
+    .SetChannelCount(4)
+    .Build();
+
+using var firestoreStorage = EmbeddedStorage.Foundation(firestoreConfig).Start();
+
+// Direct Firestore connector usage
+var firestore = FirestoreDb.Create("your-project-id");
+using var connector = GoogleCloudFirestoreConnector.New(firestore);
+using var fileSystem = BlobStoreFileSystem.New(connector);
+```
+
 ## Performance Considerations
 
 ### Caching
@@ -160,6 +182,40 @@ The default storage type that stores data as blobs in the local file system.
 - Development and testing
 - Local data processing
 - Embedded applications
+
+### Google Cloud Firestore
+
+Document-based NoSQL storage using Google Cloud Firestore.
+
+**Advantages:**
+- Serverless and fully managed
+- Global distribution and automatic scaling
+- Real-time synchronization capabilities
+- Strong consistency and ACID transactions
+- Integrated with Google Cloud ecosystem
+
+**Use Cases:**
+- Cloud-native applications
+- Multi-region deployments
+- Applications requiring real-time updates
+- Serverless architectures
+- Mobile and web applications
+
+**Configuration:**
+```csharp
+// Using convenience method
+using var storage = EmbeddedStorageFirestoreExtensions.StartWithFirestore("your-project-id");
+
+// Using configuration builder
+var config = EmbeddedStorageConfiguration.New()
+    .UseFirestore("your-project-id", "my-collection")
+    .Build();
+```
+
+**Requirements:**
+- Google Cloud Project with Firestore enabled
+- Proper authentication (service account key, application default credentials, etc.)
+- `Google.Cloud.Firestore` NuGet package
 
 ### Future Storage Types
 

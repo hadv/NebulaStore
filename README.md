@@ -27,14 +27,16 @@ The module structure exactly mirrors the Eclipse Store Java repository for famil
 | `storage/embedded-configuration` | `storage/embedded-configuration/` | ✅ Complete |
 | `storage/storage` | `storage/storage/` | ✅ Complete |
 | `afs/blobstore` | `afs/blobstore/` | ✅ Complete |
+| `afs/googlecloud/firestore` | `afs/googlecloud/firestore/` | ✅ Complete |
 
 ## Project Status
 
-✅ **Core Modules Ported** - Successfully ported 4 core Eclipse Store modules to .NET Core:
+✅ **Core Modules Ported** - Successfully ported 5 Eclipse Store modules to .NET Core:
 - ✅ `storage/embedded` - Complete with embedded storage engine
 - ✅ `storage/embedded-configuration` - Complete with configuration system
 - ✅ `storage/storage` - Complete with core storage types and interfaces
 - ✅ `afs/blobstore` - Complete with Abstract File System blob storage backend
+- ✅ `afs/googlecloud/firestore` - Complete Google Cloud Firestore integration
 
 🚧 **In Progress** - Additional Eclipse Store modules and advanced features
 
@@ -46,6 +48,7 @@ This project ports code from the [Eclipse Store Java repository](https://github.
 - **Java Source**: [`storage/embedded-configuration`](https://github.com/eclipse-store/store/tree/main/storage/embedded-configuration) → **C# Port**: `storage/embedded-configuration/`
 - **Java Source**: [`storage/storage`](https://github.com/eclipse-store/store/tree/main/storage/storage) → **C# Port**: `storage/storage/`
 - **Java Source**: [`afs/blobstore`](https://github.com/eclipse-store/store/tree/main/afs/blobstore) → **C# Port**: `afs/blobstore/`
+- **Java Source**: [`afs/googlecloud/firestore`](https://github.com/eclipse-store/store/tree/main/afs/googlecloud/firestore) → **C# Port**: `afs/googlecloud/firestore/`
 
 The .NET implementation maintains the same module structure, interfaces, and design patterns as the original Eclipse Store Java code while adapting to .NET conventions and leveraging C# language features.
 
@@ -86,6 +89,11 @@ NebulaStore follows the Eclipse Store module structure:
     - **src/** - Core AFS blobstore implementation
     - **test/** - Unit tests for blobstore functionality
     - **NebulaStore.Afs.Blobstore.csproj** - Project file
+  - **googlecloud/** - Google Cloud storage backends
+    - **firestore/** - Google Cloud Firestore integration
+      - **src/** - Firestore connector and extensions
+      - **test/** - Firestore integration tests
+      - **NebulaStore.Afs.GoogleCloud.Firestore.csproj** - Project file
   - **tests/** - Integration tests for AFS functionality
 - Dependencies: MessagePack for binary serialization
 
@@ -132,6 +140,9 @@ dotnet test afs/blobstore/test/
 
 # Run AFS integration tests
 dotnet test afs/tests/
+
+# Run Firestore tests (requires emulator or actual Firestore)
+dotnet test afs/googlecloud/firestore/test/
 
 # Run specific test project
 dotnet test tests/NebulaStore.Core.Tests/
@@ -182,6 +193,40 @@ var afsConfig = EmbeddedStorageConfiguration.New()
     .Build();
 
 using var afsStorage = EmbeddedStorage.StartWithAfs(afsConfig);
+```
+
+#### Google Cloud Firestore Usage
+
+**Prerequisites:**
+- Google Cloud Project with Firestore enabled
+- Service Account with appropriate permissions (`Cloud Datastore User` role minimum)
+- Authentication configured (see authentication methods below)
+
+```csharp
+using NebulaStore.Afs.GoogleCloud.Firestore;
+using Google.Cloud.Firestore;
+
+// Method 1: Using Service Account Key
+var firestore = new FirestoreDbBuilder
+{
+    ProjectId = "your-project-id",
+    CredentialsPath = "path/to/service-account-key.json"
+}.Build();
+
+// Method 2: Using Application Default Credentials (ADC)
+Environment.SetEnvironmentVariable("GOOGLE_APPLICATION_CREDENTIALS", "path/to/service-account-key.json");
+var firestore = FirestoreDb.Create("your-project-id");
+
+// Start with Firestore
+using var storage = EmbeddedStorageFirestoreExtensions.StartWithFirestore("your-project-id");
+
+// Custom Firestore configuration
+var firestoreConfig = EmbeddedStorageConfiguration.New()
+    .UseFirestore("your-project-id", "my-storage-collection")
+    .SetChannelCount(4)
+    .Build();
+
+using var firestoreStorage = EmbeddedStorage.Foundation(firestoreConfig).Start();
 ```
 
 #### Custom Root Object
