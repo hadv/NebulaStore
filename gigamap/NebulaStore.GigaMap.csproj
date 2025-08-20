@@ -1,0 +1,33 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <PackageId>NebulaStore.GigaMap</PackageId>
+    <PackageVersion>1.0.0</PackageVersion>
+    <Authors>NebulaStore Contributors</Authors>
+    <Description>High-performance indexed collection for handling vast amounts of data with lazy loading and bitmap indexing. .NET implementation of EclipseStore GigaMap.</Description>
+    <PackageTags>gigamap;indexing;bitmap;lazy-loading;high-performance;collections;database</PackageTags>
+    <RepositoryUrl>https://github.com/hadv/NebulaStore</RepositoryUrl>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="src\README.md" Pack="true" PackagePath="\" />
+    <None Include="src\Examples\**\*.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Remove="src\Examples\**\*.cs" />
+    <Compile Remove="tests\**\*.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../storage/storage/NebulaStore.Storage.csproj" />
+  </ItemGroup>
+
+</Project>

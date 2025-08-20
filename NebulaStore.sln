@@ -25,6 +25,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NebulaStore.Afs.Tests", "af
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NebulaStore.Examples.ConsoleApp", "examples\ConsoleApp\NebulaStore.Examples.ConsoleApp.csproj", "{D3E4F5G6-H7I8-9012-JKLM-NO3456789012}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NebulaStore.GigaMap", "gigamap\NebulaStore.GigaMap.csproj", "{H7I8J9K0-L1M2-3456-NOPQ-RS7890123456}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NebulaStore.GigaMap.Tests", "gigamap\tests\NebulaStore.GigaMap.Tests.csproj", "{I8J9K0L1-M2N3-4567-OPQR-ST8901234567}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -66,6 +70,14 @@ Global
 		{G6H7I8J9-K0L1-2345-NOPQ-RS6789012345}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{G6H7I8J9-K0L1-2345-NOPQ-RS6789012345}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{G6H7I8J9-K0L1-2345-NOPQ-RS6789012345}.Release|Any CPU.Build.0 = Release|Any CPU
+		{H7I8J9K0-L1M2-3456-NOPQ-RS7890123456}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{H7I8J9K0-L1M2-3456-NOPQ-RS7890123456}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{H7I8J9K0-L1M2-3456-NOPQ-RS7890123456}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{H7I8J9K0-L1M2-3456-NOPQ-RS7890123456}.Release|Any CPU.Build.0 = Release|Any CPU
+		{I8J9K0L1-M2N3-4567-OPQR-ST8901234567}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{I8J9K0L1-M2N3-4567-OPQR-ST8901234567}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{I8J9K0L1-M2N3-4567-OPQR-ST8901234567}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{I8J9K0L1-M2N3-4567-OPQR-ST8901234567}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{A1B2C3D4-E5F6-7890-ABCD-EF1234567890} = {D0E78B5A-0D39-4CE8-A836-5FC8C7D60478}

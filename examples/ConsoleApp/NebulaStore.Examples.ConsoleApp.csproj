@@ -11,6 +11,7 @@
     <ProjectReference Include="..\..\storage\embedded\NebulaStore.Storage.Embedded.csproj" />
     <ProjectReference Include="..\..\storage\embedded-configuration\NebulaStore.Storage.EmbeddedConfiguration.csproj" />
     <ProjectReference Include="..\..\storage\storage\NebulaStore.Storage.csproj" />
+    <ProjectReference Include="..\..\gigamap\NebulaStore.GigaMap.csproj" />
   </ItemGroup>
 
   <ItemGroup>
@@ -21,6 +22,7 @@
     <Compile Include="..\SharedDomainClasses.cs" Link="SharedDomainClasses.cs" />
     <Compile Include="..\EmbeddedStorageExample.cs" Link="EmbeddedStorageExample.cs" />
     <Compile Include="..\MonitoringExample.cs" Link="MonitoringExample.cs" />
+    <Compile Include="..\GigaMapExample.cs" Link="GigaMapExample.cs" />
   </ItemGroup>
 
 </Project>

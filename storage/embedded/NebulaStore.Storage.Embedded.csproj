@@ -18,6 +18,7 @@
     <ProjectReference Include="..\embedded-configuration\NebulaStore.Storage.EmbeddedConfiguration.csproj" />
     <ProjectReference Include="..\storage\NebulaStore.Storage.csproj" />
     <ProjectReference Include="..\..\afs\blobstore\NebulaStore.Afs.Blobstore.csproj" />
+    <ProjectReference Include="..\..\gigamap\NebulaStore.GigaMap.csproj" />
   </ItemGroup>
 
 </Project>
