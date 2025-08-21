@@ -163,14 +163,14 @@ public class GarbageCollector : IGarbageCollector
         {
             if (_isCollecting)
             {
-                var result = new GarbageCollectionResult
+                var errorResult = new GarbageCollectionResult
                 {
                     Success = false,
                     StartTime = DateTime.UtcNow,
                     EndTime = DateTime.UtcNow
                 };
-                result.AddError("Collection already in progress");
-                return result;
+                errorResult.AddError("Collection already in progress");
+                return errorResult;
             }
 
             _isCollecting = true;
@@ -180,8 +180,7 @@ public class GarbageCollector : IGarbageCollector
         var result = new GarbageCollectionResult
         {
             StartTime = DateTime.UtcNow,
-            Success = true,
-            Errors = new List<string>()
+            Success = true
         };
 
         try
