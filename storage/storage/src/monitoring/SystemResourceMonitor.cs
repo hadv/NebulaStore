@@ -9,62 +9,89 @@ namespace NebulaStore.Storage.Embedded.Monitoring;
 /// </summary>
 public class SystemResourceMonitor : ISystemResourceMonitor
 {
-    private readonly PerformanceCounter? _cpuCounter;
-    private readonly PerformanceCounter? _memoryCounter;
-    private readonly PerformanceCounter? _diskReadCounter;
-    private readonly PerformanceCounter? _diskWriteCounter;
     private readonly Process _currentProcess;
     private readonly Timer? _monitoringTimer;
     private volatile bool _isMonitoring;
     private volatile bool _isDisposed;
 
-    // Cached values
-    private volatile double _cpuUsagePercent;
-    private volatile long _memoryUsageBytes;
-    private volatile long _availableMemoryBytes;
-    private volatile double _diskReadBytesPerSecond;
-    private volatile double _diskWriteBytesPerSecond;
-    private volatile double _networkReadBytesPerSecond;
-    private volatile double _networkWriteBytesPerSecond;
-    private volatile int _threadCount;
-    private volatile int _handleCount;
+    // Cached values - using Interlocked for thread-safe access to long values
+    private double _cpuUsagePercent;
+    private long _memoryUsageBytes;
+    private long _availableMemoryBytes;
+    private double _diskReadBytesPerSecond;
+    private double _diskWriteBytesPerSecond;
+    private double _networkReadBytesPerSecond;
+    private double _networkWriteBytesPerSecond;
+    private int _threadCount;
+    private int _handleCount;
+
+    private readonly object _lockObject = new();
 
     public SystemResourceMonitor()
     {
         _currentProcess = Process.GetCurrentProcess();
 
-        try
+        // Initialize with default values
+        lock (_lockObject)
         {
-            // Initialize performance counters (may not be available on all systems)
-            _cpuCounter = new PerformanceCounter("Processor", "% Processor Time", "_Total");
-            _memoryCounter = new PerformanceCounter("Memory", "Available MBytes");
-            _diskReadCounter = new PerformanceCounter("PhysicalDisk", "Disk Read Bytes/sec", "_Total");
-            _diskWriteCounter = new PerformanceCounter("PhysicalDisk", "Disk Write Bytes/sec", "_Total");
-
-            // Initial read to initialize counters
-            _cpuCounter.NextValue();
-            _memoryCounter.NextValue();
-            _diskReadCounter.NextValue();
-            _diskWriteCounter.NextValue();
-        }
-        catch
-        {
-            // Performance counters may not be available on all systems
-            // We'll fall back to process-specific metrics
+            _cpuUsagePercent = 0.0;
+            _memoryUsageBytes = 0;
+            _availableMemoryBytes = GC.GetTotalMemory(false);
+            _diskReadBytesPerSecond = 0.0;
+            _diskWriteBytesPerSecond = 0.0;
+            _networkReadBytesPerSecond = 0.0;
+            _networkWriteBytesPerSecond = 0.0;
+            _threadCount = Environment.ProcessorCount;
+            _handleCount = 0;
         }
 
         UpdateMetrics();
     }
 
-    public double CpuUsagePercent => _cpuUsagePercent;
-    public long MemoryUsageBytes => _memoryUsageBytes;
-    public long AvailableMemoryBytes => _availableMemoryBytes;
-    public double DiskReadBytesPerSecond => _diskReadBytesPerSecond;
-    public double DiskWriteBytesPerSecond => _diskWriteBytesPerSecond;
-    public double NetworkReadBytesPerSecond => _networkReadBytesPerSecond;
-    public double NetworkWriteBytesPerSecond => _networkWriteBytesPerSecond;
-    public int ThreadCount => _threadCount;
-    public int HandleCount => _handleCount;
+    public double CpuUsagePercent
+    {
+        get { lock (_lockObject) return _cpuUsagePercent; }
+    }
+
+    public long MemoryUsageBytes
+    {
+        get { return Interlocked.Read(ref _memoryUsageBytes); }
+    }
+
+    public long AvailableMemoryBytes
+    {
+        get { return Interlocked.Read(ref _availableMemoryBytes); }
+    }
+
+    public double DiskReadBytesPerSecond
+    {
+        get { lock (_lockObject) return _diskReadBytesPerSecond; }
+    }
+
+    public double DiskWriteBytesPerSecond
+    {
+        get { lock (_lockObject) return _diskWriteBytesPerSecond; }
+    }
+
+    public double NetworkReadBytesPerSecond
+    {
+        get { lock (_lockObject) return _networkReadBytesPerSecond; }
+    }
+
+    public double NetworkWriteBytesPerSecond
+    {
+        get { lock (_lockObject) return _networkWriteBytesPerSecond; }
+    }
+
+    public int ThreadCount
+    {
+        get { return _threadCount; }
+    }
+
+    public int HandleCount
+    {
+        get { return _handleCount; }
+    }
 
     public SystemResourceSnapshot GetSnapshot()
     {
@@ -109,46 +136,27 @@ public class SystemResourceMonitor : ISystemResourceMonitor
 
             // Update process-specific metrics
             _currentProcess.Refresh();
-            _memoryUsageBytes = _currentProcess.WorkingSet64;
-            _threadCount = _currentProcess.Threads.Count;
-            _handleCount = _currentProcess.HandleCount;
 
-            // Update system-wide metrics using performance counters
-            if (_cpuCounter != null)
+            lock (_lockObject)
             {
-                _cpuUsagePercent = _cpuCounter.NextValue();
-            }
-            else
-            {
-                // Fallback: use process CPU time
-                _cpuUsagePercent = _currentProcess.TotalProcessorTime.TotalMilliseconds / Environment.TickCount * 100;
-            }
+                Interlocked.Exchange(ref _memoryUsageBytes, _currentProcess.WorkingSet64);
+                _threadCount = _currentProcess.Threads.Count;
+                _handleCount = _currentProcess.HandleCount;
 
-            if (_memoryCounter != null)
-            {
-                _availableMemoryBytes = (long)(_memoryCounter.NextValue() * 1024 * 1024); // Convert MB to bytes
-            }
-            else
-            {
-                // Fallback: estimate available memory
+                // Estimate CPU usage based on process metrics
+                _cpuUsagePercent = Math.Min(100.0, _currentProcess.TotalProcessorTime.TotalMilliseconds / Environment.TickCount * 100);
+
+                // Estimate available memory
                 var totalMemory = GC.GetTotalMemory(false);
-                _availableMemoryBytes = Math.Max(0, totalMemory - _memoryUsageBytes);
-            }
+                Interlocked.Exchange(ref _availableMemoryBytes, Math.Max(0, totalMemory));
 
-            if (_diskReadCounter != null)
-            {
-                _diskReadBytesPerSecond = _diskReadCounter.NextValue();
+                // For disk and network metrics, we'll use placeholder values
+                // In a real implementation, these would come from OS-specific APIs
+                _diskReadBytesPerSecond = 0;
+                _diskWriteBytesPerSecond = 0;
+                _networkReadBytesPerSecond = 0;
+                _networkWriteBytesPerSecond = 0;
             }
-
-            if (_diskWriteCounter != null)
-            {
-                _diskWriteBytesPerSecond = _diskWriteCounter.NextValue();
-            }
-
-            // Network metrics would require additional performance counters
-            // For now, we'll set them to 0 as they're not critical for storage monitoring
-            _networkReadBytesPerSecond = 0;
-            _networkWriteBytesPerSecond = 0;
         }
         catch
         {

@@ -9,6 +9,7 @@ namespace NebulaStore.Storage.Embedded.Caching;
 /// Interface for high-performance caching with advanced features.
 /// </summary>
 public interface ICache<TKey, TValue> : IDisposable
+    where TKey : notnull
 {
     /// <summary>
     /// Gets the cache name.

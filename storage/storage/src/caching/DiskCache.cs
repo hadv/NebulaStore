@@ -25,7 +25,7 @@ public class DiskCache<TKey, TValue> : AbstractCache<TKey, TValue>
     private readonly ConcurrentDictionary<TKey, DiskCacheEntry> _index;
     private readonly ReaderWriterLockSlim _indexLock;
     private readonly SemaphoreSlim _diskOperationSemaphore;
-    private volatile long _currentSizeInBytes;
+    private long _currentSizeInBytes;
     private readonly Timer? _compactionTimer;
 
     public DiskCache(

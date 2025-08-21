@@ -633,34 +633,7 @@ public class BenchmarkRecommendation
     }
 }
 
-/// <summary>
-/// Benchmark comparison against baseline.
-/// </summary>
-public class BenchmarkComparison
-{
-    public BenchmarkComparison(string name, double currentValue, double baselineValue, string unit)
-    {
-        Name = name ?? throw new ArgumentNullException(nameof(name));
-        CurrentValue = currentValue;
-        BaselineValue = baselineValue;
-        Unit = unit ?? throw new ArgumentNullException(nameof(unit));
-    }
 
-    public string Name { get; }
-    public double CurrentValue { get; }
-    public double BaselineValue { get; }
-    public string Unit { get; }
-
-    public double ImprovementRatio => BaselineValue != 0 ? CurrentValue / BaselineValue : 0;
-    public double ImprovementPercent => (ImprovementRatio - 1) * 100;
-
-    public override string ToString()
-    {
-        var improvement = ImprovementPercent >= 0 ? "+" : "";
-        return $"{Name}: {CurrentValue:F2} {Unit} vs {BaselineValue:F2} {Unit} " +
-               $"({improvement}{ImprovementPercent:F1}%)";
-    }
-}
 
 /// <summary>
 /// Exception thrown during benchmark execution.

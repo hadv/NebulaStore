@@ -16,7 +16,7 @@ public class InMemoryCache<TKey, TValue> : AbstractCache<TKey, TValue>
 {
     private readonly ConcurrentDictionary<TKey, ICacheEntry<TKey, TValue>> _entries;
     private readonly ReaderWriterLockSlim _evictionLock;
-    private volatile long _currentSizeInBytes;
+    private long _currentSizeInBytes;
 
     public InMemoryCache(
         string name,

@@ -11,6 +11,7 @@ namespace NebulaStore.Storage.Embedded.Caching;
 /// Abstract base class for cache implementations providing common functionality.
 /// </summary>
 public abstract class AbstractCache<TKey, TValue> : ICache<TKey, TValue>
+    where TKey : notnull
 {
     protected readonly string _name;
     protected readonly long _maxCapacity;
