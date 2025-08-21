@@ -58,13 +58,13 @@ public static class Storage
     /// <summary>
     /// Creates a new enhanced storage foundation with default settings.
     /// </summary>
-    public static IStorageFoundation EnhancedFoundation() => StorageFoundations.New();
+    public static IEnhancedStorageFoundation EnhancedFoundation() => (IEnhancedStorageFoundation)StorageFoundations.New();
 
     /// <summary>
     /// Creates a new enhanced storage foundation with the specified configuration.
     /// </summary>
-    public static IStorageFoundation EnhancedFoundation(IStorageConfiguration configuration) =>
-        StorageFoundations.New(configuration);
+    public static IEnhancedStorageFoundation EnhancedFoundation(IStorageConfiguration configuration) =>
+        (IEnhancedStorageFoundation)StorageFoundations.New(configuration);
 
     #endregion
 

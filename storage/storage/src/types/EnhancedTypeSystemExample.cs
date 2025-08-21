@@ -92,7 +92,7 @@ public static class EnhancedTypeSystemExample
     /// <summary>
     /// Demonstrates type evolution and versioning.
     /// </summary>
-    public static async Task TypeEvolutionExample()
+    public static void TypeEvolutionExample()
     {
         Console.WriteLine("\nEnhanced Type System - Type Evolution Example");
         Console.WriteLine("=============================================");
@@ -225,7 +225,7 @@ public static class EnhancedTypeSystemExample
     public static async Task RunAllExamples()
     {
         await BasicUsageExample();
-        await TypeEvolutionExample();
+        TypeEvolutionExample();
         EntityTypeHandlerExample();
         await PersistenceExample();
 

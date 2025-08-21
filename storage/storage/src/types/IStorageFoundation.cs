@@ -48,6 +48,23 @@ public interface IStorageFoundation
 }
 
 /// <summary>
+/// Enhanced storage foundation interface with advanced type system features.
+/// Extends the basic storage foundation with enhanced type management capabilities.
+/// </summary>
+public interface IEnhancedStorageFoundation : IStorageFoundation
+{
+    /// <summary>
+    /// Gets the enhanced storage type dictionary with advanced features.
+    /// </summary>
+    IEnhancedStorageTypeDictionary EnhancedTypeDictionary { get; }
+
+    /// <summary>
+    /// Gets the type-in-file manager for type-to-file mapping.
+    /// </summary>
+    TypeInFileManager TypeInFileManager { get; }
+}
+
+/// <summary>
 /// Interface for storage manager that extends storage connection with management capabilities.
 /// The storage manager is the main interface for interacting with the storage system.
 /// </summary>
@@ -68,15 +85,7 @@ public interface IStorageManager : IStorageConnection, IDatabasePart
     /// </summary>
     IStorageTypeDictionary TypeDictionary { get; }
 
-    /// <summary>
-    /// Gets the enhanced storage type dictionary with advanced features.
-    /// </summary>
-    IEnhancedStorageTypeDictionary EnhancedTypeDictionary { get; }
 
-    /// <summary>
-    /// Gets the type-in-file manager for type-to-file mapping.
-    /// </summary>
-    TypeInFileManager TypeInFileManager { get; }
 
     /// <summary>
     /// Gets a value indicating whether the storage manager is running.

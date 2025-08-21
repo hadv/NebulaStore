@@ -11,13 +11,18 @@ namespace NebulaStore.Storage;
 /// Default implementation of storage foundation.
 /// Provides the framework for creating and configuring storage instances.
 /// </summary>
-internal class StorageFoundation : IStorageFoundation
+internal class StorageFoundation : IEnhancedStorageFoundation
 {
     private IStorageConfiguration _configuration;
     private IDatabase _database;
+    private readonly IEnhancedStorageTypeDictionary _typeDictionary;
+    private readonly TypeInFileManager _typeInFileManager;
 
     public IStorageConfiguration Configuration => _configuration;
     public IDatabase Database => _database;
+    public IStorageTypeDictionary TypeDictionary => _typeDictionary;
+    public IEnhancedStorageTypeDictionary EnhancedTypeDictionary => _typeDictionary;
+    public TypeInFileManager TypeInFileManager => _typeInFileManager;
 
     public StorageFoundation()
         : this(Storage.Configuration(), Databases.New())
@@ -38,6 +43,8 @@ internal class StorageFoundation : IStorageFoundation
     {
         _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
         _database = database ?? throw new ArgumentNullException(nameof(database));
+        _typeDictionary = new EnhancedStorageTypeDictionary();
+        _typeInFileManager = new TypeInFileManager();
     }
 
     public IStorageFoundation SetConfiguration(IStorageConfiguration configuration)
@@ -60,7 +67,7 @@ internal class StorageFoundation : IStorageFoundation
 
     public IStorageManager CreateStorageManager(object? root = null)
     {
-        return new StorageManager(_configuration, _database, root);
+        return new StorageManager(_configuration, _database, _typeDictionary, _typeInFileManager, root);
     }
 }
 
@@ -110,14 +117,19 @@ internal class StorageManager : IStorageManager
 
     public bool IsActive => IsRunning && !_isDisposed;
 
-    public StorageManager(IStorageConfiguration configuration, IDatabase database, object? root = null)
+    public StorageManager(
+        IStorageConfiguration configuration,
+        IDatabase database,
+        IEnhancedStorageTypeDictionary typeDictionary,
+        TypeInFileManager typeInFileManager,
+        object? root = null)
     {
         Configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
         Database = database ?? throw new ArgumentNullException(nameof(database));
+        _typeDictionary = typeDictionary ?? throw new ArgumentNullException(nameof(typeDictionary));
+        _typeInFileManager = typeInFileManager ?? throw new ArgumentNullException(nameof(typeInFileManager));
         _root = root;
-        _typeDictionary = new EnhancedStorageTypeDictionary();
         _typeHandlerRegistry = new TypeHandlerRegistry();
-        _typeInFileManager = new TypeInFileManager();
     }
 
     public IStorageManager Start()
