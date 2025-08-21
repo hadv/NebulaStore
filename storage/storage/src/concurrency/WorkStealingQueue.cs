@@ -226,7 +226,7 @@ public class WorkStealingStatistics : IWorkStealingStatistics
     private long _totalSuccessfulSteals;
     private long _totalUtilizationSamples;
     private long _totalUtilization;
-    private int _peakQueueSize;
+    private long _peakQueueSize;
 
     public WorkStealingStatistics(WorkStealingConfiguration configuration)
     {
@@ -258,7 +258,7 @@ public class WorkStealingStatistics : IWorkStealingStatistics
         }
     }
 
-    public int PeakQueueSize => Interlocked.Read(ref _peakQueueSize);
+    public int PeakQueueSize => (int)Interlocked.Read(ref _peakQueueSize);
 
     public double ContentionLevel
     {

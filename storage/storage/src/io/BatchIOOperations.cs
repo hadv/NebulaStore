@@ -66,7 +66,7 @@ public class BatchIOOperations : IDisposable
         // Trigger immediate processing if batch is full
         if (_pendingRequests.Count >= _configuration.MaxBatchSize)
         {
-            _ = Task.Run(ProcessBatchesImmediate);
+            _ = Task.Run(() => ProcessBatchesImmediate());
         }
 
         return request.CompletionSource.Task;
@@ -100,7 +100,7 @@ public class BatchIOOperations : IDisposable
         // Trigger immediate processing if batch is full
         if (_pendingRequests.Count >= _configuration.MaxBatchSize)
         {
-            _ = Task.Run(ProcessBatchesImmediate);
+            _ = Task.Run(() => ProcessBatchesImmediate());
         }
 
         return request.CompletionSource.Task;

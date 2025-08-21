@@ -180,10 +180,6 @@ public class SystemResourceMonitor : ISystemResourceMonitor
         StopMonitoring();
         
         _monitoringTimer?.Dispose();
-        _cpuCounter?.Dispose();
-        _memoryCounter?.Dispose();
-        _diskReadCounter?.Dispose();
-        _diskWriteCounter?.Dispose();
         _currentProcess?.Dispose();
     }
 }

@@ -13,10 +13,10 @@ public class ObjectPoolStatistics : IObjectPoolStatistics
     private long _totalRetrieved;
     private long _totalReturned;
     private long _totalDiscarded;
-    private int _peakSize;
-    private int _peakInUse;
-    private int _currentSize;
-    private int _currentInUse;
+    private long _peakSize;
+    private long _peakInUse;
+    private long _currentSize;
+    private long _currentInUse;
 
     public ObjectPoolStatistics(int maxCapacity)
     {
@@ -53,9 +53,9 @@ public class ObjectPoolStatistics : IObjectPoolStatistics
         }
     }
 
-    public int PeakSize => Interlocked.Read(ref _peakSize);
+    public int PeakSize => (int)Interlocked.Read(ref _peakSize);
 
-    public int PeakInUse => Interlocked.Read(ref _peakInUse);
+    public int PeakInUse => (int)Interlocked.Read(ref _peakInUse);
 
     /// <summary>
     /// Records an object creation.
@@ -108,7 +108,7 @@ public class ObjectPoolStatistics : IObjectPoolStatistics
     public void UpdatePoolSize(int delta)
     {
         var newSize = Interlocked.Add(ref _currentSize, delta);
-        UpdatePeakSize(newSize);
+        UpdatePeakSize((int)newSize);
     }
 
     /// <summary>
@@ -118,7 +118,7 @@ public class ObjectPoolStatistics : IObjectPoolStatistics
     public void UpdateInUseCount(int delta)
     {
         var newInUse = Interlocked.Add(ref _currentInUse, delta);
-        UpdatePeakInUse(newInUse);
+        UpdatePeakInUse((int)newInUse);
     }
 
     private void UpdatePeakSize(int currentSize)
@@ -171,8 +171,8 @@ public class ObjectPoolStatistics : IObjectPoolStatistics
             Utilization,
             PeakSize,
             PeakInUse,
-            Interlocked.Read(ref _currentSize),
-            Interlocked.Read(ref _currentInUse),
+            (int)Interlocked.Read(ref _currentSize),
+            (int)Interlocked.Read(ref _currentInUse),
             _maxCapacity,
             DateTime.UtcNow
         );

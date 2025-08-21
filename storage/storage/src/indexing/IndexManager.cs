@@ -45,8 +45,8 @@ public class IndexManager : IIndexManager
             return indexConfig.Type switch
             {
                 IndexType.Hash => new HashIndex<TKey, TValue>(name, indexConfig),
-                IndexType.BTree when typeof(TKey).GetInterface(nameof(IComparable<TKey>)) != null => 
-                    new BTreeIndex<TKey, TValue>(name, indexConfig),
+                IndexType.BTree when typeof(IComparable<TKey>).IsAssignableFrom(typeof(TKey)) =>
+                    (IIndex<TKey, TValue>)Activator.CreateInstance(typeof(BTreeIndex<,>).MakeGenericType(typeof(TKey), typeof(TValue)), name, indexConfig)!,
                 IndexType.BTree => throw new ArgumentException($"B-tree index requires comparable keys, but {typeof(TKey).Name} is not comparable"),
                 _ => new HashIndex<TKey, TValue>(name, indexConfig) // Default to hash index
             };

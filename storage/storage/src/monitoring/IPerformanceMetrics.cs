@@ -191,7 +191,7 @@ public class MetricValue
         Name = name ?? throw new ArgumentNullException(nameof(name));
         Type = type;
         Value = value;
-        Tags = tags ?? new Dictionary<string, string>();
+        Tags = (IReadOnlyDictionary<string, string>)(tags ?? new Dictionary<string, string>());
         Timestamp = timestamp;
     }
 

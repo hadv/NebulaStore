@@ -218,16 +218,12 @@ public class ThreadLocalStorage<T> : IThreadLocalStorage<T>
         ThrowIfDisposed();
         
         var cleanedUp = 0;
-        var activeThreadIds = new HashSet<int>();
-        
-        // Get all active thread IDs
-        foreach (ProcessThread thread in System.Diagnostics.Process.GetCurrentProcess().Threads)
-        {
-            activeThreadIds.Add(thread.Id);
-        }
 
-        // Remove values for dead threads
-        var deadThreads = _values.Keys.Where(threadId => !activeThreadIds.Contains(threadId)).ToList();
+        // Simple cleanup: remove values that haven't been accessed recently
+        var cutoffTime = DateTime.UtcNow.Subtract(_configuration.CleanupInterval);
+        var deadThreads = _values.Where(kvp => kvp.Value.LastAccessed < cutoffTime)
+                                .Select(kvp => kvp.Key)
+                                .ToList();
         
         foreach (var threadId in deadThreads)
         {
@@ -303,12 +299,14 @@ internal class ThreadLocalValue<T>
     private readonly bool _trackLifetime;
     private T _value;
     private bool _isNewValue;
+    private DateTime _lastAccessed;
 
     public ThreadLocalValue(T value, bool trackLifetime)
     {
         _value = value;
         _trackLifetime = trackLifetime;
         _createdAt = trackLifetime ? DateTime.UtcNow : default;
+        _lastAccessed = DateTime.UtcNow;
         _isNewValue = true;
     }
 
@@ -325,6 +323,15 @@ internal class ThreadLocalValue<T>
     }
 
     public TimeSpan Lifetime => _trackLifetime ? DateTime.UtcNow - _createdAt : TimeSpan.Zero;
+
+    public DateTime LastAccessed
+    {
+        get
+        {
+            _lastAccessed = DateTime.UtcNow;
+            return _lastAccessed;
+        }
+    }
 
     public void UpdateValue(T newValue)
     {
@@ -343,7 +350,7 @@ public class ThreadLocalStatistics : IThreadLocalStatistics
     private long _totalCreations;
     private long _totalRemovals;
     private long _totalLifetimeMs;
-    private int _peakActiveThreads;
+    private long _peakActiveThreads;
 
     public ThreadLocalStatistics(ThreadLocalConfiguration configuration)
     {
@@ -354,7 +361,7 @@ public class ThreadLocalStatistics : IThreadLocalStatistics
     public long TotalCreations => Interlocked.Read(ref _totalCreations);
     public long TotalRemovals => Interlocked.Read(ref _totalRemovals);
     public int ActiveThreads => Environment.ProcessorCount; // Approximation
-    public int PeakActiveThreads => Interlocked.Read(ref _peakActiveThreads);
+    public int PeakActiveThreads => (int)Interlocked.Read(ref _peakActiveThreads);
 
     public double AverageValueLifetimeMs
     {

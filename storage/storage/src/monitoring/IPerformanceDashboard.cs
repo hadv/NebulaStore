@@ -497,7 +497,7 @@ public class WidgetConfiguration
         IDictionary<string, object>? properties = null)
     {
         RefreshInterval = refreshInterval;
-        Properties = properties ?? new Dictionary<string, object>();
+        Properties = (IReadOnlyDictionary<string, object>)(properties ?? new Dictionary<string, object>());
     }
 
     /// <summary>

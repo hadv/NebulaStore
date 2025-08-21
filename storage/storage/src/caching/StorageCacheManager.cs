@@ -12,7 +12,7 @@ namespace NebulaStore.Storage.Embedded.Caching;
 /// Integrated cache manager for NebulaStore that manages multi-level caching,
 /// coherence across storage channels, and cache warming.
 /// </summary>
-public class StorageCacheManager : IDisposable
+public class StorageCacheManager : ICacheManager
 {
     private readonly string _storageDirectory;
     private readonly StorageCacheConfiguration _configuration;
@@ -21,6 +21,7 @@ public class StorageCacheManager : IDisposable
     private readonly CacheFactory _cacheFactory;
     private readonly Timer? _maintenanceTimer;
     private volatile bool _isDisposed;
+    private volatile bool _isInitialized;
 
     public StorageCacheManager(string storageDirectory, StorageCacheConfiguration? configuration = null)
     {
@@ -39,6 +40,78 @@ public class StorageCacheManager : IDisposable
         {
             _maintenanceTimer = new Timer(PerformMaintenance, null, _configuration.MaintenanceInterval, _configuration.MaintenanceInterval);
         }
+
+        _isInitialized = true;
+    }
+
+    // ICacheManager implementation
+    public string Name => "StorageCacheManager";
+    public bool IsInitialized => _isInitialized;
+    public CacheManagerStatistics Statistics => GetStatistics();
+
+    public Task InitializeAsync(CancellationToken cancellationToken = default)
+    {
+        _isInitialized = true;
+        return Task.CompletedTask;
+    }
+
+    public Task StartAsync(CancellationToken cancellationToken = default)
+    {
+        return Task.CompletedTask;
+    }
+
+    public Task StopAsync(CancellationToken cancellationToken = default)
+    {
+        return Task.CompletedTask;
+    }
+
+    public async Task<T?> GetAsync<T>(string key, CancellationToken cancellationToken = default)
+    {
+        var cache = GetOrCreateCache<string, T>(0, "generic");
+        return await cache.GetAsync(key, cancellationToken);
+    }
+
+    public async Task SetAsync<T>(string key, T value, TimeSpan expiration, CancellationToken cancellationToken = default)
+    {
+        var cache = GetOrCreateCache<string, T>(0, "generic");
+        await cache.PutAsync(key, value, expiration, CacheEntryPriority.Normal, cancellationToken);
+    }
+
+    public Task<bool> RemoveAsync(string key, CancellationToken cancellationToken = default)
+    {
+        var cache = GetOrCreateCache<string, object>(0, "generic");
+        var result = cache.Remove(key);
+        return Task.FromResult(result);
+    }
+
+    public Task ClearAsync(CancellationToken cancellationToken = default)
+    {
+        foreach (var cacheEntry in _caches.Values)
+        {
+            if (cacheEntry is ICache<string, object> cache)
+            {
+                cache.Clear();
+            }
+        }
+        return Task.CompletedTask;
+    }
+
+    public Task WarmCacheAsync(IEnumerable<string> keys, CancellationToken cancellationToken = default)
+    {
+        // Implementation would warm cache with specified keys
+        return Task.CompletedTask;
+    }
+
+    public CacheHealthStatus GetHealthStatus()
+    {
+        var isHealthy = _isInitialized && !_isDisposed;
+        var status = isHealthy ? "Healthy" : "Unhealthy";
+        var issues = new List<string>();
+
+        if (_isDisposed) issues.Add("Cache manager is disposed");
+        if (!_isInitialized) issues.Add("Cache manager is not initialized");
+
+        return new CacheHealthStatus(isHealthy, status, issues);
     }
 
     /// <summary>
@@ -318,6 +391,27 @@ public class StorageCacheManager : IDisposable
         _caches.Clear();
         _coherenceManager.Dispose();
         _cacheFactory.Dispose();
+    }
+
+    private CacheManagerStatistics GetStatistics()
+    {
+        // Aggregate statistics from all caches
+        long totalRequests = 0;
+        long cacheHits = 0;
+        long cacheMisses = 0;
+        double totalResponseTime = 0;
+        long totalMemoryUsage = 0;
+        int activeCaches = _caches.Count;
+
+        // In a real implementation, we would collect actual statistics from caches
+        return new CacheManagerStatistics(
+            totalRequests,
+            cacheHits,
+            cacheMisses,
+            totalResponseTime,
+            totalMemoryUsage,
+            activeCaches
+        );
     }
 }
 

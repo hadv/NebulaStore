@@ -45,7 +45,7 @@ public class PerformanceIntegration : IPerformanceIntegration
 
         // Initialize core performance components
         _configuration = new PerformanceConfiguration("NebulaStore.Performance");
-        _cacheManager = new CacheManager("NebulaStore.Cache");
+        _cacheManager = (ICacheManager)new StorageCacheManager("NebulaStore.Cache");
         _indexManager = new IndexManager();
         _bufferManager = new BufferManager("NebulaStore.Buffers");
         _metrics = new PerformanceMetricsCollector("NebulaStore.Metrics");
@@ -200,9 +200,9 @@ public class PerformanceIntegration : IPerformanceIntegration
 
     public IntegratedPerformanceStatistics GetPerformanceStatistics()
     {
-        var cacheStats = new CacheManagerStatistics(0, 0, 0, 0, 0.0, 0.0, 0, DateTime.UtcNow);
+        var cacheStats = new CacheManagerStatistics(0, 0, 0, 0.0, 0, 0);
         var indexStats = new IndexManagerStatistics(0, 0, 0, 0, 0.0, 0.0, 0, 0.0, 0, DateTime.UtcNow);
-        var poolStats = new ObjectPoolManagerStatistics(0, 0, 0, 0, 0.0, 0.0, 0, DateTime.UtcNow);
+        var poolStats = new ObjectPoolManagerStatistics(0, 0, 0, 0, 0.0, 0.0, 0, 0, 0, DateTime.UtcNow);
         var systemResources = _resourceMonitor.GetSnapshot();
 
         return new IntegratedPerformanceStatistics(cacheStats, indexStats, poolStats, systemResources, DateTime.UtcNow);
@@ -317,7 +317,7 @@ public class PerformanceIntegration : IPerformanceIntegration
     {
         try
         {
-            var isHealthy = _cacheManager.IndexCount >= 0; // Basic health check
+            var isHealthy = _cacheManager.IsInitialized; // Basic health check
             return new HealthCheckItem("CacheManager", isHealthy, 
                 isHealthy ? "Cache manager is operational" : "Cache manager has issues");
         }

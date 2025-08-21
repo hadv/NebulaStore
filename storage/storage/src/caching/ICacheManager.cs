@@ -133,6 +133,11 @@ public class CacheManagerStatistics
     public double HitRatio => TotalRequests > 0 ? (double)CacheHits / TotalRequests : 0.0;
 
     /// <summary>
+    /// Gets the average hit ratio (alias for HitRatio for compatibility).
+    /// </summary>
+    public double AverageHitRatio => HitRatio;
+
+    /// <summary>
     /// Gets the average response time in milliseconds.
     /// </summary>
     public double AverageResponseTimeMs { get; }

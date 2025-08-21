@@ -9,7 +9,7 @@ namespace NebulaStore.Storage.Embedded.IO;
 /// </summary>
 public class MemoryMappedViewAccessor : IMemoryMappedViewAccessor
 {
-    private readonly MemoryMappedViewAccessor _accessor;
+    private readonly System.IO.MemoryMappedFiles.MemoryMappedViewAccessor _accessor;
     private readonly MemoryMappedFileStatistics _statistics;
     private readonly long _offset;
     private readonly long _size;
@@ -17,9 +17,9 @@ public class MemoryMappedViewAccessor : IMemoryMappedViewAccessor
     private volatile bool _isDisposed;
 
     public MemoryMappedViewAccessor(
-        MemoryMappedViewAccessor accessor, 
-        long offset, 
-        long size, 
+        System.IO.MemoryMappedFiles.MemoryMappedViewAccessor accessor,
+        long offset,
+        long size,
         MemoryMappedFileAccess access,
         MemoryMappedFileStatistics statistics)
     {
@@ -61,7 +61,7 @@ public class MemoryMappedViewAccessor : IMemoryMappedViewAccessor
         ThrowIfDisposed();
         ValidateWriteAccess();
         ValidatePosition(position, 1);
-        
+
         var stopwatch = Stopwatch.StartNew();
         try
         {

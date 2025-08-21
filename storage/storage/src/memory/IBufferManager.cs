@@ -36,6 +36,13 @@ public interface IBufferManager : IDisposable
     byte[] RentBuffer(int minimumSize);
 
     /// <summary>
+    /// Gets a buffer of the specified size (alias for RentBuffer for compatibility).
+    /// </summary>
+    /// <param name="size">Buffer size required</param>
+    /// <returns>Buffer</returns>
+    byte[] GetBuffer(int size);
+
+    /// <summary>
     /// Returns a buffer to the pool.
     /// </summary>
     /// <param name="buffer">Buffer to return</param>

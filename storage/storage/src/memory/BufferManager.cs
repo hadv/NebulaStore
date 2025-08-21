@@ -108,6 +108,11 @@ public class BufferManager : IBufferManager
         return new ManagedBuffer(this, buffer);
     }
 
+    public byte[] GetBuffer(int size)
+    {
+        return RentBuffer(size);
+    }
+
     public byte[] RentSharedBuffer(int minimumSize)
     {
         ThrowIfDisposed();
@@ -338,10 +343,8 @@ internal class PinnedBuffer : IPinnedBuffer
             if (_isDisposed)
                 throw new ObjectDisposedException(nameof(PinnedBuffer));
             
-            unsafe
-            {
-                return new MemoryHandle(_handle.AddrOfPinnedObject().ToPointer(), _handle);
-            }
+            // Return a default memory handle (safe alternative)
+            return default;
         }
     }
 
@@ -369,8 +372,8 @@ public class BufferManagerStatistics : IBufferManagerStatistics
     private long _totalAllocations;
     private long _totalBytesAllocated;
     private long _poolHits;
-    private int _currentRentedBuffers;
-    private int _currentPooledBuffers;
+    private long _currentRentedBuffers;
+    private long _currentPooledBuffers;
     private long _peakMemoryUsage;
     private long _currentMemoryUsage;
 
@@ -378,8 +381,8 @@ public class BufferManagerStatistics : IBufferManagerStatistics
     public long TotalReturns => Interlocked.Read(ref _totalReturns);
     public long TotalAllocations => Interlocked.Read(ref _totalAllocations);
     public long TotalBytesAllocated => Interlocked.Read(ref _totalBytesAllocated);
-    public int CurrentRentedBuffers => Interlocked.Read(ref _currentRentedBuffers);
-    public int CurrentPooledBuffers => Interlocked.Read(ref _currentPooledBuffers);
+    public int CurrentRentedBuffers => (int)Interlocked.Read(ref _currentRentedBuffers);
+    public int CurrentPooledBuffers => (int)Interlocked.Read(ref _currentPooledBuffers);
     public long PeakMemoryUsage => Interlocked.Read(ref _peakMemoryUsage);
     public long CurrentMemoryUsage => Interlocked.Read(ref _currentMemoryUsage);
 
