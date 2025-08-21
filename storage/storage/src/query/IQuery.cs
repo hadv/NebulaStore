@@ -80,7 +80,7 @@ public interface IOrderableQuery<T> : IQuery<T>
     /// <summary>
     /// Gets the ordering expressions.
     /// </summary>
-    IReadOnlyList<OrderExpression<T>> OrderBy { get; }
+    IReadOnlyList<OrderExpression<T>> OrderExpressions { get; }
 
     /// <summary>
     /// Adds ascending ordering to the query.
@@ -108,12 +108,12 @@ public interface IPaginableQuery<T> : IQuery<T>
     /// <summary>
     /// Gets the skip count.
     /// </summary>
-    int? Skip { get; }
+    int? SkipCount { get; }
 
     /// <summary>
     /// Gets the take count.
     /// </summary>
-    int? Take { get; }
+    int? TakeCount { get; }
 
     /// <summary>
     /// Skips the specified number of elements.

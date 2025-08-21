@@ -11,6 +11,7 @@ namespace NebulaStore.Storage.Embedded.Caching;
 /// Interface for cache coherence management across multiple cache instances.
 /// </summary>
 public interface ICacheCoherenceManager<TKey, TValue> : IDisposable
+    where TKey : notnull
 {
     /// <summary>
     /// Registers a cache instance for coherence management.
