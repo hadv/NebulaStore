@@ -71,8 +71,9 @@ internal class StorageFoundation : IStorageFoundation
 internal class StorageManager : IStorageManager
 {
     private readonly object _lock = new();
-    private readonly IStorageTypeDictionary _typeDictionary;
+    private readonly IEnhancedStorageTypeDictionary _typeDictionary;
     private readonly ITypeHandlerRegistry _typeHandlerRegistry;
+    private readonly TypeInFileManager _typeInFileManager;
     private object? _root;
     private bool _isRunning;
     private bool _isAcceptingTasks;
@@ -81,6 +82,8 @@ internal class StorageManager : IStorageManager
     public IStorageConfiguration Configuration { get; }
     public IDatabase Database { get; }
     public IStorageTypeDictionary TypeDictionary => _typeDictionary;
+    public IEnhancedStorageTypeDictionary EnhancedTypeDictionary => _typeDictionary;
+    public TypeInFileManager TypeInFileManager => _typeInFileManager;
     public string DatabaseName => Database.DatabaseName;
 
     public bool IsRunning
@@ -112,8 +115,9 @@ internal class StorageManager : IStorageManager
         Configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
         Database = database ?? throw new ArgumentNullException(nameof(database));
         _root = root;
-        _typeDictionary = new StorageTypeDictionary();
+        _typeDictionary = new EnhancedStorageTypeDictionary();
         _typeHandlerRegistry = new TypeHandlerRegistry();
+        _typeInFileManager = new TypeInFileManager();
     }
 
     public IStorageManager Start()

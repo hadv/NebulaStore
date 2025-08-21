@@ -55,6 +55,17 @@ public static class Storage
     /// </summary>
     public static StorageConfigurationBuilder ConfigurationBuilder() => StorageConfiguration.Builder();
 
+    /// <summary>
+    /// Creates a new enhanced storage foundation with default settings.
+    /// </summary>
+    public static IStorageFoundation EnhancedFoundation() => StorageFoundations.New();
+
+    /// <summary>
+    /// Creates a new enhanced storage foundation with the specified configuration.
+    /// </summary>
+    public static IStorageFoundation EnhancedFoundation(IStorageConfiguration configuration) =>
+        StorageFoundations.New(configuration);
+
     #endregion
 
     #region File Provider Factory Methods

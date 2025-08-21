@@ -69,6 +69,16 @@ public interface IStorageManager : IStorageConnection, IDatabasePart
     IStorageTypeDictionary TypeDictionary { get; }
 
     /// <summary>
+    /// Gets the enhanced storage type dictionary with advanced features.
+    /// </summary>
+    IEnhancedStorageTypeDictionary EnhancedTypeDictionary { get; }
+
+    /// <summary>
+    /// Gets the type-in-file manager for type-to-file mapping.
+    /// </summary>
+    TypeInFileManager TypeInFileManager { get; }
+
+    /// <summary>
     /// Gets a value indicating whether the storage manager is running.
     /// </summary>
     bool IsRunning { get; }
