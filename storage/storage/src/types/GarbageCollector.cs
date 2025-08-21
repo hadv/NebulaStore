@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -23,7 +24,6 @@ public class GarbageCollector : IGarbageCollector
     private readonly object _collectionLock = new();
     private volatile bool _isRunning;
     private volatile bool _isCollecting;
-    private volatile GarbageCollectionPhase _currentPhase = GarbageCollectionPhase.Idle;
     private GarbageCollectionStatistics _statistics = new();
     private bool _isDisposed;
 
@@ -163,17 +163,17 @@ public class GarbageCollector : IGarbageCollector
         {
             if (_isCollecting)
             {
-                return new GarbageCollectionResult
+                var result = new GarbageCollectionResult
                 {
                     Success = false,
                     StartTime = DateTime.UtcNow,
-                    EndTime = DateTime.UtcNow,
-                    Errors = new List<string> { "Collection already in progress" }
+                    EndTime = DateTime.UtcNow
                 };
+                result.AddError("Collection already in progress");
+                return result;
             }
 
             _isCollecting = true;
-            _currentPhase = GarbageCollectionPhase.Marking;
         }
 
         var stopwatch = Stopwatch.StartNew();
@@ -196,12 +196,11 @@ public class GarbageCollector : IGarbageCollector
             if (stopwatch.Elapsed > timeBudget)
             {
                 result.Success = false;
-                result.Errors.Add("Time budget exceeded during marking phase");
+                result.AddError("Time budget exceeded during marking phase");
                 return result;
             }
 
             // Phase 2: Sweep orphaned entities
-            _currentPhase = GarbageCollectionPhase.Sweeping;
             var sweepingStopwatch = Stopwatch.StartNew();
             var orphanedEntities = PerformSweepingPhase(reachableEntities);
             sweepingStopwatch.Stop();
@@ -209,12 +208,11 @@ public class GarbageCollector : IGarbageCollector
             if (stopwatch.Elapsed > timeBudget)
             {
                 result.Success = false;
-                result.Errors.Add("Time budget exceeded during sweeping phase");
+                result.AddError("Time budget exceeded during sweeping phase");
                 return result;
             }
 
             // Phase 3: Reclaim storage
-            _currentPhase = GarbageCollectionPhase.StorageReclaim;
             var reclaimStopwatch = Stopwatch.StartNew();
             var spaceReclaimed = PerformStorageReclaimPhase(orphanedEntities);
             reclaimStopwatch.Stop();
@@ -244,13 +242,12 @@ public class GarbageCollector : IGarbageCollector
         catch (Exception ex)
         {
             result.Success = false;
-            result.Errors.Add($"Collection failed: {ex.Message}");
+            result.AddError($"Collection failed: {ex.Message}");
         }
         finally
         {
             stopwatch.Stop();
             result.EndTime = DateTime.UtcNow;
-            _currentPhase = GarbageCollectionPhase.Idle;
             _isCollecting = false;
 
             CollectionCompleted?.Invoke(this, new GarbageCollectionEventArgs(result));
@@ -347,7 +344,7 @@ public class GarbageCollector : IGarbageCollector
 /// <summary>
 /// Thread-safe hash set implementation.
 /// </summary>
-internal class ConcurrentHashSet<T> where T : notnull
+internal class ConcurrentHashSet<T> : IEnumerable<T> where T : notnull
 {
     private readonly ConcurrentDictionary<T, byte> _dictionary = new();
 
@@ -357,6 +354,9 @@ internal class ConcurrentHashSet<T> where T : notnull
     public void Clear() => _dictionary.Clear();
     public IEnumerable<T> ToList() => _dictionary.Keys.ToList();
     public int Count => _dictionary.Count;
+
+    public IEnumerator<T> GetEnumerator() => _dictionary.Keys.GetEnumerator();
+    System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator() => GetEnumerator();
 }
 
 /// <summary>
@@ -381,6 +381,8 @@ public class GarbageCollectionConfiguration : IGarbageCollectionConfiguration
 /// </summary>
 internal class GarbageCollectionResult : IGarbageCollectionResult
 {
+    private readonly List<string> _errors = new();
+
     public bool Success { get; set; }
     public DateTime StartTime { get; set; }
     public DateTime EndTime { get; set; }
@@ -390,8 +392,10 @@ internal class GarbageCollectionResult : IGarbageCollectionResult
     public long OrphanedEntitiesFound { get; set; }
     public long EntitiesCollected { get; set; }
     public long StorageSpaceReclaimed { get; set; }
-    public IReadOnlyList<string> Errors { get; set; } = new List<string>();
+    public IReadOnlyList<string> Errors => _errors.AsReadOnly();
     public IGarbageCollectionMetrics Metrics { get; set; } = new GarbageCollectionMetrics();
+
+    public void AddError(string error) => _errors.Add(error);
 }
 
 /// <summary>

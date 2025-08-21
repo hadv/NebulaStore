@@ -18,7 +18,6 @@ public class StorageChannelManager : IStorageChannelManager
     private readonly IChannelLoadBalancer _loadBalancer;
     private readonly List<IStorageChannel> _channels = new();
     private readonly object _lock = new();
-    private int _nextChannelIndex = 0;
     private bool _isDisposed;
 
     public StorageChannelManager(
@@ -153,7 +152,7 @@ public class StorageChannelManager : IStorageChannelManager
     private void InitializeChannels()
     {
         var channelCount = _configuration.ChannelCountProvider.ChannelCount;
-        var baseDirectory = _configuration.FileProvider.Directory;
+        var baseDirectory = _configuration.FileProvider.StorageDirectory;
 
         for (int i = 0; i < channelCount; i++)
         {
