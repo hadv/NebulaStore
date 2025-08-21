@@ -12,7 +12,7 @@ public interface IDatabase : IDatabasePart
     /// <summary>
     /// Gets the database name.
     /// </summary>
-    string DatabaseName { get; }
+    new string DatabaseName { get; }
 
     /// <summary>
     /// Gets a value indicating whether the database is running.

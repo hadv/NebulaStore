@@ -14,7 +14,7 @@ public static class Storage
     /// <summary>
     /// Conversion factor from milliseconds to nanoseconds.
     /// </summary>
-    private const long MillisecondsToNanoseconds = 1_000_000L;
+    private const long MillisecondsToNanosecondsConversionFactor = 1_000_000L;
 
     /// <summary>
     /// Default storage directory name.
@@ -28,12 +28,12 @@ public static class Storage
     /// <summary>
     /// Converts milliseconds to nanoseconds.
     /// </summary>
-    public static long MillisecondsToNanoseconds(long milliseconds) => milliseconds * MillisecondsToNanoseconds;
+    public static long MillisecondsToNanoseconds(long milliseconds) => milliseconds * MillisecondsToNanosecondsConversionFactor;
 
     /// <summary>
     /// Converts nanoseconds to milliseconds.
     /// </summary>
-    public static long NanosecondsToMilliseconds(long nanoseconds) => nanoseconds / MillisecondsToNanoseconds;
+    public static long NanosecondsToMilliseconds(long nanoseconds) => nanoseconds / MillisecondsToNanosecondsConversionFactor;
 
     #endregion
 

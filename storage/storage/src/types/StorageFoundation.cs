@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using NebulaStore.Storage.EmbeddedConfiguration;
 
 namespace NebulaStore.Storage;
 
@@ -202,7 +203,9 @@ internal class StorageManager : IStorageManager
 
     public IStorageConnection CreateConnection()
     {
-        return new StorageConnection(Configuration, _typeHandlerRegistry);
+        // Create a bridge configuration that adapts IStorageConfiguration to IEmbeddedStorageConfiguration
+        var embeddedConfig = CreateEmbeddedConfiguration(Configuration);
+        return new StorageConnection(embeddedConfig, _typeHandlerRegistry);
     }
 
     public IStorer CreateStorer()
@@ -235,7 +238,8 @@ internal class StorageManager : IStorageManager
     public IStorageStatistics GetStatistics()
     {
         // Return basic statistics for now
-        return new StorageStatistics(Configuration);
+        var embeddedConfig = CreateEmbeddedConfiguration(Configuration);
+        return new StorageStatistics(embeddedConfig);
     }
 
     public void Dispose()
@@ -269,6 +273,29 @@ internal class StorageManager : IStorageManager
     {
         if (_isDisposed)
             throw new ObjectDisposedException(nameof(StorageManager));
+    }
+
+    /// <summary>
+    /// Creates an embedded configuration from the storage configuration.
+    /// This is a bridge method to adapt the new configuration system to the existing embedded configuration.
+    /// </summary>
+    private static IEmbeddedStorageConfiguration CreateEmbeddedConfiguration(IStorageConfiguration config)
+    {
+        var builder = EmbeddedStorageConfiguration.New()
+            .SetStorageDirectory(config.FileProvider.StorageDirectory)
+            .SetChannelCount(config.ChannelCountProvider.ChannelCount)
+            .SetEntityCacheThreshold(config.EntityCacheEvaluator.Threshold)
+            .SetEntityCacheTimeout(config.EntityCacheEvaluator.TimeoutMs)
+            .SetDataFileSize(config.DataFileEvaluator.FileMinimumSize, config.DataFileEvaluator.FileMaximumSize)
+            .SetHousekeepingInterval(config.HousekeepingController.HousekeepingIntervalMs);
+
+        // Only set backup directory if it's not null
+        if (config.BackupSetup?.BackupFileProvider.BackupDirectory != null)
+        {
+            builder = builder.SetBackupDirectory(config.BackupSetup.BackupFileProvider.BackupDirectory);
+        }
+
+        return builder.Build();
     }
 }
 
