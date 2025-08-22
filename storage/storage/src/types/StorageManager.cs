@@ -26,6 +26,10 @@ public class StorageManager : IStorageManager, IStorer
     private bool _isShuttingDown = false;
     private bool _disposed = false;
 
+    // Object ID generation
+    private long _nextObjectId = 1;
+    private readonly object _objectIdLock = new object();
+
     #endregion
 
     #region Constructor
@@ -308,13 +312,43 @@ public class StorageManager : IStorageManager, IStorer
         if (instance == null)
             return -1;
 
-        // Get the channel for this object (simple hash-based distribution)
-        var channelIndex = Math.Abs(instance.GetHashCode()) % _channels.Count;
-        var channel = _channels[channelIndex];
+        try
+        {
+            // Get the channel for this object (hash-based distribution)
+            var channelIndex = Math.Abs(instance.GetHashCode()) % _channels.Count;
+            var channel = _channels[channelIndex];
 
-        // For now, return a placeholder object ID
-        // In a real implementation, this would serialize the object and store it
-        return DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+            // Get or create type handler for this object type
+            var typeHandler = _typeDictionary.GetTypeHandler(instance.GetType());
+            if (typeHandler == null)
+            {
+                throw new StorageExceptionInitialization($"Failed to get type handler for type {instance.GetType().Name}");
+            }
+
+            // Serialize the object
+            var serializedData = typeHandler.Serialize(instance);
+
+            // Generate unique object ID
+            var objectId = GenerateObjectId();
+
+            // Create chunk data for storage
+            // Create header with metadata
+            var header = CreateChunkHeader(objectId, typeHandler.TypeId, serializedData.Length);
+            var chunkData = new Channels.BasicChunk(new byte[][] { header, serializedData });
+
+            // Store the chunk in the channel
+            var timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+            var storeResult = channel.StoreEntities(timestamp, chunkData);
+
+            // Update entity cache
+            _ = channel.PostStoreUpdateEntityCacheAsync(storeResult.Key, storeResult.Value);
+
+            return objectId;
+        }
+        catch (Exception ex)
+        {
+            throw new StorageExceptionIoWriting($"Failed to store object of type {instance.GetType().Name}", ex);
+        }
     }
 
     public long[] StoreAll(params object[] instances)
@@ -332,12 +366,37 @@ public class StorageManager : IStorageManager, IStorer
 
     public long Commit()
     {
-        // Commit all pending operations
-        foreach (var channel in _channels)
+        try
         {
-            channel.CommitChunkStorage();
+            long totalCommitted = 0;
+
+            // Commit all pending operations in all channels
+            foreach (var channel in _channels)
+            {
+                channel.CommitChunkStorage();
+                // In a real implementation, we would track how many objects were committed per channel
+                totalCommitted++; // Placeholder - should be actual count
+            }
+
+            return totalCommitted;
         }
-        return 0; // Return number of committed objects
+        catch (Exception ex)
+        {
+            // Rollback all channels on failure
+            foreach (var channel in _channels)
+            {
+                try
+                {
+                    channel.RollbackChunkStorage();
+                }
+                catch
+                {
+                    // Log rollback failures but don't throw
+                }
+            }
+
+            throw new StorageOperationException("Failed to commit storage operations", ex);
+        }
     }
 
     public long PendingObjectCount => 0; // No pending objects in this simple implementation
@@ -367,6 +426,31 @@ public class StorageManager : IStorageManager, IStorer
             var channel = StorageChannel.Create(i, _typeDictionary, _configuration.StorageDirectory);
             _channels.Add(channel);
         }
+    }
+
+    private long GenerateObjectId()
+    {
+        lock (_objectIdLock)
+        {
+            return _nextObjectId++;
+        }
+    }
+
+    private byte[] CreateChunkHeader(long objectId, long typeId, int dataLength)
+    {
+        // Header format: [ObjectId(8 bytes)][TypeId(8 bytes)][DataLength(4 bytes)]
+        var header = new byte[20];
+
+        // Write object ID
+        BitConverter.GetBytes(objectId).CopyTo(header, 0);
+
+        // Write type ID
+        BitConverter.GetBytes(typeId).CopyTo(header, 8);
+
+        // Write data length
+        BitConverter.GetBytes(dataLength).CopyTo(header, 16);
+
+        return header;
     }
 
     #endregion
@@ -463,10 +547,22 @@ internal class BasicPersistenceManager : IPersistenceManager
     private readonly IStorageTypeDictionary _typeDictionary;
     private readonly IPersistenceObjectRegistry _objectRegistry;
 
+    // Object ID generation
+    private long _nextObjectId = 1;
+    private readonly object _objectIdLock = new object();
+
     public BasicPersistenceManager(IStorageTypeDictionary typeDictionary)
     {
         _typeDictionary = typeDictionary ?? throw new ArgumentNullException(nameof(typeDictionary));
         _objectRegistry = new BasicPersistenceObjectRegistry();
+    }
+
+    private long GenerateObjectId()
+    {
+        lock (_objectIdLock)
+        {
+            return _nextObjectId++;
+        }
     }
 
     public IStorageTypeDictionary TypeDictionary => _typeDictionary;
@@ -475,9 +571,31 @@ internal class BasicPersistenceManager : IPersistenceManager
     public long Store(object instance)
     {
         if (instance == null) return -1;
-        var objectId = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
-        _objectRegistry.RegisterObject(instance, objectId);
-        return objectId;
+
+        try
+        {
+            // Get or create type handler for this object type
+            var typeHandler = _typeDictionary.GetTypeHandler(instance.GetType());
+            if (typeHandler == null)
+            {
+                throw new StorageExceptionInitialization($"Failed to get type handler for type {instance.GetType().Name}");
+            }
+
+            // Serialize the object
+            var serializedData = typeHandler.Serialize(instance);
+
+            // Generate unique object ID
+            var objectId = GenerateObjectId();
+
+            // Register the object in the registry
+            _objectRegistry.RegisterObject(instance, objectId);
+
+            return objectId;
+        }
+        catch (Exception ex) when (!(ex is StorageException))
+        {
+            throw new StorageExceptionIoWriting($"Failed to store object of type {instance.GetType().Name}", ex);
+        }
     }
 
     public long[] StoreAll(params object[] instances)
@@ -488,8 +606,23 @@ internal class BasicPersistenceManager : IPersistenceManager
 
     public object GetObject(long objectId)
     {
-        // Placeholder implementation
-        return new object();
+        try
+        {
+            // Try to get from object registry first (for recently stored objects)
+            var cachedObject = _objectRegistry.GetObject(objectId);
+            if (cachedObject != null)
+            {
+                return cachedObject;
+            }
+
+            // If not in cache, we would need to load from storage
+            // For now, throw an exception as this requires more complex implementation
+            throw new StorageExceptionNotRunning($"Object with ID {objectId} not found in cache. Loading from storage not yet implemented.");
+        }
+        catch (Exception ex) when (!(ex is StorageException))
+        {
+            throw new StorageExceptionIoReading($"Failed to get object with ID {objectId}", ex);
+        }
     }
 
     public IStorer CreateLazyStorer() => new BasicStorer(this);
@@ -508,6 +641,7 @@ internal class BasicPersistenceManager : IPersistenceManager
 internal class BasicPersistenceObjectRegistry : IPersistenceObjectRegistry
 {
     private readonly Dictionary<object, long> _objectToId = new();
+    private readonly Dictionary<long, object> _idToObject = new();
     private readonly object _lock = new object();
 
     public long LookupObjectId(object instance)
@@ -525,6 +659,15 @@ internal class BasicPersistenceObjectRegistry : IPersistenceObjectRegistry
         lock (_lock)
         {
             _objectToId[instance] = objectId;
+            _idToObject[objectId] = instance;
+        }
+    }
+
+    public object? GetObject(long objectId)
+    {
+        lock (_lock)
+        {
+            return _idToObject.TryGetValue(objectId, out var obj) ? obj : null;
         }
     }
 
