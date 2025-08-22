@@ -22,7 +22,6 @@ public class StorageEntityCache : IStorageEntityCache
     
     private long _cacheSize;
     private long _entityCount;
-    private bool _hasPendingStoreUpdate;
 
     #endregion
 
@@ -74,7 +73,6 @@ public class StorageEntityCache : IStorageEntityCache
             _typeCache.Clear();
             Interlocked.Exchange(ref _cacheSize, 0);
             Interlocked.Exchange(ref _entityCount, 0);
-            _hasPendingStoreUpdate = false;
         }
     }
 
@@ -192,12 +190,14 @@ public class StorageEntityCache : IStorageEntityCache
 
     public void RegisterPendingStoreUpdate()
     {
-        _hasPendingStoreUpdate = true;
+        // Mark that there are pending store updates
+        // Implementation would track pending operations
     }
 
     public void ClearPendingStoreUpdate()
     {
-        _hasPendingStoreUpdate = false;
+        // Clear pending store update flag
+        // Implementation would clear pending operations tracking
     }
 
     public async Task PostStorePutEntitiesAsync(byte[][] chunks, long[] chunksStoragePositions, IStorageLiveDataFile dataFile, CancellationToken cancellationToken = default)

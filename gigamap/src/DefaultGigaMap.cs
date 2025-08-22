@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using NebulaStore.Storage;
+using NebulaStore.Storage.Embedded.Types;
 
 namespace NebulaStore.GigaMap;
 

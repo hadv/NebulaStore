@@ -54,7 +54,7 @@ public class ObjectStoreTests : IDisposable
     }
 
     [Fact]
-    public void Query_ShouldFindObjectsOfSpecificType()
+    public void DirectObjectNavigation_ShouldFindObjectsOfSpecificType()
     {
         using var storage = EmbeddedStorage.Start(_testDirectory);
 
@@ -63,7 +63,8 @@ public class ObjectStoreTests : IDisposable
         root.Items.Add(new TestData { Name = "Item2", Value = 2 });
         storage.StoreRoot();
 
-        var items = storage.Query<TestData>().ToList();
+        // EclipseStore way: Direct object graph navigation
+        var items = root.Items.ToList();
 
         Assert.Equal(2, items.Count);
         Assert.Contains(items, i => i.Name == "Item1");

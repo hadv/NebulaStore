@@ -122,19 +122,9 @@ public class EmbeddedStorageManager : IEmbeddedStorageManager, IMonitorableStora
         return objectIds;
     }
 
-    public IEnumerable<T> Query<T>()
-    {
-        ThrowIfDisposed();
-        
-        if (_root == null) 
-            yield break;
-
-        foreach (var item in TraverseGraphLazy(_root, new HashSet<object>()))
-        {
-            if (item is T t) 
-                yield return t;
-        }
-    }
+    // Note: EclipseStore doesn't have a Query method - use direct object graph navigation instead
+    // Example: root.Customers.Where(c => c.Age > 25) using LINQ on your object graph
+    // The root object contains your entire object graph that you can navigate directly
 
     public IStorer CreateStorer()
     {
@@ -391,52 +381,7 @@ public class EmbeddedStorageManager : IEmbeddedStorageManager, IMonitorableStora
         );
     }
 
-    private IEnumerable<object> TraverseGraphLazy(object obj, HashSet<object> visited)
-    {
-        if (obj == null || visited.Contains(obj)) 
-            yield break;
-
-        visited.Add(obj);
-        yield return obj;
-
-        // Traverse collections
-        if (obj is System.Collections.IEnumerable enumerable && obj is not string)
-        {
-            foreach (var element in enumerable)
-            {
-                if (element != null)
-                {
-                    foreach (var child in TraverseGraphLazy(element, visited))
-                        yield return child;
-                }
-            }
-        }
-
-        // Traverse properties
-        var type = obj.GetType();
-        foreach (var prop in type.GetProperties())
-        {
-            if (!prop.CanRead || prop.GetIndexParameters().Length > 0)
-                continue;
-
-            object? value = null;
-            try
-            {
-                value = prop.GetValue(obj);
-            }
-            catch
-            {
-                // Skip properties that can't be accessed
-                continue;
-            }
-
-            if (value != null && value is not string && _typeEvaluator!(value.GetType()))
-            {
-                foreach (var child in TraverseGraphLazy(value, visited))
-                    yield return child;
-            }
-        }
-    }
+    // TraverseGraphLazy method removed - not needed for EclipseStore's direct object navigation approach
 
     // ========== GigaMap Implementation ==========
 

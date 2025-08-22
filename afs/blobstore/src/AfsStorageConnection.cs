@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using MessagePack;
 using NebulaStore.Storage;
 using NebulaStore.Storage.EmbeddedConfiguration;
+using NebulaStore.Storage.Embedded.Types;
 
 namespace NebulaStore.Afs.Blobstore;
 

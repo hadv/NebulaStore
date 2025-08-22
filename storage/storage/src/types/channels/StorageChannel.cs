@@ -344,7 +344,7 @@ public class StorageChannel : IStorageChannel, IDisposable
                 Thread.Sleep(100);
             }
         }
-        catch (Exception ex)
+        catch (Exception)
         {
             // Log the exception (in a real implementation)
             // For now, we'll just stop the channel

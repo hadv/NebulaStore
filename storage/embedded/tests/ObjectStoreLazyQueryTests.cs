@@ -19,7 +19,7 @@ public class ObjectStoreLazyQueryTests : IDisposable
     }
 
     [Fact]
-    public void Query_Is_Lazy_And_Incremental()
+    public void DirectObjectNavigation_Is_Lazy_And_Incremental()
     {
         using (var storage = EmbeddedStorage.Start(_testDirectory))
         {
@@ -33,11 +33,15 @@ public class ObjectStoreLazyQueryTests : IDisposable
 
         using (var storage = EmbeddedStorage.Start(_testDirectory))
         {
-            var query = storage.Query<Product>(); // not traversed immediately
-            Assert.NotNull(query);
+            var order = storage.Root<Order>();
+
+            // EclipseStore way: Direct object graph navigation with LINQ
+            // LINQ is lazy by default - not traversed immediately
+            var expensiveQuery = order.Items.Where(p => p.Price > 100);
+            Assert.NotNull(expensiveQuery);
 
             // Only traversed when enumerated
-            var expensive = query.Where(p => p.Price > 100).ToList();
+            var expensive = expensiveQuery.ToList();
 
             Assert.Single(expensive);
             Assert.Equal("Big Sofa", expensive[0].Name);
