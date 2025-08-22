@@ -211,7 +211,7 @@ public interface ITypeSerializer<T> : IObjectSerializer
     /// <param name="reader">The binary reader to read from.</param>
     /// <param name="context">The deserialization context.</param>
     /// <returns>The deserialized object.</returns>
-    T Deserialize(IBinaryReader reader, IDeserializationContext context);
+    new T Deserialize(IBinaryReader reader, IDeserializationContext context);
 
     /// <summary>
     /// Gets the size in bytes required to serialize the specified object.

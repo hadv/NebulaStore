@@ -127,18 +127,23 @@ public class StorageEntityCache : IStorageEntityCache
     public long ClearCache()
     {
         long clearedSize = 0;
-        
+
         lock (_lock)
         {
             foreach (var entity in _entityCache.Values)
             {
                 clearedSize += entity.ClearCache();
             }
-            
+
             Interlocked.Exchange(ref _cacheSize, 0);
         }
-        
+
         return clearedSize;
+    }
+
+    public void Clear()
+    {
+        Reset();
     }
 
     public IStorageEntity? GetEntry(long objectId)

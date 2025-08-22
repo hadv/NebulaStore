@@ -273,6 +273,7 @@ public class StorageEntityTypeHandler : IStorageEntityTypeHandler
 /// </summary>
 public class TypeHandler : ITypeHandler
 {
+    public Type HandledType { get; }
     public Type Type { get; }
     public long TypeId { get; }
     public string TypeName { get; }
@@ -280,8 +281,35 @@ public class TypeHandler : ITypeHandler
     public TypeHandler(Type type, long typeId)
     {
         Type = type ?? throw new ArgumentNullException(nameof(type));
+        HandledType = type;
         TypeId = typeId;
         TypeName = type.FullName ?? type.Name;
+    }
+
+    public byte[] Serialize(object instance)
+    {
+        // Basic serialization using System.Text.Json for now
+        var json = System.Text.Json.JsonSerializer.Serialize(instance);
+        return System.Text.Encoding.UTF8.GetBytes(json);
+    }
+
+    public object Deserialize(byte[] data)
+    {
+        // Basic deserialization using System.Text.Json for now
+        var json = System.Text.Encoding.UTF8.GetString(data);
+        return System.Text.Json.JsonSerializer.Deserialize(json, Type) ?? throw new InvalidOperationException("Failed to deserialize object");
+    }
+
+    public long GetSerializedLength(object instance)
+    {
+        // Estimate serialized length
+        var serialized = Serialize(instance);
+        return serialized.Length;
+    }
+
+    public bool CanHandle(Type type)
+    {
+        return type == Type;
     }
 
     public override string ToString()

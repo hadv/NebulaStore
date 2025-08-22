@@ -15,7 +15,7 @@ public interface IStorageChannel : IRunnable, IStorageChannelResetablePart, ISto
     /// <summary>
     /// Gets the channel index.
     /// </summary>
-    int ChannelIndex { get; }
+    new int ChannelIndex { get; }
 
     /// <summary>
     /// Gets the type dictionary for this channel.
@@ -335,36 +335,7 @@ public interface IStorageImportSource
     IEnumerable<FileInfo> GetAvailableFiles();
 }
 
-/// <summary>
-/// Interface for storage entity cache.
-/// </summary>
-public interface IStorageEntityCache
-{
-    /// <summary>
-    /// Gets the type dictionary.
-    /// </summary>
-    IStorageTypeDictionary TypeDictionary { get; }
-
-    /// <summary>
-    /// Gets the entity count.
-    /// </summary>
-    long EntityCount { get; }
-
-    /// <summary>
-    /// Gets the cache size.
-    /// </summary>
-    long CacheSize { get; }
-
-    /// <summary>
-    /// Resets the cache.
-    /// </summary>
-    void Reset();
-
-    /// <summary>
-    /// Clears the cache.
-    /// </summary>
-    void Clear();
-}
+// IStorageEntityCache interface is already defined in IStorageEntityCache.cs
 
 /// <summary>
 /// Interface for storage entity type handler.

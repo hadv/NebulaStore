@@ -330,6 +330,32 @@ public class StorageManager : IStorageManager, IStorer
         return objectIds;
     }
 
+    public long Commit()
+    {
+        // Commit all pending operations
+        foreach (var channel in _channels)
+        {
+            channel.CommitChunkStorage();
+        }
+        return 0; // Return number of committed objects
+    }
+
+    public long PendingObjectCount => 0; // No pending objects in this simple implementation
+
+    public bool HasPendingOperations => false; // No pending operations in this simple implementation
+
+    public IStorer Skip(object obj)
+    {
+        // Skip storing the object (mark as already stored)
+        return this;
+    }
+
+    public long Ensure(object obj)
+    {
+        // Force storage even if already stored
+        return Store(obj);
+    }
+
     #endregion
 
     #region Private Methods
@@ -405,6 +431,12 @@ internal class StorageConnection : IStorageConnection
 
     public long Store(object instance) => _storageManager.Store(instance);
     public long[] StoreAll(params object[] instances) => _storageManager.StoreAll(instances);
+    public long Commit() => _storageManager.Commit();
+    public long PendingObjectCount => _storageManager.PendingObjectCount;
+    public bool HasPendingOperations => _storageManager.HasPendingOperations;
+    public IStorer Skip(object obj) => _storageManager.Skip(obj);
+    public long Ensure(object obj) => _storageManager.Ensure(obj);
+
     public void IssueFullGarbageCollection() => _storageManager.IssueFullGarbageCollection();
     public bool IssueGarbageCollection(TimeSpan timeBudget) => _storageManager.IssueGarbageCollection(timeBudget);
     public void IssueFullFileCheck() => _storageManager.IssueFullFileCheck();
@@ -516,6 +548,17 @@ internal class BasicStorer : IStorer
 
     public long Store(object instance) => _persistenceManager.Store(instance);
     public long[] StoreAll(params object[] instances) => _persistenceManager.StoreAll(instances);
+
+    public long Commit() => 0; // No pending operations in this simple implementation
+    public long PendingObjectCount => 0;
+    public bool HasPendingOperations => false;
+    public IStorer Skip(object obj) => this;
+    public long Ensure(object obj) => Store(obj);
+
+    public void Dispose()
+    {
+        // Nothing to dispose in this simple implementation
+    }
 }
 
 /// <summary>

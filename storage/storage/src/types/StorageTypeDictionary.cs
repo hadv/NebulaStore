@@ -85,11 +85,11 @@ public class StorageTypeDictionary : IStorageTypeDictionary
             if (_typeIdToHandler.ContainsKey(handler.TypeId))
             {
                 var existing = _typeIdToHandler[handler.TypeId];
-                if (existing.Type != type)
+                if (existing.HandledType != type)
                 {
                     throw new InvalidOperationException(
                         $"Type ID {handler.TypeId} is already registered for different type. " +
-                        $"Existing: {existing.Type.FullName}, New: {type.FullName}");
+                        $"Existing: {existing.HandledType.FullName}, New: {type.FullName}");
                 }
                 return; // Already registered
             }
@@ -97,7 +97,7 @@ public class StorageTypeDictionary : IStorageTypeDictionary
             // Register the handler
             _typeToHandler[type] = handler;
             _typeIdToHandler[handler.TypeId] = handler;
-            _typeNameToHandler[handler.TypeName] = handler;
+            _typeNameToHandler[handler.HandledType.FullName ?? handler.HandledType.Name] = handler;
 
             // Update next type ID if necessary
             if (handler.TypeId >= _nextTypeId)

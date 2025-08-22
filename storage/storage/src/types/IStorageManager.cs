@@ -38,13 +38,13 @@ public interface IStorageManager : IStorageController, IStorageConnection, IData
     /// Starts the storage manager.
     /// </summary>
     /// <returns>This storage manager instance for fluent usage.</returns>
-    IStorageManager Start();
+    new IStorageManager Start();
 
     /// <summary>
     /// Shuts down the storage manager.
     /// </summary>
     /// <returns>True if shutdown was successful, false otherwise.</returns>
-    bool Shutdown();
+    new bool Shutdown();
 
     /// <summary>
     /// Creates a new IStorageConnection instance. See the type description for details.
@@ -68,7 +68,7 @@ public interface IStorageManager : IStorageController, IStorageConnection, IData
     /// </code>
     /// </summary>
     /// <returns>The persistent object graph's root object.</returns>
-    object Root();
+    object? Root();
 
     /// <summary>
     /// Sets the passed instance as the new root for the persistent object graph.
@@ -104,7 +104,7 @@ public interface IStorageManager : IStorageController, IStorageConnection, IData
     /// <summary>
     /// Alias for Database().DatabaseName().
     /// </summary>
-    string DatabaseName { get; }
+    new string DatabaseName { get; }
 }
 
 /// <summary>
@@ -187,7 +187,7 @@ public interface IStorageTypeDictionary
     /// </summary>
     /// <param name="type">The type to get the handler for.</param>
     /// <returns>The type handler for the specified type.</returns>
-    ITypeHandler GetTypeHandler(Type type);
+    ITypeHandler? GetTypeHandler(Type type);
 
     /// <summary>
     /// Gets all registered type handlers.
@@ -212,7 +212,7 @@ public interface IPersistenceRootsView
     /// Gets the default root reference.
     /// </summary>
     /// <returns>The default root reference.</returns>
-    object RootReference();
+    object? RootReference();
 
     /// <summary>
     /// Gets all root references.

@@ -141,7 +141,7 @@ public interface IStorageFileManager : IStorageChannelResetablePart, IDisposable
 /// <summary>
 /// Interface for storage live data files.
 /// </summary>
-public interface IStorageLiveDataFile : IStorageFile
+public interface IStorageLiveDataFile : IStorageFile, IDisposable
 {
     /// <summary>
     /// Gets the file number.

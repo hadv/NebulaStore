@@ -236,33 +236,4 @@ internal class DefaultStorageEntityCacheEvaluator : IStorageEntityCacheEvaluator
     }
 }
 
-/// <summary>
-/// Interface for storage entities.
-/// </summary>
-public interface IStorageEntity
-{
-    /// <summary>
-    /// Gets the time when this entity was last touched (accessed).
-    /// </summary>
-    long LastTouched { get; }
-
-    /// <summary>
-    /// Gets the length of the cached data for this entity.
-    /// </summary>
-    long CachedDataLength { get; }
-
-    /// <summary>
-    /// Gets a value indicating whether this entity has references to other entities.
-    /// </summary>
-    bool HasReferences { get; }
-
-    /// <summary>
-    /// Gets the object ID of this entity.
-    /// </summary>
-    long ObjectId { get; }
-
-    /// <summary>
-    /// Gets the type ID of this entity.
-    /// </summary>
-    long TypeId { get; }
-}
+// IStorageEntity interface is already defined in IStorageEntityCache.cs
