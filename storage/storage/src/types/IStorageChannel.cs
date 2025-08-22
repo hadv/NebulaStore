@@ -1,358 +1,422 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace NebulaStore.Storage.Embedded;
+namespace NebulaStore.Storage.Embedded.Types;
 
 /// <summary>
-/// Interface for storage channels.
-/// A channel represents the unity of a thread, a storage directory, and cached data.
+/// Represents a storage channel that handles storage operations for a specific partition of data.
+/// Each channel runs in its own thread and manages its own entity cache and file operations.
 /// </summary>
-public interface IStorageChannel : IDisposable
+public interface IStorageChannel : IRunnable, IStorageChannelResetablePart, IStorageActivePart, IDisposable
 {
     /// <summary>
-    /// Gets the channel identifier.
+    /// Gets the channel index.
     /// </summary>
-    int ChannelId { get; }
+    new int ChannelIndex { get; }
 
     /// <summary>
-    /// Gets the channel directory path.
+    /// Gets the type dictionary for this channel.
     /// </summary>
-    string ChannelDirectory { get; }
+    IStorageTypeDictionary TypeDictionary { get; }
 
     /// <summary>
-    /// Gets whether the channel is active.
+    /// Collects and loads entities by their object IDs.
+    /// </summary>
+    /// <param name="channelChunks">The channel chunks buffer array.</param>
+    /// <param name="loadOids">The object IDs to load.</param>
+    /// <returns>A chunks buffer containing the loaded entities.</returns>
+    IChunksBuffer CollectLoadByOids(IChunksBuffer[] channelChunks, IPersistenceIdSet loadOids);
+
+    /// <summary>
+    /// Collects and loads all root entities.
+    /// </summary>
+    /// <param name="channelChunks">The channel chunks buffer array.</param>
+    /// <returns>A chunks buffer containing the root entities.</returns>
+    IChunksBuffer CollectLoadRoots(IChunksBuffer[] channelChunks);
+
+    /// <summary>
+    /// Collects and loads entities by their type IDs.
+    /// </summary>
+    /// <param name="channelChunks">The channel chunks buffer array.</param>
+    /// <param name="loadTids">The type IDs to load.</param>
+    /// <returns>A chunks buffer containing the loaded entities.</returns>
+    IChunksBuffer CollectLoadByTids(IChunksBuffer[] channelChunks, IPersistenceIdSet loadTids);
+
+    /// <summary>
+    /// Stores entities from chunk data.
+    /// </summary>
+    /// <param name="timestamp">The timestamp for the store operation.</param>
+    /// <param name="chunkData">The chunk data containing entities to store.</param>
+    /// <returns>A key-value pair of byte buffers and their storage positions.</returns>
+    KeyValuePair<byte[][], long[]> StoreEntities(long timestamp, IChunk chunkData);
+
+    /// <summary>
+    /// Rolls back the current chunk storage operation.
+    /// </summary>
+    void RollbackChunkStorage();
+
+    /// <summary>
+    /// Commits the current chunk storage operation.
+    /// </summary>
+    void CommitChunkStorage();
+
+    /// <summary>
+    /// Updates the entity cache after a store operation.
+    /// </summary>
+    /// <param name="chunks">The stored chunks.</param>
+    /// <param name="chunksStoragePositions">The storage positions of the chunks.</param>
+    /// <param name="cancellationToken">The cancellation token.</param>
+    Task PostStoreUpdateEntityCacheAsync(byte[][] chunks, long[] chunksStoragePositions, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Reads the storage inventory.
+    /// </summary>
+    /// <returns>The storage inventory.</returns>
+    IStorageInventory ReadStorage();
+
+    /// <summary>
+    /// Issues a garbage collection operation with the specified time budget.
+    /// </summary>
+    /// <param name="timeBudget">The time budget for garbage collection.</param>
+    /// <returns>True if garbage collection completed within the time budget.</returns>
+    bool IssuedGarbageCollection(TimeSpan timeBudget);
+
+    /// <summary>
+    /// Issues a file cleanup check with the specified time budget.
+    /// </summary>
+    /// <param name="timeBudget">The time budget for file cleanup.</param>
+    /// <returns>True if file cleanup completed within the time budget.</returns>
+    bool IssuedFileCleanupCheck(TimeSpan timeBudget);
+
+    /// <summary>
+    /// Issues an entity cache check with the specified time budget.
+    /// </summary>
+    /// <param name="timeBudget">The time budget for cache checking.</param>
+    /// <param name="entityEvaluator">The entity cache evaluator to use.</param>
+    /// <returns>True if cache checking completed within the time budget.</returns>
+    bool IssuedEntityCacheCheck(TimeSpan timeBudget, IStorageEntityCacheEvaluator entityEvaluator);
+
+    /// <summary>
+    /// Issues a transaction log cleanup operation.
+    /// </summary>
+    /// <returns>True if the cleanup was successful.</returns>
+    bool IssuedTransactionsLogCleanup();
+
+    /// <summary>
+    /// Exports data using the specified file provider.
+    /// </summary>
+    /// <param name="fileProvider">The file provider for export.</param>
+    void ExportData(IStorageLiveFileProvider fileProvider);
+
+    /// <summary>
+    /// Prepares for data import.
+    /// </summary>
+    /// <returns>The entity cache for import operations.</returns>
+    IStorageEntityCache PrepareImportData();
+
+    /// <summary>
+    /// Imports data from the specified source.
+    /// </summary>
+    /// <param name="importSource">The import source.</param>
+    void ImportData(IStorageImportSource importSource);
+
+    /// <summary>
+    /// Rolls back a data import operation.
+    /// </summary>
+    /// <param name="cause">The cause of the rollback.</param>
+    void RollbackImportData(Exception cause);
+
+    /// <summary>
+    /// Commits a data import operation.
+    /// </summary>
+    /// <param name="taskTimestamp">The task timestamp.</param>
+    void CommitImportData(long taskTimestamp);
+
+    /// <summary>
+    /// Exports entities of a specific type to a file.
+    /// </summary>
+    /// <param name="type">The type handler for the entities to export.</param>
+    /// <param name="file">The file to export to.</param>
+    /// <returns>A key-value pair of byte count and entity count.</returns>
+    Task<KeyValuePair<long, long>> ExportTypeEntitiesAsync(IStorageEntityTypeHandler type, Stream file);
+
+    /// <summary>
+    /// Exports entities of a specific type to a file with a predicate filter.
+    /// </summary>
+    /// <param name="type">The type handler for the entities to export.</param>
+    /// <param name="file">The file to export to.</param>
+    /// <param name="predicateEntity">The predicate to filter entities.</param>
+    /// <returns>A key-value pair of byte count and entity count.</returns>
+    Task<KeyValuePair<long, long>> ExportTypeEntitiesAsync(IStorageEntityTypeHandler type, Stream file, Predicate<IStorageEntity> predicateEntity);
+
+    /// <summary>
+    /// Creates raw file statistics for this channel.
+    /// </summary>
+    /// <returns>The raw file statistics.</returns>
+    IStorageRawFileStatistics CreateRawFileStatistics();
+
+    /// <summary>
+    /// Initializes storage with the specified parameters.
+    /// </summary>
+    /// <param name="taskTimestamp">The task timestamp.</param>
+    /// <param name="consistentStoreTimestamp">The consistent store timestamp.</param>
+    /// <param name="storageInventory">The storage inventory.</param>
+    /// <returns>The storage ID analysis result.</returns>
+    IStorageIdAnalysis InitializeStorage(long taskTimestamp, long consistentStoreTimestamp, IStorageInventory storageInventory);
+
+    /// <summary>
+    /// Signals that garbage collection sweep has completed.
+    /// </summary>
+    void SignalGarbageCollectionSweepCompleted();
+
+    /// <summary>
+    /// Cleans up the store.
+    /// </summary>
+    void CleanupStore();
+
+    /// <summary>
+    /// Collects adjacency data for export.
+    /// </summary>
+    /// <param name="exportDirectory">The export directory.</param>
+    /// <returns>The adjacency files.</returns>
+    IAdjacencyFiles CollectAdjacencyData(DirectoryInfo exportDirectory);
+}
+
+/// <summary>
+/// Interface for runnable components.
+/// </summary>
+public interface IRunnable
+{
+    /// <summary>
+    /// Runs the component.
+    /// </summary>
+    void Run();
+}
+
+/// <summary>
+/// Interface for storage channel resetable parts.
+/// </summary>
+public interface IStorageChannelResetablePart
+{
+    /// <summary>
+    /// Resets the component.
+    /// </summary>
+    void Reset();
+}
+
+/// <summary>
+/// Interface for storage active parts.
+/// </summary>
+public interface IStorageActivePart
+{
+    /// <summary>
+    /// Gets a value indicating whether the component is active.
     /// </summary>
     bool IsActive { get; }
 
     /// <summary>
-    /// Gets whether the channel is currently processing operations.
+    /// Gets the channel index.
     /// </summary>
-    bool IsBusy { get; }
-
-    /// <summary>
-    /// Gets the thread associated with this channel.
-    /// </summary>
-    Thread? ChannelThread { get; }
-
-    /// <summary>
-    /// Starts the channel operations.
-    /// </summary>
-    void Start();
-
-    /// <summary>
-    /// Stops the channel operations.
-    /// </summary>
-    void Stop();
-
-    /// <summary>
-    /// Creates a storer for this specific channel.
-    /// </summary>
-    /// <returns>A channel-specific storer</returns>
-    IChannelStorer CreateStorer();
-
-    /// <summary>
-    /// Gets channel-specific statistics.
-    /// </summary>
-    /// <returns>Channel statistics</returns>
-    IChannelStatistics GetStatistics();
-
-    /// <summary>
-    /// Issues garbage collection for this channel.
-    /// </summary>
-    /// <param name="timeBudgetNanos">Time budget in nanoseconds</param>
-    /// <returns>True if completed within budget</returns>
-    bool IssueGarbageCollection(long timeBudgetNanos);
-
-    /// <summary>
-    /// Issues file cleanup for this channel.
-    /// </summary>
-    /// <param name="timeBudgetNanos">Time budget in nanoseconds</param>
-    /// <returns>True if completed within budget</returns>
-    bool IssueFileCleanup(long timeBudgetNanos);
-
-    /// <summary>
-    /// Issues cache cleanup for this channel.
-    /// </summary>
-    /// <param name="timeBudgetNanos">Time budget in nanoseconds</param>
-    /// <returns>True if completed within budget</returns>
-    bool IssueCacheCleanup(long timeBudgetNanos);
+    int ChannelIndex { get; }
 }
 
 /// <summary>
-/// Interface for channel-specific storer operations.
+/// Interface for chunks buffer.
 /// </summary>
-public interface IChannelStorer : IStorer
+public interface IChunksBuffer
 {
     /// <summary>
-    /// Gets the channel this storer belongs to.
+    /// Completes the buffer.
     /// </summary>
-    int ChannelId { get; }
+    /// <returns>The completed chunks buffer.</returns>
+    IChunksBuffer Complete();
 
     /// <summary>
-    /// Gets the current load factor of this channel.
+    /// Gets the buffers.
     /// </summary>
-    double LoadFactor { get; }
+    byte[][] Buffers { get; }
+
+    /// <summary>
+    /// Gets the total size.
+    /// </summary>
+    long TotalSize { get; }
 }
 
 /// <summary>
-/// Interface for storage channel manager.
-/// Manages multiple storage channels and load balancing.
+/// Interface for persistence ID set.
 /// </summary>
-public interface IStorageChannelManager : IDisposable
+public interface IPersistenceIdSet : IEnumerable<long>
 {
     /// <summary>
-    /// Gets the number of channels.
+    /// Gets the size of the set.
+    /// </summary>
+    int Size { get; }
+
+    /// <summary>
+    /// Gets a value indicating whether the set is empty.
+    /// </summary>
+    bool IsEmpty { get; }
+
+    /// <summary>
+    /// Iterates over the IDs with the specified action.
+    /// </summary>
+    /// <param name="action">The action to perform for each ID.</param>
+    void Iterate(Action<long> action);
+}
+
+/// <summary>
+/// Interface for chunk data.
+/// </summary>
+public interface IChunk
+{
+    /// <summary>
+    /// Gets the buffers.
+    /// </summary>
+    /// <returns>The buffers.</returns>
+    byte[][] Buffers();
+
+    /// <summary>
+    /// Gets the total size.
+    /// </summary>
+    long TotalSize { get; }
+}
+
+/// <summary>
+/// Interface for storage inventory.
+/// </summary>
+public interface IStorageInventory
+{
+    /// <summary>
+    /// Gets the channel count.
     /// </summary>
     int ChannelCount { get; }
 
     /// <summary>
-    /// Gets all channels.
+    /// Gets the type dictionary.
     /// </summary>
-    IReadOnlyList<IStorageChannel> Channels { get; }
+    IStorageTypeDictionary TypeDictionary { get; }
 
     /// <summary>
-    /// Gets a specific channel by ID.
+    /// Gets the creation timestamp.
     /// </summary>
-    /// <param name="channelId">The channel ID</param>
-    /// <returns>The channel</returns>
-    IStorageChannel GetChannel(int channelId);
-
-    /// <summary>
-    /// Gets the optimal channel for storing an entity.
-    /// </summary>
-    /// <param name="entity">The entity to store</param>
-    /// <returns>The optimal channel</returns>
-    IStorageChannel GetOptimalChannel(object entity);
-
-    /// <summary>
-    /// Gets the least loaded channel.
-    /// </summary>
-    /// <returns>The channel with the lowest load</returns>
-    IStorageChannel GetLeastLoadedChannel();
-
-    /// <summary>
-    /// Distributes an entity to the appropriate channel.
-    /// </summary>
-    /// <param name="entity">The entity to distribute</param>
-    /// <returns>The channel ID where the entity was assigned</returns>
-    int DistributeEntity(object entity);
-
-    /// <summary>
-    /// Starts all channels.
-    /// </summary>
-    void StartAllChannels();
-
-    /// <summary>
-    /// Stops all channels.
-    /// </summary>
-    void StopAllChannels();
-
-    /// <summary>
-    /// Gets aggregated statistics from all channels.
-    /// </summary>
-    /// <returns>Aggregated channel statistics</returns>
-    IAggregatedChannelStatistics GetAggregatedStatistics();
-
-    /// <summary>
-    /// Performs load balancing across channels.
-    /// </summary>
-    /// <returns>Number of entities redistributed</returns>
-    int PerformLoadBalancing();
-
-    /// <summary>
-    /// Issues housekeeping operations across all channels.
-    /// </summary>
-    /// <param name="timeBudgetNanos">Total time budget in nanoseconds</param>
-    /// <returns>True if all channels completed within budget</returns>
-    bool IssueHousekeeping(long timeBudgetNanos);
+    long CreationTimestamp { get; }
 }
 
 /// <summary>
-/// Interface for channel statistics.
+/// Interface for storage live file provider.
 /// </summary>
-public interface IChannelStatistics
+public interface IStorageLiveFileProvider
 {
     /// <summary>
-    /// Gets the channel ID.
+    /// Provides a file for the specified identifier.
     /// </summary>
-    int ChannelId { get; }
+    /// <param name="identifier">The file identifier.</param>
+    /// <returns>The file stream.</returns>
+    Stream ProvideFile(string identifier);
+}
+
+/// <summary>
+/// Interface for storage import source.
+/// </summary>
+public interface IStorageImportSource
+{
+    /// <summary>
+    /// Gets the source directory.
+    /// </summary>
+    DirectoryInfo SourceDirectory { get; }
 
     /// <summary>
-    /// Gets the number of entities stored in this channel.
+    /// Gets the available files.
+    /// </summary>
+    /// <returns>The available files.</returns>
+    IEnumerable<FileInfo> GetAvailableFiles();
+}
+
+// IStorageEntityCache interface is already defined in IStorageEntityCache.cs
+
+/// <summary>
+/// Interface for storage entity type handler.
+/// </summary>
+public interface IStorageEntityTypeHandler
+{
+    /// <summary>
+    /// Gets the type ID.
+    /// </summary>
+    long TypeId { get; }
+
+    /// <summary>
+    /// Gets the type.
+    /// </summary>
+    Type Type { get; }
+
+    /// <summary>
+    /// Gets the type name.
+    /// </summary>
+    string TypeName { get; }
+}
+
+/// <summary>
+/// Interface for storage raw file statistics.
+/// </summary>
+public interface IStorageRawFileStatistics
+{
+    /// <summary>
+    /// Gets the file count.
+    /// </summary>
+    int FileCount { get; }
+
+    /// <summary>
+    /// Gets the total file size.
+    /// </summary>
+    long TotalFileSize { get; }
+
+    /// <summary>
+    /// Gets the live data size.
+    /// </summary>
+    long LiveDataSize { get; }
+}
+
+/// <summary>
+/// Interface for storage ID analysis.
+/// </summary>
+public interface IStorageIdAnalysis
+{
+    /// <summary>
+    /// Gets the highest object ID.
+    /// </summary>
+    long HighestObjectId { get; }
+
+    /// <summary>
+    /// Gets the highest type ID.
+    /// </summary>
+    long HighestTypeId { get; }
+
+    /// <summary>
+    /// Gets the entity count.
     /// </summary>
     long EntityCount { get; }
-
-    /// <summary>
-    /// Gets the total storage size for this channel.
-    /// </summary>
-    long StorageSize { get; }
-
-    /// <summary>
-    /// Gets the number of data files in this channel.
-    /// </summary>
-    int DataFileCount { get; }
-
-    /// <summary>
-    /// Gets the current load factor (0.0 to 1.0).
-    /// </summary>
-    double LoadFactor { get; }
-
-    /// <summary>
-    /// Gets the number of pending operations.
-    /// </summary>
-    long PendingOperations { get; }
-
-    /// <summary>
-    /// Gets the last housekeeping time.
-    /// </summary>
-    DateTime? LastHousekeeping { get; }
-
-    /// <summary>
-    /// Gets the cache hit ratio.
-    /// </summary>
-    double CacheHitRatio { get; }
-
-    /// <summary>
-    /// Gets the average operation time in milliseconds.
-    /// </summary>
-    double AverageOperationTime { get; }
 }
 
 /// <summary>
-/// Interface for aggregated channel statistics.
+/// Interface for adjacency files.
 /// </summary>
-public interface IAggregatedChannelStatistics
+public interface IAdjacencyFiles
 {
     /// <summary>
-    /// Gets the total number of entities across all channels.
+    /// Gets the exported files.
     /// </summary>
-    long TotalEntityCount { get; }
+    IEnumerable<FileInfo> ExportedFiles { get; }
 
     /// <summary>
-    /// Gets the total storage size across all channels.
+    /// Gets the total file count.
     /// </summary>
-    long TotalStorageSize { get; }
+    int TotalFileCount { get; }
 
     /// <summary>
-    /// Gets the total number of data files across all channels.
+    /// Gets the total file size.
     /// </summary>
-    int TotalDataFileCount { get; }
-
-    /// <summary>
-    /// Gets the average load factor across all channels.
-    /// </summary>
-    double AverageLoadFactor { get; }
-
-    /// <summary>
-    /// Gets the load distribution variance (measure of load balance).
-    /// </summary>
-    double LoadDistributionVariance { get; }
-
-    /// <summary>
-    /// Gets the total number of pending operations across all channels.
-    /// </summary>
-    long TotalPendingOperations { get; }
-
-    /// <summary>
-    /// Gets the overall cache hit ratio.
-    /// </summary>
-    double OverallCacheHitRatio { get; }
-
-    /// <summary>
-    /// Gets statistics for each individual channel.
-    /// </summary>
-    IReadOnlyList<IChannelStatistics> ChannelStatistics { get; }
-}
-
-/// <summary>
-/// Interface for channel load balancing strategy.
-/// </summary>
-public interface IChannelLoadBalancer
-{
-    /// <summary>
-    /// Determines the optimal channel for an entity.
-    /// </summary>
-    /// <param name="entity">The entity to place</param>
-    /// <param name="channels">Available channels</param>
-    /// <returns>The optimal channel</returns>
-    IStorageChannel SelectChannel(object entity, IReadOnlyList<IStorageChannel> channels);
-
-    /// <summary>
-    /// Evaluates whether load balancing is needed.
-    /// </summary>
-    /// <param name="statistics">Current channel statistics</param>
-    /// <returns>True if rebalancing is recommended</returns>
-    bool ShouldRebalance(IAggregatedChannelStatistics statistics);
-
-    /// <summary>
-    /// Creates a rebalancing plan.
-    /// </summary>
-    /// <param name="statistics">Current channel statistics</param>
-    /// <returns>Rebalancing plan</returns>
-    IRebalancingPlan CreateRebalancingPlan(IAggregatedChannelStatistics statistics);
-}
-
-/// <summary>
-/// Interface for channel rebalancing plan.
-/// </summary>
-public interface IRebalancingPlan
-{
-    /// <summary>
-    /// Gets the planned entity movements.
-    /// </summary>
-    IReadOnlyList<EntityMovement> EntityMovements { get; }
-
-    /// <summary>
-    /// Gets the estimated improvement in load distribution.
-    /// </summary>
-    double EstimatedImprovement { get; }
-
-    /// <summary>
-    /// Executes the rebalancing plan.
-    /// </summary>
-    /// <returns>Number of entities actually moved</returns>
-    int Execute();
-}
-
-/// <summary>
-/// Represents a planned entity movement between channels.
-/// </summary>
-public record EntityMovement(long EntityId, int FromChannelId, int ToChannelId, string Reason);
-
-/// <summary>
-/// Enumeration of channel load balancing strategies.
-/// </summary>
-public enum ChannelLoadBalancingStrategy
-{
-    /// <summary>
-    /// Round-robin distribution.
-    /// </summary>
-    RoundRobin,
-
-    /// <summary>
-    /// Least loaded channel first.
-    /// </summary>
-    LeastLoaded,
-
-    /// <summary>
-    /// Hash-based distribution by entity type.
-    /// </summary>
-    HashByType,
-
-    /// <summary>
-    /// Hash-based distribution by entity ID.
-    /// </summary>
-    HashById,
-
-    /// <summary>
-    /// Weighted distribution based on channel capacity.
-    /// </summary>
-    WeightedCapacity,
-
-    /// <summary>
-    /// Custom strategy implementation.
-    /// </summary>
-    Custom
+    long TotalFileSize { get; }
 }

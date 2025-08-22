@@ -45,12 +45,8 @@ public interface IEmbeddedStorageManager : IDisposable
     /// <returns>Array of object IDs</returns>
     long[] StoreAll(params object[] objects);
 
-    /// <summary>
-    /// Queries for objects of the specified type.
-    /// </summary>
-    /// <typeparam name="T">The type to query for</typeparam>
-    /// <returns>Enumerable of objects of the specified type</returns>
-    IEnumerable<T> Query<T>();
+    // Note: EclipseStore doesn't have a Query method - use direct object graph navigation instead
+    // Example: root.Customers.Where(c => c.Age > 25) using LINQ on your object graph
 
     /// <summary>
     /// Creates a new storer instance for batch operations.

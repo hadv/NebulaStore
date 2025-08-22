@@ -51,8 +51,8 @@ public class EmbeddedStorageExample
         // Store the root
         storage.StoreRoot();
 
-        // Query books
-        var modernBooks = storage.Query<Book>()
+        // Query books using direct object graph navigation (no Query method needed)
+        var modernBooks = library.Books
             .Where(b => b.Year >= 2000)
             .ToList();
 

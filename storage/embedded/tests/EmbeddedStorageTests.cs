@@ -78,18 +78,19 @@ public class EmbeddedStorageTests : IDisposable
     }
 
     [Fact]
-    public void StorageManager_Query_ShouldFindStoredObjects()
+    public void StorageManager_DirectObjectNavigation_ShouldFindStoredObjects()
     {
         using var storage = EmbeddedStorage.Start(_testDirectory);
-        
+
         var root = storage.Root<TestContainer>();
         root.Items.Add(new TestData { Name = "Item1", Value = 1 });
         root.Items.Add(new TestData { Name = "Item2", Value = 2 });
-        
+
         storage.StoreRoot();
-        
-        var items = storage.Query<TestData>().ToList();
-        
+
+        // EclipseStore way: Direct object graph navigation using LINQ
+        var items = root.Items.ToList();
+
         Assert.Equal(2, items.Count);
         Assert.Contains(items, i => i.Name == "Item1");
         Assert.Contains(items, i => i.Name == "Item2");

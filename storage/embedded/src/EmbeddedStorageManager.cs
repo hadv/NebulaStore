@@ -2,6 +2,8 @@ using MessagePack;
 using NebulaStore.Storage.EmbeddedConfiguration;
 using NebulaStore.Storage.Monitoring;
 using NebulaStore.GigaMap;
+using NebulaStore.Storage.Embedded.Types;
+using IStorageStatistics = NebulaStore.Storage.IStorageStatistics;
 
 namespace NebulaStore.Storage.Embedded;
 
@@ -41,9 +43,9 @@ public class EmbeddedStorageManager : IEmbeddedStorageManager, IMonitorableStora
 
     public bool IsRunning => _isRunning && !_isDisposed;
 
-    public bool IsAcceptingTasks => IsRunning && _connection.IsActive;
+    public bool IsAcceptingTasks => IsRunning && _connection != null;
 
-    public bool IsActive => IsRunning && _connection.IsActive;
+    public bool IsActive => IsRunning && _connection != null;
 
     public T Root<T>() where T : new()
     {
@@ -122,24 +124,14 @@ public class EmbeddedStorageManager : IEmbeddedStorageManager, IMonitorableStora
         return objectIds;
     }
 
-    public IEnumerable<T> Query<T>()
-    {
-        ThrowIfDisposed();
-        
-        if (_root == null) 
-            yield break;
-
-        foreach (var item in TraverseGraphLazy(_root, new HashSet<object>()))
-        {
-            if (item is T t) 
-                yield return t;
-        }
-    }
+    // Note: EclipseStore doesn't have a Query method - use direct object graph navigation instead
+    // Example: root.Customers.Where(c => c.Age > 25) using LINQ on your object graph
+    // The root object contains your entire object graph that you can navigate directly
 
     public IStorer CreateStorer()
     {
         ThrowIfDisposed();
-        return _connection.CreateStorer();
+        return new EmbeddedStorer(_connection);
     }
 
     public IEmbeddedStorageManager Start()
@@ -190,7 +182,8 @@ public class EmbeddedStorageManager : IEmbeddedStorageManager, IMonitorableStora
     public bool IssueGarbageCollection(long timeBudgetNanos)
     {
         ThrowIfDisposed();
-        return _connection.IssueGarbageCollection(timeBudgetNanos);
+        var timeBudget = TimeSpan.FromTicks(timeBudgetNanos / 100); // Convert nanoseconds to TimeSpan
+        return _connection.IssueGarbageCollection(timeBudget);
     }
 
     public async Task CreateBackupAsync(string backupDirectory)
@@ -222,7 +215,8 @@ public class EmbeddedStorageManager : IEmbeddedStorageManager, IMonitorableStora
     public IStorageStatistics GetStatistics()
     {
         ThrowIfDisposed();
-        return _connection.GetStatistics();
+        var embeddedStats = _connection.CreateStorageStatistics();
+        return new StorageStatisticsAdapter(embeddedStats);
     }
 
     public IStorageMonitoringManager GetMonitoringManager()
@@ -391,52 +385,7 @@ public class EmbeddedStorageManager : IEmbeddedStorageManager, IMonitorableStora
         );
     }
 
-    private IEnumerable<object> TraverseGraphLazy(object obj, HashSet<object> visited)
-    {
-        if (obj == null || visited.Contains(obj)) 
-            yield break;
-
-        visited.Add(obj);
-        yield return obj;
-
-        // Traverse collections
-        if (obj is System.Collections.IEnumerable enumerable && obj is not string)
-        {
-            foreach (var element in enumerable)
-            {
-                if (element != null)
-                {
-                    foreach (var child in TraverseGraphLazy(element, visited))
-                        yield return child;
-                }
-            }
-        }
-
-        // Traverse properties
-        var type = obj.GetType();
-        foreach (var prop in type.GetProperties())
-        {
-            if (!prop.CanRead || prop.GetIndexParameters().Length > 0)
-                continue;
-
-            object? value = null;
-            try
-            {
-                value = prop.GetValue(obj);
-            }
-            catch
-            {
-                // Skip properties that can't be accessed
-                continue;
-            }
-
-            if (value != null && value is not string && _typeEvaluator!(value.GetType()))
-            {
-                foreach (var child in TraverseGraphLazy(value, visited))
-                    yield return child;
-            }
-        }
-    }
+    // TraverseGraphLazy method removed - not needed for EclipseStore's direct object navigation approach
 
     // ========== GigaMap Implementation ==========
 
@@ -652,7 +601,7 @@ internal class RootWrapper
 /// Placeholder implementation of object registry for monitoring.
 /// This will be replaced when the actual object registry is implemented.
 /// </summary>
-internal class PlaceholderObjectRegistry : IPersistenceObjectRegistry
+internal class PlaceholderObjectRegistry : NebulaStore.Storage.Monitoring.IPersistenceObjectRegistry
 {
     public long Capacity => 1000000; // Default capacity
     public long Size => 0; // No objects registered yet
@@ -662,7 +611,7 @@ internal class PlaceholderObjectRegistry : IPersistenceObjectRegistry
 /// Placeholder implementation of entity cache for monitoring.
 /// This will be replaced when the actual entity cache is implemented.
 /// </summary>
-internal class PlaceholderEntityCache : IStorageEntityCache
+internal class PlaceholderEntityCache : NebulaStore.Storage.Monitoring.IStorageEntityCache
 {
     public int ChannelIndex { get; }
     public long LastSweepStart => DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
@@ -673,5 +622,100 @@ internal class PlaceholderEntityCache : IStorageEntityCache
     public PlaceholderEntityCache(int channelIndex)
     {
         ChannelIndex = channelIndex;
+    }
+}
+
+/// <summary>
+/// Adapter to convert between different IStorageStatistics interfaces
+/// </summary>
+internal class StorageStatisticsAdapter : IStorageStatistics
+{
+    private readonly NebulaStore.Storage.Embedded.Types.IStorageStatistics _embeddedStats;
+
+    public StorageStatisticsAdapter(NebulaStore.Storage.Embedded.Types.IStorageStatistics embeddedStats)
+    {
+        _embeddedStats = embeddedStats ?? throw new ArgumentNullException(nameof(embeddedStats));
+    }
+
+    // IStorageStatistics from NebulaStore.Storage interface
+    public long TotalObjectCount => 0; // Not available in embedded stats
+    public long TotalStorageSize => _embeddedStats.TotalFileSize;
+    public int DataFileCount => 0; // Not available in embedded stats
+    public int TransactionFileCount => 0; // Not available in embedded stats
+    public long LiveDataLength => _embeddedStats.LiveDataSize;
+    public DateTime CreationTime => _embeddedStats.CreationTimestamp;
+    public DateTime LastModificationTime => DateTime.UtcNow; // Placeholder
+}
+
+/// <summary>
+/// Embedded storage storer that properly tracks pending objects for commit.
+/// </summary>
+internal class EmbeddedStorer : IStorer
+{
+    private readonly IStorageConnection _connection;
+    private long _pendingObjectCount = 0;
+    private bool _disposed = false;
+
+    public EmbeddedStorer(IStorageConnection connection)
+    {
+        _connection = connection ?? throw new ArgumentNullException(nameof(connection));
+    }
+
+    public long Store(object obj)
+    {
+        ThrowIfDisposed();
+        var objectId = _connection.Store(obj);
+        if (objectId > 0)
+        {
+            _pendingObjectCount++;
+        }
+        return objectId;
+    }
+
+    public long[] StoreAll(params object[] objects)
+    {
+        ThrowIfDisposed();
+        var objectIds = _connection.StoreAll(objects);
+        _pendingObjectCount += objectIds.Count(id => id > 0);
+        return objectIds;
+    }
+
+    public long Commit()
+    {
+        ThrowIfDisposed();
+        var committedCount = _pendingObjectCount;
+        _pendingObjectCount = 0; // Reset after commit
+        _connection.Commit(); // Delegate to underlying connection
+        return committedCount;
+    }
+
+    public long PendingObjectCount => _pendingObjectCount;
+    public bool HasPendingOperations => _pendingObjectCount > 0;
+
+    public IStorer Skip(object obj)
+    {
+        ThrowIfDisposed();
+        _connection.Skip(obj);
+        return this;
+    }
+
+    public long Ensure(object obj)
+    {
+        ThrowIfDisposed();
+        return Store(obj); // Force storage
+    }
+
+    private void ThrowIfDisposed()
+    {
+        if (_disposed)
+            throw new ObjectDisposedException(GetType().Name);
+    }
+
+    public void Dispose()
+    {
+        if (!_disposed)
+        {
+            _disposed = true;
+        }
     }
 }
