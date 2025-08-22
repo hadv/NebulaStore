@@ -317,6 +317,13 @@ public interface IPersistenceObjectRegistry
     void RegisterObject(object instance, long objectId);
 
     /// <summary>
+    /// Gets the object for the specified object ID.
+    /// </summary>
+    /// <param name="objectId">The object ID to look up.</param>
+    /// <returns>The object for the specified object ID, or null if not found.</returns>
+    object? GetObject(long objectId);
+
+    /// <summary>
     /// Consolidates the registry.
     /// </summary>
     void Consolidate();
