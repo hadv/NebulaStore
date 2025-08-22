@@ -303,11 +303,17 @@ internal class EmbeddedStorageFoundation : IEmbeddedStorageFoundation
     {
         var configuration = _configuration ?? EmbeddedStorage.CreateConfiguration(EmbeddedStorage.GetDefaultStorageDirectory());
         var connectionFoundation = _connectionFoundation ?? EmbeddedStorage.ConnectionFoundation();
-        
-        // This would create the actual storage manager implementation
-        // For now, we'll throw a NotImplementedException as the full implementation
-        // would require all the concrete classes we've defined interfaces for
-        throw new NotImplementedException("Full storage manager implementation requires concrete implementations of all storage interfaces.");
+
+        // Create the actual storage manager implementation
+        var storageManager = StorageManager.Create(configuration);
+
+        // Set the root object if provided
+        if (root != null)
+        {
+            storageManager.SetRoot(root);
+        }
+
+        return storageManager;
     }
 }
 
@@ -326,8 +332,10 @@ internal class EmbeddedStorageConnectionFoundation : IEmbeddedStorageConnectionF
 
     public IStorageConnection CreateConnection()
     {
-        // This would create the actual storage connection implementation
-        throw new NotImplementedException("Full storage connection implementation requires concrete implementations of all storage interfaces.");
+        // Create a basic storage connection
+        var configuration = EmbeddedStorage.CreateConfiguration(_storageDirectory ?? EmbeddedStorage.GetDefaultStorageDirectory());
+        var storageManager = StorageManager.Create(configuration);
+        return storageManager.CreateConnection();
     }
 }
 
