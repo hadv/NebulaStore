@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using NebulaStore.Storage.EmbeddedConfiguration;
 using NebulaStore.Afs.Blobstore;
+using NebulaStore.Storage;
+using NebulaStore.Storage.Embedded.Types;
 
 namespace NebulaStore.Storage.Embedded;
 
@@ -95,12 +97,22 @@ public class EmbeddedStorageFoundation : IEmbeddedStorageFoundation
         // Create storage connection (AFS or traditional)
         IStorageConnection connection = configuration.UseAfs
             ? new AfsStorageConnection(configuration, typeHandlerRegistry)
-            : new StorageConnection(configuration, typeHandlerRegistry);
+            : CreateBasicStorageConnection(configuration);
 
         // Create the storage manager
         var manager = new EmbeddedStorageManager(configuration, connection, rootObject, _typeEvaluator);
 
         return manager;
+    }
+
+    private IStorageConnection CreateBasicStorageConnection(IEmbeddedStorageConfiguration configuration)
+    {
+        // Convert embedded configuration to storage configuration
+        var storageConfig = new BasicStorageConfiguration(configuration);
+
+        // Create a basic storage manager and return its connection
+        var storageManager = StorageManager.Create(storageConfig);
+        return storageManager.CreateConnection();
     }
 
     public IEmbeddedStorageManager Start()
@@ -113,4 +125,27 @@ public class EmbeddedStorageFoundation : IEmbeddedStorageFoundation
         var manager = CreateEmbeddedStorageManager(explicitRoot);
         return manager.Start();
     }
+}
+
+/// <summary>
+/// Adapter to convert IEmbeddedStorageConfiguration to IStorageConfiguration
+/// </summary>
+internal class BasicStorageConfiguration : IStorageConfiguration
+{
+    private readonly IEmbeddedStorageConfiguration _embeddedConfig;
+
+    public BasicStorageConfiguration(IEmbeddedStorageConfiguration embeddedConfig)
+    {
+        _embeddedConfig = embeddedConfig ?? throw new ArgumentNullException(nameof(embeddedConfig));
+    }
+
+    public string StorageDirectory => _embeddedConfig.StorageDirectory;
+    public int ChannelCount => _embeddedConfig.ChannelCount;
+    public TimeSpan HousekeepingInterval => TimeSpan.FromMilliseconds(_embeddedConfig.HousekeepingIntervalMs);
+    public long HousekeepingTimeBudget => _embeddedConfig.HousekeepingTimeBudgetNs;
+    public long EntityCacheThreshold => _embeddedConfig.EntityCacheThreshold;
+    public TimeSpan EntityCacheTimeout => TimeSpan.FromMilliseconds(_embeddedConfig.EntityCacheTimeoutMs);
+    public long DataFileMinimumSize => _embeddedConfig.DataFileMinimumSize;
+    public long DataFileMaximumSize => _embeddedConfig.DataFileMaximumSize;
+    public bool UseAfs => _embeddedConfig.UseAfs;
 }

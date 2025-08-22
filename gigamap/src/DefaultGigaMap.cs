@@ -397,7 +397,7 @@ public class DefaultGigaMap<T> : IGigaMap<T> where T : class
 
         lock (_lock)
         {
-            using var storer = _storageConnection.CreateStorer();
+            var storer = _storageConnection; // IStorageConnection implements IStorer directly
 
             // Store all entities
             var entityCount = 0;

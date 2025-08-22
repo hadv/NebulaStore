@@ -10,11 +10,11 @@ namespace NebulaStore.Storage.Embedded;
 /// 
 /// In the simplest case, the following call is enough to set up and start an embedded object graph database:
 /// <code>
-/// var storage = EmbeddedStorage.Start();
+/// var storage = EmbeddedStorageFactory.Start();
 /// </code>
 /// Anything beyond that is optimization and customization. As it should be.
 /// </summary>
-public static class EmbeddedStorage
+public static class EmbeddedStorageFactory
 {
     /// <summary>
     /// Creates an instance of an IEmbeddedStorageFoundation default implementation without any assembly parts set.
@@ -301,8 +301,8 @@ internal class EmbeddedStorageFoundation : IEmbeddedStorageFoundation
 
     public IStorageManager CreateEmbeddedStorageManager(object? root)
     {
-        var configuration = _configuration ?? EmbeddedStorage.CreateConfiguration(EmbeddedStorage.GetDefaultStorageDirectory());
-        var connectionFoundation = _connectionFoundation ?? EmbeddedStorage.ConnectionFoundation();
+        var configuration = _configuration ?? EmbeddedStorageFactory.CreateConfiguration(EmbeddedStorageFactory.GetDefaultStorageDirectory());
+        var connectionFoundation = _connectionFoundation ?? EmbeddedStorageFactory.ConnectionFoundation();
 
         // Create the actual storage manager implementation
         var storageManager = StorageManager.Create(configuration);
@@ -333,7 +333,7 @@ internal class EmbeddedStorageConnectionFoundation : IEmbeddedStorageConnectionF
     public IStorageConnection CreateConnection()
     {
         // Create a basic storage connection
-        var configuration = EmbeddedStorage.CreateConfiguration(_storageDirectory ?? EmbeddedStorage.GetDefaultStorageDirectory());
+        var configuration = EmbeddedStorageFactory.CreateConfiguration(_storageDirectory ?? EmbeddedStorageFactory.GetDefaultStorageDirectory());
         var storageManager = StorageManager.Create(configuration);
         return storageManager.CreateConnection();
     }

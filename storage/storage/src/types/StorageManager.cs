@@ -540,18 +540,39 @@ internal class BasicPersistenceObjectRegistry : IPersistenceObjectRegistry
 internal class BasicStorer : IStorer
 {
     private readonly BasicPersistenceManager _persistenceManager;
+    private long _pendingObjectCount = 0;
 
     public BasicStorer(BasicPersistenceManager persistenceManager)
     {
         _persistenceManager = persistenceManager ?? throw new ArgumentNullException(nameof(persistenceManager));
     }
 
-    public long Store(object instance) => _persistenceManager.Store(instance);
-    public long[] StoreAll(params object[] instances) => _persistenceManager.StoreAll(instances);
+    public long Store(object instance)
+    {
+        var objectId = _persistenceManager.Store(instance);
+        if (objectId > 0)
+        {
+            _pendingObjectCount++;
+        }
+        return objectId;
+    }
 
-    public long Commit() => 0; // No pending operations in this simple implementation
-    public long PendingObjectCount => 0;
-    public bool HasPendingOperations => false;
+    public long[] StoreAll(params object[] instances)
+    {
+        var objectIds = _persistenceManager.StoreAll(instances);
+        _pendingObjectCount += objectIds.Count(id => id > 0);
+        return objectIds;
+    }
+
+    public long Commit()
+    {
+        var committedCount = _pendingObjectCount;
+        _pendingObjectCount = 0; // Reset after commit
+        return committedCount;
+    }
+
+    public long PendingObjectCount => _pendingObjectCount;
+    public bool HasPendingOperations => _pendingObjectCount > 0;
     public IStorer Skip(object obj) => this;
     public long Ensure(object obj) => Store(obj);
 
