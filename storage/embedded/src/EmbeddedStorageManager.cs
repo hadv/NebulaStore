@@ -47,24 +47,17 @@ public class EmbeddedStorageManager : IEmbeddedStorageManager, IMonitorableStora
 
     public bool IsActive => IsRunning && _connection != null;
 
-    public T Root<T>() where T : new()
+    public T? Root<T>()
     {
         ThrowIfDisposed();
 
         if (_root == null)
         {
-            _root = new T();
-            _rootType = typeof(T);
+            return default(T); // Return null/default if no root has been set (Eclipse Store behavior)
         }
         else if (_root is not T)
         {
             throw new InvalidOperationException($"Root object is of type {_root.GetType().Name}, not {typeof(T).Name}");
-        }
-
-        // Ensure root type is set
-        if (_rootType == null)
-        {
-            _rootType = typeof(T);
         }
 
         return (T)_root;
@@ -767,16 +760,46 @@ internal class EmbeddedStorer : IStorer
 /// </summary>
 internal class SimpleTypeDictionary : IStorageTypeDictionary
 {
+    private readonly Dictionary<Type, ITypeHandler> _typeHandlers = new();
+
     public void RegisterType(Type type) { /* No-op - types handled by MessagePack */ }
     public bool IsTypeRegistered(Type type) => true; // All types supported via MessagePack
     public long GetTypeId(Type type) => type.GetHashCode(); // Simple type ID
     public Type? GetType(long typeId) => null; // Not needed for simple implementation
 
     // Additional required methods
-    public ITypeHandler? GetTypeHandler(Type type) => null; // Not needed for simple implementation
+    public ITypeHandler? GetTypeHandler(Type type)
+    {
+        if (!_typeHandlers.TryGetValue(type, out var handler))
+        {
+            handler = new SimpleTypeHandler(type);
+            _typeHandlers[type] = handler;
+        }
+        return handler;
+    }
     public ITypeHandler? GetTypeHandlerByTypeId(long typeId) => null; // Not needed for simple implementation
-    public IEnumerable<ITypeHandler> GetAllTypeHandlers() => Enumerable.Empty<ITypeHandler>();
-    public void RegisterTypeHandler(Type type, ITypeHandler handler) { /* No-op */ }
+    public IEnumerable<ITypeHandler> GetAllTypeHandlers() => _typeHandlers.Values;
+    public void RegisterTypeHandler(Type type, ITypeHandler handler) { _typeHandlers[type] = handler; }
+}
+
+/// <summary>
+/// Simple type handler implementation for Eclipse Store compatibility.
+/// </summary>
+internal class SimpleTypeHandler : ITypeHandler
+{
+    public Type HandledType { get; }
+    public long TypeId { get; }
+
+    public SimpleTypeHandler(Type type)
+    {
+        HandledType = type;
+        TypeId = Math.Abs(type.GetHashCode()) + 1000; // Ensure positive ID starting from 1000
+    }
+
+    public byte[] Serialize(object obj) => MessagePack.MessagePackSerializer.Serialize(obj);
+    public object Deserialize(byte[] data) => MessagePack.MessagePackSerializer.Deserialize<object>(data);
+    public long GetSerializedLength(object obj) => Serialize(obj).Length;
+    public bool CanHandle(Type type) => type == HandledType;
 }
 
 /// <summary>
@@ -829,7 +852,7 @@ internal class SimpleStorageConnection : IStorageConnection
         _embeddedStorage = embeddedStorage;
     }
 
-    public IPersistenceManager PersistenceManager => throw new NotSupportedException("Use EmbeddedStorageManager directly");
+    public IPersistenceManager PersistenceManager => new SimplePersistenceManager(_embeddedStorage);
 
     public long Store(object instance) => _embeddedStorage.Store(instance);
     public long[] StoreAll(params object[] instances) => _embeddedStorage.StoreAll(instances);
@@ -853,4 +876,38 @@ internal class SimpleStorageConnection : IStorageConnection
     public void ImportFiles(System.IO.DirectoryInfo importDirectory) => _embeddedStorage.ImportFiles(importDirectory);
 
     public void Dispose() { }
+}
+
+/// <summary>
+/// Simple persistence manager adapter for Eclipse Store compatibility.
+/// </summary>
+internal class SimplePersistenceManager : IPersistenceManager
+{
+    private readonly IEmbeddedStorageManager _embeddedStorage;
+
+    public SimplePersistenceManager(IEmbeddedStorageManager embeddedStorage)
+    {
+        _embeddedStorage = embeddedStorage;
+    }
+
+    public long Store(object instance) => _embeddedStorage.Store(instance);
+    public long[] StoreAll(params object[] instances) => _embeddedStorage.StoreAll(instances);
+    public object GetObject(long objectId) => throw new NotSupportedException("Use object graph navigation instead");
+    public IStorer CreateLazyStorer() => _embeddedStorage.CreateStorer();
+    public IStorer CreateStorer() => _embeddedStorage.CreateStorer();
+    public IStorer CreateEagerStorer() => _embeddedStorage.CreateStorer();
+    public IStorageTypeDictionary TypeDictionary => _embeddedStorage.TypeDictionary;
+    public NebulaStore.Storage.Embedded.Types.IPersistenceObjectRegistry ObjectRegistry => new SimpleObjectRegistry();
+    public IPersistenceRootsView ViewRoots() => _embeddedStorage.ViewRoots();
+}
+
+/// <summary>
+/// Simple object registry for Eclipse Store compatibility.
+/// </summary>
+internal class SimpleObjectRegistry : NebulaStore.Storage.Embedded.Types.IPersistenceObjectRegistry
+{
+    public long LookupObjectId(object instance) => 0; // Simple implementation
+    public void RegisterObject(object instance, long objectId) { } // No-op
+    public object? GetObject(long objectId) => null; // Simple implementation
+    public void Consolidate() { } // No-op
 }
