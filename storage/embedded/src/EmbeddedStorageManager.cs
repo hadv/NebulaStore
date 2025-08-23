@@ -53,7 +53,22 @@ public class EmbeddedStorageManager : IEmbeddedStorageManager, IMonitorableStora
 
         if (_root == null)
         {
-            return default(T); // Return null/default if no root has been set (Eclipse Store behavior)
+            // NebulaStore convenience: auto-create root if type has parameterless constructor
+            try
+            {
+                var newRoot = Activator.CreateInstance<T>();
+                if (newRoot != null)
+                {
+                    _root = newRoot;
+                    _rootType = typeof(T);
+                    return newRoot;
+                }
+            }
+            catch
+            {
+                // If creation fails, return default (null for reference types)
+            }
+            return default(T);
         }
         else if (_root is not T)
         {

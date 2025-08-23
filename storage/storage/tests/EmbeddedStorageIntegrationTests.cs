@@ -277,16 +277,20 @@ public class EmbeddedStorageIntegrationTests : IDisposable
     }
 
     [Fact]
-    public void StorageHandlesNullRoot()
+    public void StorageHandlesAutoCreatedRoot()
     {
         // Arrange & Act
         using var storage = EmbeddedStorage.Start(null, _testDirectory);
 
         // Assert
         Assert.NotNull(storage);
-        Assert.Null(storage.Root<TestData>());
 
-        // Should be able to set root later
+        // NebulaStore auto-creates root objects with parameterless constructors
+        var autoRoot = storage.Root<TestData>();
+        Assert.NotNull(autoRoot);
+        Assert.IsType<TestData>(autoRoot);
+
+        // Should be able to set a different root later
         var testData = new TestData { Name = "Later", Value = 456 };
         storage.SetRoot(testData);
 

@@ -13,7 +13,7 @@ public interface IEmbeddedStorageManager : IDisposable
 {
     /// <summary>
     /// Gets the root object of the specified type.
-    /// Returns null if no root has been set.
+    /// Creates a new instance if no root exists and type has parameterless constructor.
     /// </summary>
     /// <typeparam name="T">The type of the root object</typeparam>
     /// <returns>The root object instance or null</returns>
