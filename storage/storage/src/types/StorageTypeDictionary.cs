@@ -55,6 +55,12 @@ public class StorageTypeDictionary : IStorageTypeDictionary
         return RegisterType(type);
     }
 
+    public ITypeHandler? GetTypeHandlerByTypeId(long typeId)
+    {
+        _typeIdToHandler.TryGetValue(typeId, out var handler);
+        return handler;
+    }
+
     public IEnumerable<ITypeHandler> GetAllTypeHandlers()
     {
         return _typeToHandler.Values.ToList();

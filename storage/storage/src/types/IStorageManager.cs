@@ -190,6 +190,13 @@ public interface IStorageTypeDictionary
     ITypeHandler? GetTypeHandler(Type type);
 
     /// <summary>
+    /// Gets the type handler for the specified type ID.
+    /// </summary>
+    /// <param name="typeId">The type ID to get the handler for.</param>
+    /// <returns>The type handler for the specified type ID.</returns>
+    ITypeHandler? GetTypeHandlerByTypeId(long typeId);
+
+    /// <summary>
     /// Gets all registered type handlers.
     /// </summary>
     /// <returns>All registered type handlers.</returns>

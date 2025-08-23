@@ -480,6 +480,161 @@ public class StorageManager : IStorageManager, IStorer
         GC.SuppressFinalize(this);
     }
 
+    public object GetObject(long objectId)
+    {
+        try
+        {
+            // Try to get from persistence manager first (for recently stored objects)
+            var cachedObject = _persistenceManager.ObjectRegistry.GetObject(objectId);
+            if (cachedObject != null)
+            {
+                return cachedObject;
+            }
+
+            // Load from storage files
+            return LoadObjectFromStorage(objectId);
+        }
+        catch (Exception ex) when (!(ex is StorageException))
+        {
+            throw new StorageExceptionIoReading($"Failed to get object with ID {objectId}", ex);
+        }
+    }
+
+    private object LoadObjectFromStorage(long objectId)
+    {
+        // Search through all channels to find the object
+        foreach (var channel in _channels)
+        {
+            var obj = LoadObjectFromChannel(channel, objectId);
+            if (obj != null)
+            {
+                // Register the loaded object in the registry for future access
+                _persistenceManager.ObjectRegistry.RegisterObject(obj, objectId);
+                return obj;
+            }
+        }
+
+        throw new StorageExceptionNotFound($"Object with ID {objectId} not found in storage");
+    }
+
+    private object? LoadObjectFromChannel(StorageChannel channel, long objectId)
+    {
+        try
+        {
+            // Get the file manager for this channel
+            var fileManager = channel.FileManager;
+
+            // Iterate through all storage files in the channel
+            object? foundObject = null;
+            fileManager.IterateStorageFiles(file =>
+            {
+                if (foundObject != null) return; // Already found
+
+                foundObject = SearchObjectInFile(file, objectId);
+            });
+
+            return foundObject;
+        }
+        catch (Exception ex)
+        {
+            // Log error but continue searching in other channels
+            Console.WriteLine($"Error searching for object {objectId} in channel {channel.ChannelIndex}: {ex.Message}");
+            return null;
+        }
+    }
+
+    private object? SearchObjectInFile(IStorageLiveDataFile file, long objectId)
+    {
+        try
+        {
+            if (!file.HasContent) return null;
+
+            var buffer = new byte[8192]; // Read in chunks
+            var position = 0L;
+
+            while (position < file.DataLength)
+            {
+                var bytesRead = file.ReadBytes(buffer, position);
+                if (bytesRead == 0) break;
+
+                // Parse the chunk to look for our object
+                var obj = ParseChunkForObject(buffer, bytesRead, objectId);
+                if (obj != null) return obj;
+
+                position += bytesRead;
+            }
+
+            return null;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error searching in file {file.Identifier}: {ex.Message}");
+            return null;
+        }
+    }
+
+    private object? ParseChunkForObject(byte[] buffer, int length, long targetObjectId)
+    {
+        try
+        {
+            // This is a simplified parser - in a real implementation this would
+            // properly parse the binary format with headers, type information, etc.
+
+            var position = 0;
+            while (position < length - 16) // Need at least 16 bytes for header
+            {
+                // Read chunk header (simplified format)
+                var chunkObjectId = BitConverter.ToInt64(buffer, position);
+                position += 8;
+
+                var typeId = BitConverter.ToInt64(buffer, position);
+                position += 8;
+
+                var dataLength = BitConverter.ToInt32(buffer, position);
+                position += 4;
+
+                if (chunkObjectId == targetObjectId && position + dataLength <= length)
+                {
+                    // Found our object - deserialize it
+                    var objectData = new byte[dataLength];
+                    Array.Copy(buffer, position, objectData, 0, dataLength);
+
+                    return DeserializeObject(objectData, typeId);
+                }
+
+                position += dataLength;
+            }
+
+            return null;
+        }
+        catch (Exception)
+        {
+            // Parsing error - continue searching
+            return null;
+        }
+    }
+
+    private object DeserializeObject(byte[] data, long typeId)
+    {
+        try
+        {
+            // Get the type handler for this type ID
+            var typeHandler = _typeDictionary.GetTypeHandlerByTypeId(typeId);
+            if (typeHandler != null)
+            {
+                return typeHandler.Deserialize(data);
+            }
+
+            // Fallback to JSON deserialization if no specific handler
+            var json = System.Text.Encoding.UTF8.GetString(data);
+            return System.Text.Json.JsonSerializer.Deserialize<object>(json) ?? new object();
+        }
+        catch (Exception ex)
+        {
+            throw new StorageExceptionDeserialization($"Failed to deserialize object with type ID {typeId}", ex);
+        }
+    }
+
     #endregion
 
     #region Static Factory Methods
@@ -606,23 +761,8 @@ internal class BasicPersistenceManager : IPersistenceManager
 
     public object GetObject(long objectId)
     {
-        try
-        {
-            // Try to get from object registry first (for recently stored objects)
-            var cachedObject = _objectRegistry.GetObject(objectId);
-            if (cachedObject != null)
-            {
-                return cachedObject;
-            }
-
-            // If not in cache, we would need to load from storage
-            // For now, throw an exception as this requires more complex implementation
-            throw new StorageExceptionNotRunning($"Object with ID {objectId} not found in cache. Loading from storage not yet implemented.");
-        }
-        catch (Exception ex) when (!(ex is StorageException))
-        {
-            throw new StorageExceptionIoReading($"Failed to get object with ID {objectId}", ex);
-        }
+        // Delegate to the storage manager which has access to channels
+        throw new NotImplementedException("GetObject should be called on StorageManager, not BasicPersistenceManager");
     }
 
     public IStorer CreateLazyStorer() => new BasicStorer(this);

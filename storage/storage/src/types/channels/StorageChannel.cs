@@ -58,6 +58,8 @@ public class StorageChannel : IStorageChannel, IDisposable
 
     public IStorageTypeDictionary TypeDictionary => _typeDictionary;
 
+    public IStorageFileManager FileManager => _fileManager;
+
     public bool IsActive => _isActive;
 
     public IChunksBuffer CollectLoadByOids(IChunksBuffer[] channelChunks, IPersistenceIdSet loadOids)
