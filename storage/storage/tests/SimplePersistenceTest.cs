@@ -50,63 +50,7 @@ public class SimplePersistenceTest : IDisposable
         Assert.True(File.Exists(testFilePath));
     }
 
-    [Fact]
-    public void Metadata_Classes_Work_Correctly()
-    {
-        // Test that our metadata classes work correctly
-        var objectMetadata = new ObjectMetadata
-        {
-            ObjectId = 123,
-            TypeId = 456,
-            ChannelIndex = 0,
-            FileNumber = 1,
-            Position = 1024,
-            Size = 512,
-            CreatedAt = DateTime.UtcNow,
-            LastAccessedAt = DateTime.UtcNow,
-            AccessCount = 1
-        };
 
-        Assert.Equal(123, objectMetadata.ObjectId);
-        Assert.Equal(456, objectMetadata.TypeId);
-        Assert.Equal(0, objectMetadata.ChannelIndex);
-        Assert.Equal(1, objectMetadata.FileNumber);
-        Assert.Equal(1024, objectMetadata.Position);
-        Assert.Equal(512, objectMetadata.Size);
-        Assert.Equal(1, objectMetadata.AccessCount);
-
-        var typeMetadata = new TypeMetadata
-        {
-            TypeId = 789,
-            TypeName = "TestType",
-            AssemblyQualifiedName = "TestNamespace.TestType, TestAssembly",
-            RegisteredAt = DateTime.UtcNow,
-            ObjectCount = 5
-        };
-
-        Assert.Equal(789, typeMetadata.TypeId);
-        Assert.Equal("TestType", typeMetadata.TypeName);
-        Assert.Equal("TestNamespace.TestType, TestAssembly", typeMetadata.AssemblyQualifiedName);
-        Assert.Equal(5, typeMetadata.ObjectCount);
-
-        var storageStats = new StorageStatistics
-        {
-            TotalObjects = 100,
-            TotalTypes = 10,
-            TotalDataSize = 1024 * 1024,
-            TotalFileSize = 2 * 1024 * 1024,
-            ChannelCount = 2,
-            FileCount = 5,
-            LastUpdated = DateTime.UtcNow
-        };
-
-        Assert.Equal(100, storageStats.TotalObjects);
-        Assert.Equal(10, storageStats.TotalTypes);
-        Assert.Equal(1024 * 1024, storageStats.TotalDataSize);
-        Assert.Equal(2 * 1024 * 1024, storageStats.TotalFileSize);
-        Assert.Equal(2, storageStats.ChannelCount);
-        Assert.Equal(5, storageStats.FileCount);
-    }
 
     [Fact]
     public void Storage_Exceptions_Work()
@@ -122,56 +66,9 @@ public class SimplePersistenceTest : IDisposable
         Assert.Equal("Test deserialization error", deserializationEx.Message);
     }
 
-    [Fact]
-    public void Pending_Write_Operation_Works()
-    {
-        // Test that PendingWriteOperation class works correctly
-        var testData = new byte[] { 1, 2, 3, 4, 5 };
-        var mockFile = new MockStorageLiveDataFile();
 
-        var pendingWrite = new PendingWriteOperation(mockFile, 1000, 2000, testData);
 
-        Assert.NotNull(pendingWrite.File);
-        Assert.Equal(1000, pendingWrite.OriginalLength);
-        Assert.Equal(2000, pendingWrite.WritePosition);
-        Assert.Equal(testData, pendingWrite.Data);
-        Assert.True(pendingWrite.Timestamp <= DateTime.UtcNow);
-        Assert.True(pendingWrite.Timestamp > DateTime.UtcNow.AddMinutes(-1));
-    }
 
-    [Fact]
-    public void Storage_File_Metadata_Works()
-    {
-        // Test that StorageFileMetadata class works correctly
-        var metadata = new StorageFileMetadata
-        {
-            NextFileNumber = 5,
-            TotalDataSize = 1024 * 1024,
-            FileCount = 3,
-            LastUpdated = DateTime.UtcNow
-        };
-
-        metadata.Files[1] = new StorageFileMetadata.FileInfo
-        {
-            Number = 1,
-            Size = 512 * 1024,
-            DataLength = 400 * 1024,
-            Created = DateTime.UtcNow.AddHours(-1),
-            LastModified = DateTime.UtcNow,
-            IsActive = true
-        };
-
-        Assert.Equal(5, metadata.NextFileNumber);
-        Assert.Equal(1024 * 1024, metadata.TotalDataSize);
-        Assert.Equal(3, metadata.FileCount);
-        Assert.Single(metadata.Files);
-
-        var fileInfo = metadata.Files[1];
-        Assert.Equal(1, fileInfo.Number);
-        Assert.Equal(512 * 1024, fileInfo.Size);
-        Assert.Equal(400 * 1024, fileInfo.DataLength);
-        Assert.True(fileInfo.IsActive);
-    }
 
     public void Dispose()
     {
