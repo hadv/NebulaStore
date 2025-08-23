@@ -47,12 +47,12 @@ public class EmbeddedStorageIntegrationTests : IDisposable
         using var storage = EmbeddedStorage.Start(testData, _testDirectory);
 
         // Act
-        var root = storage.Root();
+        var root = storage.Root<TestData>();
 
         // Assert
         Assert.NotNull(root);
         Assert.IsType<TestData>(root);
-        var retrievedData = (TestData)root;
+        var retrievedData = root;
         Assert.Equal("Test", retrievedData.Name);
         Assert.Equal(42, retrievedData.Value);
     }
@@ -95,7 +95,7 @@ public class EmbeddedStorageIntegrationTests : IDisposable
         // Act & Assert - Should not throw
         storage.IssueFullGarbageCollection();
         
-        var result = storage.IssueGarbageCollection(TimeSpan.FromSeconds(1));
+        var result = storage.IssueGarbageCollection(TimeSpan.FromSeconds(1).Ticks * 100); // Convert to nanoseconds
         Assert.True(result); // Should complete within time budget
     }
 
@@ -149,9 +149,9 @@ public class EmbeddedStorageIntegrationTests : IDisposable
 
         // Assert
         Assert.NotNull(statistics);
-        Assert.True(statistics.TotalFileCount >= 0);
-        Assert.True(statistics.TotalFileSize >= 0);
-        Assert.True(statistics.LiveDataSize >= 0);
+        Assert.True(statistics.DataFileCount >= 0);
+        Assert.True(statistics.TotalStorageSize >= 0);
+        Assert.True(statistics.LiveDataLength >= 0);
     }
 
     [Fact]
@@ -192,7 +192,7 @@ public class EmbeddedStorageIntegrationTests : IDisposable
         // Should have built-in types registered
         var stringHandler = typeDictionary.GetTypeHandler(typeof(string));
         Assert.NotNull(stringHandler);
-        Assert.Equal(typeof(string), stringHandler.Type);
+        Assert.Equal(typeof(string), stringHandler.HandledType);
     }
 
     [Fact]
@@ -267,8 +267,8 @@ public class EmbeddedStorageIntegrationTests : IDisposable
         Assert.True(storage1.IsRunning);
         Assert.True(storage2.IsRunning);
         
-        var root1 = (TestData)storage1.Root()!;
-        var root2 = (TestData)storage2.Root()!;
+        var root1 = storage1.Root<TestData>()!;
+        var root2 = storage2.Root<TestData>()!;
         
         Assert.Equal("Storage1", root1.Name);
         Assert.Equal("Storage2", root2.Name);
@@ -284,14 +284,14 @@ public class EmbeddedStorageIntegrationTests : IDisposable
 
         // Assert
         Assert.NotNull(storage);
-        Assert.Null(storage.Root());
-        
+        Assert.Null(storage.Root<TestData>());
+
         // Should be able to set root later
         var testData = new TestData { Name = "Later", Value = 456 };
         storage.SetRoot(testData);
-        
-        Assert.NotNull(storage.Root());
-        Assert.Same(testData, storage.Root());
+
+        Assert.NotNull(storage.Root<TestData>());
+        Assert.Same(testData, storage.Root<TestData>());
     }
 
     public void Dispose()

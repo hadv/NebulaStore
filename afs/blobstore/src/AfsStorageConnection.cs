@@ -7,7 +7,6 @@ using MessagePack;
 using NebulaStore.Storage;
 using NebulaStore.Storage.EmbeddedConfiguration;
 using NebulaStore.Storage.Embedded.Types;
-using IStorageStatistics = NebulaStore.Storage.Embedded.Types.IStorageStatistics;
 
 namespace NebulaStore.Afs.Blobstore;
 

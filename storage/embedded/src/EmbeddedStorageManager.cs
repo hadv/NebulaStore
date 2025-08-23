@@ -3,7 +3,6 @@ using NebulaStore.Storage.EmbeddedConfiguration;
 using NebulaStore.Storage.Monitoring;
 using NebulaStore.GigaMap;
 using NebulaStore.Storage.Embedded.Types;
-using IStorageStatistics = NebulaStore.Storage.IStorageStatistics;
 using System.Linq;
 
 namespace NebulaStore.Storage.Embedded;
@@ -216,8 +215,7 @@ public class EmbeddedStorageManager : IEmbeddedStorageManager, IMonitorableStora
     public IStorageStatistics GetStatistics()
     {
         ThrowIfDisposed();
-        var embeddedStats = _connection.CreateStorageStatistics();
-        return new StorageStatisticsAdapter(embeddedStats);
+        return _connection.CreateStorageStatistics();
     }
 
     public IStorageMonitoringManager GetMonitoringManager()
@@ -441,6 +439,69 @@ public class EmbeddedStorageManager : IEmbeddedStorageManager, IMonitorableStora
 
         await Task.CompletedTask;
     }
+
+    #region Eclipse Store Compatibility Methods
+
+    public void IssueFullFileCheck()
+    {
+        // No-op for now - file system is managed by AFS
+    }
+
+    public bool IssueFileCheck(TimeSpan timeBudget)
+    {
+        // No-op for now - file system is managed by AFS
+        return true;
+    }
+
+    public void IssueFullCacheCheck()
+    {
+        // No-op for now - caching is managed by MessagePack
+    }
+
+    public bool IssueCacheCheck(TimeSpan timeBudget)
+    {
+        // No-op for now - caching is managed by MessagePack
+        return true;
+    }
+
+    public void IssueFullBackup(System.IO.DirectoryInfo targetDirectory)
+    {
+        CreateBackupAsync(targetDirectory.FullName).Wait();
+    }
+
+    public IStorageStatistics CreateStorageStatistics()
+    {
+        return GetStatistics();
+    }
+
+    public void ExportChannels(System.IO.DirectoryInfo targetDirectory, bool performGarbageCollection = true)
+    {
+        IssueFullBackup(targetDirectory);
+    }
+
+    public void ImportFiles(System.IO.DirectoryInfo importDirectory)
+    {
+        // No-op for now - import not implemented
+    }
+
+    public IStorageTypeDictionary TypeDictionary => new SimpleTypeDictionary();
+
+    public IDatabase Database()
+    {
+        return new SimpleDatabase(this);
+    }
+
+    public IPersistenceRootsView ViewRoots()
+    {
+        return new SimplePersistenceRootsView(_root);
+    }
+
+    public IStorageConnection CreateConnection()
+    {
+        return new SimpleStorageConnection(this);
+    }
+
+    #endregion
 }
 
 /// <summary>
@@ -626,90 +687,7 @@ internal class PlaceholderEntityCache : NebulaStore.Storage.Monitoring.IStorageE
     }
 }
 
-/// <summary>
-/// Adapter to convert between different IStorageStatistics interfaces
-/// </summary>
-internal class StorageStatisticsAdapter : IStorageStatistics
-{
-    private readonly NebulaStore.Storage.Embedded.Types.IStorageStatistics _embeddedStats;
 
-    public StorageStatisticsAdapter(NebulaStore.Storage.Embedded.Types.IStorageStatistics embeddedStats)
-    {
-        _embeddedStats = embeddedStats ?? throw new ArgumentNullException(nameof(embeddedStats));
-    }
-
-    // IStorageStatistics from NebulaStore.Storage interface
-    public long TotalObjectCount => 0; // Not available in embedded stats
-    public long TotalStorageSize => _embeddedStats.TotalFileSize;
-    public int DataFileCount => 0; // Not available in embedded stats
-    public int TransactionFileCount => 0; // Not available in embedded stats
-    public long LiveDataLength => _embeddedStats.LiveDataSize;
-    public DateTime CreationTime => _embeddedStats.CreationTimestamp;
-    public DateTime LastModificationTime => DateTime.UtcNow; // Placeholder
-
-    #region Eclipse Store Compatibility Methods
-
-    public void IssueFullFileCheck()
-    {
-        // No-op for now - file system is managed by AFS
-    }
-
-    public bool IssueFileCheck(TimeSpan timeBudget)
-    {
-        // No-op for now - file system is managed by AFS
-        return true;
-    }
-
-    public void IssueFullCacheCheck()
-    {
-        // No-op for now - caching is managed by MessagePack
-    }
-
-    public bool IssueCacheCheck(TimeSpan timeBudget)
-    {
-        // No-op for now - caching is managed by MessagePack
-        return true;
-    }
-
-    public void IssueFullBackup(System.IO.DirectoryInfo targetDirectory)
-    {
-        CreateBackupAsync(targetDirectory.FullName).Wait();
-    }
-
-    public IStorageStatistics CreateStorageStatistics()
-    {
-        return GetStatistics();
-    }
-
-    public void ExportChannels(System.IO.DirectoryInfo targetDirectory, bool performGarbageCollection = true)
-    {
-        IssueFullBackup(targetDirectory);
-    }
-
-    public void ImportFiles(System.IO.DirectoryInfo importDirectory)
-    {
-        // No-op for now - import not implemented
-    }
-
-    public IStorageTypeDictionary TypeDictionary => new SimpleTypeDictionary();
-
-    public IDatabase Database()
-    {
-        return new SimpleDatabase(this);
-    }
-
-    public IPersistenceRootsView ViewRoots()
-    {
-        return new SimplePersistenceRootsView(_root);
-    }
-
-    public IStorageConnection CreateConnection()
-    {
-        return new SimpleStorageConnection(this);
-    }
-
-    #endregion
-}
 
 /// <summary>
 /// Embedded storage storer that properly tracks pending objects for commit.

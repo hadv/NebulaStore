@@ -336,28 +336,4 @@ public interface IPersistenceObjectRegistry
     void Consolidate();
 }
 
-/// <summary>
-/// Interface for storage statistics.
-/// </summary>
-public interface IStorageStatistics
-{
-    /// <summary>
-    /// Gets the total file count.
-    /// </summary>
-    int TotalFileCount { get; }
 
-    /// <summary>
-    /// Gets the total file size.
-    /// </summary>
-    long TotalFileSize { get; }
-
-    /// <summary>
-    /// Gets the live data size.
-    /// </summary>
-    long LiveDataSize { get; }
-
-    /// <summary>
-    /// Gets the creation timestamp.
-    /// </summary>
-    DateTime CreationTimestamp { get; }
-}

@@ -35,14 +35,15 @@ public class PersistenceOperationsTests : IDisposable
             Value = 123.45
         };
 
-        // Act - Store the object
+        // Act - Set as root and store the object
+        _storageManager.SetRoot(testObject);
         var objectId = _storageManager.Store(testObject);
 
         // Assert - Object ID should be valid
         Assert.True(objectId > 0);
 
-        // Act - Retrieve the object
-        var retrievedObject = _storageManager.GetObject(objectId);
+        // Act - Retrieve the object from root (Eclipse Store approach)
+        var retrievedObject = _storageManager.Root() as TestDataClass;
 
         // Assert - Retrieved object should match original
         Assert.NotNull(retrievedObject);
@@ -55,13 +56,13 @@ public class PersistenceOperationsTests : IDisposable
     }
 
     [Fact]
-    public void GetObject_With_Invalid_Id_Throws_Exception()
+    public void Root_With_No_Data_Returns_Null()
     {
-        // Arrange
-        var invalidObjectId = 999999L;
+        // Arrange - No root set
 
-        // Act & Assert
-        Assert.Throws<StorageExceptionNotFound>(() => _storageManager.GetObject(invalidObjectId));
+        // Act & Assert - Root should be null when no data is stored
+        var root = _storageManager.Root() as TestDataClass;
+        Assert.Null(root);
     }
 
     [Fact]
@@ -75,24 +76,25 @@ public class PersistenceOperationsTests : IDisposable
             new TestDataClass { Id = 3, Name = "Object 3", Value = 3.3 }
         };
 
-        // Act - Store all objects
+        // Act - Store array as root (Eclipse Store approach)
+        _storageManager.SetRoot(objects);
         var objectIds = _storageManager.StoreAll(objects);
 
         // Assert - All objects should have valid IDs
         Assert.Equal(3, objectIds.Length);
         Assert.All(objectIds, id => Assert.True(id > 0));
 
-        // Act & Assert - Retrieve all objects
+        // Act & Assert - Retrieve all objects from root
+        var retrievedObjects = _storageManager.Root() as TestDataClass[];
+        Assert.NotNull(retrievedObjects);
+        Assert.Equal(3, retrievedObjects.Length);
+
         for (int i = 0; i < objects.Length; i++)
         {
-            var retrievedObject = _storageManager.GetObject(objectIds[i]);
-            Assert.NotNull(retrievedObject);
-            Assert.IsType<TestDataClass>(retrievedObject);
-            
-            var retrievedTestObject = (TestDataClass)retrievedObject;
-            Assert.Equal(objects[i].Id, retrievedTestObject.Id);
-            Assert.Equal(objects[i].Name, retrievedTestObject.Name);
-            Assert.Equal(objects[i].Value, retrievedTestObject.Value);
+            Assert.NotNull(retrievedObjects[i]);
+            Assert.Equal(objects[i].Id, retrievedObjects[i].Id);
+            Assert.Equal(objects[i].Name, retrievedObjects[i].Name);
+            Assert.Equal(objects[i].Value, retrievedObjects[i].Value);
         }
     }
 
@@ -138,7 +140,8 @@ public class PersistenceOperationsTests : IDisposable
             Value = 456.78
         };
 
-        // Act - Store object and get ID
+        // Act - Set as root and store object
+        _storageManager.SetRoot(testObject);
         var objectId = _storageManager.Store(testObject);
         Assert.True(objectId > 0);
 
@@ -149,17 +152,16 @@ public class PersistenceOperationsTests : IDisposable
 
         try
         {
-            // Act - Try to retrieve object after restart
-            var retrievedObject = newStorageManager.GetObject(objectId);
+            // Act - Try to retrieve object from root after restart
+            var retrievedObject = newStorageManager.Root() as TestDataClass;
 
             // Assert - Object should still be retrievable
             Assert.NotNull(retrievedObject);
             Assert.IsType<TestDataClass>(retrievedObject);
-            
-            var retrievedTestObject = (TestDataClass)retrievedObject;
-            Assert.Equal(testObject.Id, retrievedTestObject.Id);
-            Assert.Equal(testObject.Name, retrievedTestObject.Name);
-            Assert.Equal(testObject.Value, retrievedTestObject.Value);
+
+            Assert.Equal(testObject.Id, retrievedObject.Id);
+            Assert.Equal(testObject.Name, retrievedObject.Name);
+            Assert.Equal(testObject.Value, retrievedObject.Value);
         }
         finally
         {

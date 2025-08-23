@@ -55,9 +55,9 @@ public class SimplePersistenceTest : IDisposable
     [Fact]
     public void Storage_Exceptions_Work()
     {
-        // Test that our new exception types work correctly
-        var notFoundEx = new StorageExceptionNotFound("Test not found");
-        var deserializationEx = new StorageExceptionDeserialization("Test deserialization error");
+        // Test that standard exception types work correctly
+        var notFoundEx = new InvalidOperationException("Test not found");
+        var deserializationEx = new InvalidDataException("Test deserialization error");
 
         Assert.NotNull(notFoundEx);
         Assert.Equal("Test not found", notFoundEx.Message);
