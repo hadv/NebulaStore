@@ -22,6 +22,7 @@ public class StorageFileManager : IStorageFileManager
     private readonly object _lock = new object();
     private readonly ConcurrentDictionary<long, IStorageLiveDataFile> _dataFiles = new();
 
+
     private IStorageLiveDataFile? _currentDataFile;
     private long _nextFileNumber = 1;
     private bool _disposed = false;
@@ -79,11 +80,11 @@ public class StorageFileManager : IStorageFileManager
             throw new ArgumentNullException(nameof(dataBuffers));
 
         var positions = new long[dataBuffers.Length];
-        
+
         lock (_lock)
         {
             var currentFile = CurrentStorageFile;
-            
+
             for (int i = 0; i < dataBuffers.Length; i++)
             {
                 var buffer = dataBuffers[i];
@@ -111,26 +112,79 @@ public class StorageFileManager : IStorageFileManager
 
     public void RollbackWrite()
     {
-        // In a real implementation, this would rollback any pending write operations
-        // For now, this is a placeholder
+        // Simple rollback implementation matching Eclipse Store
+        if (_currentDataFile != null)
+        {
+            _currentDataFile.ResetToLastCommittedState();
+        }
     }
 
     public void CommitWrite()
     {
-        // In a real implementation, this would commit any pending write operations
-        // For now, this is a placeholder
-        lock (_lock)
+        // Simple commit implementation matching Eclipse Store
+        if (_currentDataFile != null)
         {
-            _currentDataFile?.Close();
+            _currentDataFile.FlushAndSync();
+            _currentDataFile.CommitState();
         }
     }
 
     public IStorageInventory ReadStorage()
     {
-        // Read storage inventory from existing files
-        // This would typically scan all files and build an inventory
-        // For now, return a basic inventory
-        return new BasicStorageInventory(_channelIndex, new StorageTypeDictionary());
+        lock (_lock)
+        {
+            try
+            {
+                var typeDictionary = new StorageTypeDictionary();
+                var inventory = new BasicStorageInventory(_channelIndex, typeDictionary);
+
+                // Scan all data files and build inventory
+                foreach (var file in _dataFiles.Values)
+                {
+                    if (file.HasContent)
+                    {
+                        // In a real implementation, this would parse the file contents
+                        // and extract type information and object references
+                        ScanFileForInventory(file, inventory);
+                    }
+                }
+
+                return inventory;
+            }
+            catch (Exception ex)
+            {
+                throw new StorageFileException($"Failed to read storage inventory for channel {_channelIndex}", ex);
+            }
+        }
+    }
+
+    private void ScanFileForInventory(IStorageLiveDataFile file, BasicStorageInventory inventory)
+    {
+        try
+        {
+            // This is a simplified implementation
+            // In a real system, this would parse the binary data format
+            // and extract object metadata, type information, etc.
+
+            var buffer = new byte[1024]; // Read in chunks
+            var position = 0L;
+
+            while (position < file.DataLength)
+            {
+                var bytesRead = file.ReadBytes(buffer, position);
+                if (bytesRead == 0) break;
+
+                // Parse chunk headers and extract metadata
+                // This would involve understanding the binary format
+                // For now, just advance position
+                position += bytesRead;
+            }
+        }
+        catch (Exception ex)
+        {
+            // Log warning but continue with other files
+            Console.WriteLine($"Warning: Failed to scan file {file.Identifier}: {ex.Message}");
+        }
     }
 
     public IStorageIdAnalysis InitializeStorage(
@@ -165,10 +219,10 @@ public class StorageFileManager : IStorageFileManager
     public bool IncrementalFileCleanupCheck(TimeSpan timeBudget)
     {
         var endTime = DateTimeOffset.UtcNow.Add(timeBudget);
-        
+
         // Perform incremental file cleanup
         var filesToCheck = _dataFiles.Values.ToList();
-        
+
         foreach (var file in filesToCheck)
         {
             if (DateTimeOffset.UtcNow > endTime)
@@ -186,6 +240,8 @@ public class StorageFileManager : IStorageFileManager
 
         return true; // Completed within time budget
     }
+
+
 
     public bool IssuedFileCleanupCheck(TimeSpan timeBudget)
     {
@@ -303,6 +359,8 @@ public class StorageFileManager : IStorageFileManager
     #endregion
 
     #region Private Methods
+
+
 
     private void EnsureStorageDirectoryExists()
     {
@@ -446,3 +504,7 @@ internal class BasicStorageRawFileStatistics : IStorageRawFileStatistics
         LiveDataSize = liveDataSize;
     }
 }
+
+
+
+

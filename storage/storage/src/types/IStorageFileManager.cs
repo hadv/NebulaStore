@@ -243,6 +243,27 @@ public interface IStorageLiveDataFile : IStorageFile, IDisposable
     /// <param name="first">The first entity in the chain.</param>
     /// <param name="last">The last entity in the chain.</param>
     void AddChainToTail(IStorageEntity first, IStorageEntity last);
+
+    /// <summary>
+    /// Flushes and synchronizes the file to disk.
+    /// </summary>
+    void FlushAndSync();
+
+    /// <summary>
+    /// Commits the current state of the file.
+    /// </summary>
+    void CommitState();
+
+    /// <summary>
+    /// Resets the file to its last committed state.
+    /// </summary>
+    void ResetToLastCommittedState();
+
+    /// <summary>
+    /// Truncates the file to the specified length.
+    /// </summary>
+    /// <param name="length">The length to truncate to.</param>
+    void TruncateToLength(long length);
 }
 
 /// <summary>

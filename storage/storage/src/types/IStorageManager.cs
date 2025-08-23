@@ -190,6 +190,13 @@ public interface IStorageTypeDictionary
     ITypeHandler? GetTypeHandler(Type type);
 
     /// <summary>
+    /// Gets the type handler for the specified type ID.
+    /// </summary>
+    /// <param name="typeId">The type ID to get the handler for.</param>
+    /// <returns>The type handler for the specified type ID.</returns>
+    ITypeHandler? GetTypeHandlerByTypeId(long typeId);
+
+    /// <summary>
     /// Gets all registered type handlers.
     /// </summary>
     /// <returns>All registered type handlers.</returns>
@@ -329,28 +336,4 @@ public interface IPersistenceObjectRegistry
     void Consolidate();
 }
 
-/// <summary>
-/// Interface for storage statistics.
-/// </summary>
-public interface IStorageStatistics
-{
-    /// <summary>
-    /// Gets the total file count.
-    /// </summary>
-    int TotalFileCount { get; }
 
-    /// <summary>
-    /// Gets the total file size.
-    /// </summary>
-    long TotalFileSize { get; }
-
-    /// <summary>
-    /// Gets the live data size.
-    /// </summary>
-    long LiveDataSize { get; }
-
-    /// <summary>
-    /// Gets the creation timestamp.
-    /// </summary>
-    DateTime CreationTimestamp { get; }
-}

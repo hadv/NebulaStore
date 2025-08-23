@@ -1,6 +1,7 @@
 using NebulaStore.Storage.EmbeddedConfiguration;
 using NebulaStore.Storage.Monitoring;
 using NebulaStore.GigaMap;
+using NebulaStore.Storage.Embedded.Types;
 
 namespace NebulaStore.Storage.Embedded;
 
@@ -12,11 +13,11 @@ public interface IEmbeddedStorageManager : IDisposable
 {
     /// <summary>
     /// Gets the root object of the specified type.
-    /// Creates a new instance if no root exists.
+    /// Creates a new instance if no root exists and type has parameterless constructor.
     /// </summary>
     /// <typeparam name="T">The type of the root object</typeparam>
-    /// <returns>The root object instance</returns>
-    T Root<T>() where T : new();
+    /// <returns>The root object instance or null</returns>
+    T? Root<T>();
 
     /// <summary>
     /// Sets a new root object instance.
@@ -144,4 +145,77 @@ public interface IEmbeddedStorageManager : IDisposable
     /// </summary>
     /// <returns>A task representing the asynchronous operation</returns>
     Task StoreGigaMapsAsync();
+
+    // Eclipse Store compatibility methods
+
+    /// <summary>
+    /// Issues a full file check operation.
+    /// </summary>
+    void IssueFullFileCheck();
+
+    /// <summary>
+    /// Issues a file check operation with a time budget.
+    /// </summary>
+    /// <param name="timeBudget">Time budget for the operation</param>
+    /// <returns>True if completed within budget</returns>
+    bool IssueFileCheck(TimeSpan timeBudget);
+
+    /// <summary>
+    /// Issues a full cache check operation.
+    /// </summary>
+    void IssueFullCacheCheck();
+
+    /// <summary>
+    /// Issues a cache check operation with a time budget.
+    /// </summary>
+    /// <param name="timeBudget">Time budget for the operation</param>
+    /// <returns>True if completed within budget</returns>
+    bool IssueCacheCheck(TimeSpan timeBudget);
+
+    /// <summary>
+    /// Issues a full backup to the specified directory.
+    /// </summary>
+    /// <param name="targetDirectory">Target directory for backup</param>
+    void IssueFullBackup(System.IO.DirectoryInfo targetDirectory);
+
+    /// <summary>
+    /// Creates storage statistics.
+    /// </summary>
+    /// <returns>Storage statistics</returns>
+    IStorageStatistics CreateStorageStatistics();
+
+    /// <summary>
+    /// Exports channels to the specified directory.
+    /// </summary>
+    /// <param name="targetDirectory">Target directory</param>
+    /// <param name="performGarbageCollection">Whether to perform garbage collection</param>
+    void ExportChannels(System.IO.DirectoryInfo targetDirectory, bool performGarbageCollection = true);
+
+    /// <summary>
+    /// Imports files from the specified directory.
+    /// </summary>
+    /// <param name="importDirectory">Import directory</param>
+    void ImportFiles(System.IO.DirectoryInfo importDirectory);
+
+    /// <summary>
+    /// Gets the type dictionary.
+    /// </summary>
+    IStorageTypeDictionary TypeDictionary { get; }
+
+    /// <summary>
+    /// Gets the database interface.
+    /// </summary>
+    IDatabase Database();
+
+    /// <summary>
+    /// Views the persistence roots.
+    /// </summary>
+    /// <returns>Persistence roots view</returns>
+    IPersistenceRootsView ViewRoots();
+
+    /// <summary>
+    /// Creates a storage connection.
+    /// </summary>
+    /// <returns>Storage connection</returns>
+    IStorageConnection CreateConnection();
 }

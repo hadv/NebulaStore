@@ -668,3 +668,63 @@ public class StorageExceptionIoWritingChunk : StorageExceptionIoWriting
         ChunkId = chunkId;
     }
 }
+
+/// <summary>
+/// Exception thrown when an object is not found in storage.
+/// </summary>
+public class StorageExceptionNotFound : StorageException
+{
+    /// <summary>
+    /// Initializes a new instance of the <see cref="StorageExceptionNotFound"/> class.
+    /// </summary>
+    public StorageExceptionNotFound()
+    {
+    }
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="StorageExceptionNotFound"/> class with a specified error message.
+    /// </summary>
+    /// <param name="message">The message that describes the error.</param>
+    public StorageExceptionNotFound(string message) : base(message)
+    {
+    }
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="StorageExceptionNotFound"/> class with a specified error message and inner exception.
+    /// </summary>
+    /// <param name="message">The message that describes the error.</param>
+    /// <param name="innerException">The exception that is the cause of the current exception.</param>
+    public StorageExceptionNotFound(string message, Exception innerException) : base(message, innerException)
+    {
+    }
+}
+
+/// <summary>
+/// Exception thrown when deserialization fails during storage operations.
+/// </summary>
+public class StorageExceptionDeserialization : StorageException
+{
+    /// <summary>
+    /// Initializes a new instance of the <see cref="StorageExceptionDeserialization"/> class.
+    /// </summary>
+    public StorageExceptionDeserialization()
+    {
+    }
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="StorageExceptionDeserialization"/> class with a specified error message.
+    /// </summary>
+    /// <param name="message">The message that describes the error.</param>
+    public StorageExceptionDeserialization(string message) : base(message)
+    {
+    }
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="StorageExceptionDeserialization"/> class with a specified error message and inner exception.
+    /// </summary>
+    /// <param name="message">The message that describes the error.</param>
+    /// <param name="innerException">The exception that is the cause of the current exception.</param>
+    public StorageExceptionDeserialization(string message, Exception innerException) : base(message, innerException)
+    {
+    }
+}

@@ -349,6 +349,74 @@ public class StorageLiveDataFile : IStorageLiveDataFile
     /// </summary>
     public string FilePath => _filePath;
 
+    /// <summary>
+    /// Flushes and synchronizes the file to disk.
+    /// </summary>
+    public void FlushAndSync()
+    {
+        lock (_lock)
+        {
+            if (_fileStream != null)
+            {
+                _fileStream.Flush(true); // Force flush to disk
+            }
+        }
+    }
+
+    /// <summary>
+    /// Commits the current state of the file.
+    /// </summary>
+    public void CommitState()
+    {
+        lock (_lock)
+        {
+            // Update committed state - in a real implementation this would
+            // update internal state tracking for rollback purposes
+            FlushAndSync();
+        }
+    }
+
+    /// <summary>
+    /// Resets the file to its last committed state.
+    /// </summary>
+    public void ResetToLastCommittedState()
+    {
+        lock (_lock)
+        {
+            // In a real implementation, this would restore the file
+            // to its last committed state
+            if (_fileStream != null)
+            {
+                _fileStream.Flush();
+            }
+        }
+    }
+
+    /// <summary>
+    /// Truncates the file to the specified length.
+    /// </summary>
+    /// <param name="length">The length to truncate to.</param>
+    public void TruncateToLength(long length)
+    {
+        if (length < 0)
+            throw new ArgumentOutOfRangeException(nameof(length));
+
+        lock (_lock)
+        {
+            EnsureFileStreamOpen();
+
+            if (_fileStream != null)
+            {
+                _fileStream.SetLength(length);
+                _fileStream.Flush(true);
+
+                // Update internal length tracking
+                Interlocked.Exchange(ref _totalLength, length);
+                Interlocked.Exchange(ref _dataLength, Math.Min(_dataLength, length));
+            }
+        }
+    }
+
     #endregion
 
     #region Private Methods

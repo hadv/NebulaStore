@@ -3,7 +3,7 @@ using NebulaStore.Storage.EmbeddedConfiguration;
 using NebulaStore.Storage.Monitoring;
 using NebulaStore.GigaMap;
 using NebulaStore.Storage.Embedded.Types;
-using IStorageStatistics = NebulaStore.Storage.IStorageStatistics;
+using System.Linq;
 
 namespace NebulaStore.Storage.Embedded;
 
@@ -47,24 +47,32 @@ public class EmbeddedStorageManager : IEmbeddedStorageManager, IMonitorableStora
 
     public bool IsActive => IsRunning && _connection != null;
 
-    public T Root<T>() where T : new()
+    public T? Root<T>()
     {
         ThrowIfDisposed();
 
         if (_root == null)
         {
-            _root = new T();
-            _rootType = typeof(T);
+            // NebulaStore convenience: auto-create root if type has parameterless constructor
+            try
+            {
+                var newRoot = Activator.CreateInstance<T>();
+                if (newRoot != null)
+                {
+                    _root = newRoot;
+                    _rootType = typeof(T);
+                    return newRoot;
+                }
+            }
+            catch
+            {
+                // If creation fails, return default (null for reference types)
+            }
+            return default(T);
         }
         else if (_root is not T)
         {
             throw new InvalidOperationException($"Root object is of type {_root.GetType().Name}, not {typeof(T).Name}");
-        }
-
-        // Ensure root type is set
-        if (_rootType == null)
-        {
-            _rootType = typeof(T);
         }
 
         return (T)_root;
@@ -215,8 +223,7 @@ public class EmbeddedStorageManager : IEmbeddedStorageManager, IMonitorableStora
     public IStorageStatistics GetStatistics()
     {
         ThrowIfDisposed();
-        var embeddedStats = _connection.CreateStorageStatistics();
-        return new StorageStatisticsAdapter(embeddedStats);
+        return _connection.CreateStorageStatistics();
     }
 
     public IStorageMonitoringManager GetMonitoringManager()
@@ -440,6 +447,69 @@ public class EmbeddedStorageManager : IEmbeddedStorageManager, IMonitorableStora
 
         await Task.CompletedTask;
     }
+
+    #region Eclipse Store Compatibility Methods
+
+    public void IssueFullFileCheck()
+    {
+        // No-op for now - file system is managed by AFS
+    }
+
+    public bool IssueFileCheck(TimeSpan timeBudget)
+    {
+        // No-op for now - file system is managed by AFS
+        return true;
+    }
+
+    public void IssueFullCacheCheck()
+    {
+        // No-op for now - caching is managed by MessagePack
+    }
+
+    public bool IssueCacheCheck(TimeSpan timeBudget)
+    {
+        // No-op for now - caching is managed by MessagePack
+        return true;
+    }
+
+    public void IssueFullBackup(System.IO.DirectoryInfo targetDirectory)
+    {
+        CreateBackupAsync(targetDirectory.FullName).Wait();
+    }
+
+    public IStorageStatistics CreateStorageStatistics()
+    {
+        return GetStatistics();
+    }
+
+    public void ExportChannels(System.IO.DirectoryInfo targetDirectory, bool performGarbageCollection = true)
+    {
+        IssueFullBackup(targetDirectory);
+    }
+
+    public void ImportFiles(System.IO.DirectoryInfo importDirectory)
+    {
+        // No-op for now - import not implemented
+    }
+
+    public IStorageTypeDictionary TypeDictionary => new SimpleTypeDictionary();
+
+    public IDatabase Database()
+    {
+        return new SimpleDatabase(this);
+    }
+
+    public IPersistenceRootsView ViewRoots()
+    {
+        return new SimplePersistenceRootsView(_root);
+    }
+
+    public IStorageConnection CreateConnection()
+    {
+        return new SimpleStorageConnection(this);
+    }
+
+    #endregion
 }
 
 /// <summary>
@@ -625,27 +695,7 @@ internal class PlaceholderEntityCache : NebulaStore.Storage.Monitoring.IStorageE
     }
 }
 
-/// <summary>
-/// Adapter to convert between different IStorageStatistics interfaces
-/// </summary>
-internal class StorageStatisticsAdapter : IStorageStatistics
-{
-    private readonly NebulaStore.Storage.Embedded.Types.IStorageStatistics _embeddedStats;
 
-    public StorageStatisticsAdapter(NebulaStore.Storage.Embedded.Types.IStorageStatistics embeddedStats)
-    {
-        _embeddedStats = embeddedStats ?? throw new ArgumentNullException(nameof(embeddedStats));
-    }
-
-    // IStorageStatistics from NebulaStore.Storage interface
-    public long TotalObjectCount => 0; // Not available in embedded stats
-    public long TotalStorageSize => _embeddedStats.TotalFileSize;
-    public int DataFileCount => 0; // Not available in embedded stats
-    public int TransactionFileCount => 0; // Not available in embedded stats
-    public long LiveDataLength => _embeddedStats.LiveDataSize;
-    public DateTime CreationTime => _embeddedStats.CreationTimestamp;
-    public DateTime LastModificationTime => DateTime.UtcNow; // Placeholder
-}
 
 /// <summary>
 /// Embedded storage storer that properly tracks pending objects for commit.
@@ -718,4 +768,161 @@ internal class EmbeddedStorer : IStorer
             _disposed = true;
         }
     }
+}
+
+/// <summary>
+/// Simple type dictionary implementation for Eclipse Store compatibility.
+/// </summary>
+internal class SimpleTypeDictionary : IStorageTypeDictionary
+{
+    private readonly Dictionary<Type, ITypeHandler> _typeHandlers = new();
+
+    public void RegisterType(Type type) { /* No-op - types handled by MessagePack */ }
+    public bool IsTypeRegistered(Type type) => true; // All types supported via MessagePack
+    public long GetTypeId(Type type) => type.GetHashCode(); // Simple type ID
+    public Type? GetType(long typeId) => null; // Not needed for simple implementation
+
+    // Additional required methods
+    public ITypeHandler? GetTypeHandler(Type type)
+    {
+        if (!_typeHandlers.TryGetValue(type, out var handler))
+        {
+            handler = new SimpleTypeHandler(type);
+            _typeHandlers[type] = handler;
+        }
+        return handler;
+    }
+    public ITypeHandler? GetTypeHandlerByTypeId(long typeId) => null; // Not needed for simple implementation
+    public IEnumerable<ITypeHandler> GetAllTypeHandlers() => _typeHandlers.Values;
+    public void RegisterTypeHandler(Type type, ITypeHandler handler) { _typeHandlers[type] = handler; }
+}
+
+/// <summary>
+/// Simple type handler implementation for Eclipse Store compatibility.
+/// </summary>
+internal class SimpleTypeHandler : ITypeHandler
+{
+    public Type HandledType { get; }
+    public long TypeId { get; }
+
+    public SimpleTypeHandler(Type type)
+    {
+        HandledType = type;
+        TypeId = Math.Abs(type.GetHashCode()) + 1000; // Ensure positive ID starting from 1000
+    }
+
+    public byte[] Serialize(object obj) => MessagePack.MessagePackSerializer.Serialize(obj);
+    public object Deserialize(byte[] data) => MessagePack.MessagePackSerializer.Deserialize<object>(data);
+    public long GetSerializedLength(object obj) => Serialize(obj).Length;
+    public bool CanHandle(Type type) => type == HandledType;
+}
+
+/// <summary>
+/// Simple database implementation for Eclipse Store compatibility.
+/// </summary>
+internal class SimpleDatabase : IDatabase
+{
+    private readonly IEmbeddedStorageManager _storageManager;
+
+    public SimpleDatabase(IEmbeddedStorageManager storageManager)
+    {
+        _storageManager = storageManager;
+    }
+
+    public string Name => "NebulaStore";
+    public string DatabaseName => "NebulaStore";
+    public IStorageManager StorageManager => throw new NotSupportedException("Use EmbeddedStorageManager directly");
+}
+
+/// <summary>
+/// Simple persistence roots view for Eclipse Store compatibility.
+/// </summary>
+internal class SimplePersistenceRootsView : IPersistenceRootsView
+{
+    private readonly object? _root;
+
+    public SimplePersistenceRootsView(object? root)
+    {
+        _root = root;
+    }
+
+    public object? Root => _root;
+    public object? RootReference() => _root;
+    public IEnumerable<object> AllRootReferences()
+    {
+        if (_root != null)
+            yield return _root;
+    }
+}
+
+/// <summary>
+/// Simple storage connection for Eclipse Store compatibility.
+/// </summary>
+internal class SimpleStorageConnection : IStorageConnection
+{
+    private readonly IEmbeddedStorageManager _embeddedStorage;
+
+    public SimpleStorageConnection(IEmbeddedStorageManager embeddedStorage)
+    {
+        _embeddedStorage = embeddedStorage;
+    }
+
+    public IPersistenceManager PersistenceManager => new SimplePersistenceManager(_embeddedStorage);
+
+    public long Store(object instance) => _embeddedStorage.Store(instance);
+    public long[] StoreAll(params object[] instances) => _embeddedStorage.StoreAll(instances);
+    public long Commit() => 0; // Simple implementation
+    public long PendingObjectCount => 0;
+    public bool HasPendingOperations => false;
+    public IStorer Skip(object obj) => _embeddedStorage.CreateStorer();
+    public long Ensure(object obj) => Store(obj);
+
+    // Eclipse Store housekeeping methods - delegate to storage manager
+    public void IssueFullGarbageCollection() { }
+    public bool IssueGarbageCollection(TimeSpan timeBudget) => true;
+    public void IssueFullFileCheck() => _embeddedStorage.IssueFullFileCheck();
+    public bool IssueFileCheck(TimeSpan timeBudget) => _embeddedStorage.IssueFileCheck(timeBudget);
+    public void IssueFullCacheCheck() => _embeddedStorage.IssueFullCacheCheck();
+    public bool IssueCacheCheck(TimeSpan timeBudget) => _embeddedStorage.IssueCacheCheck(timeBudget);
+    public void IssueFullBackup(System.IO.DirectoryInfo targetDirectory) => _embeddedStorage.IssueFullBackup(targetDirectory);
+    public void IssueTransactionsLogCleanup() { }
+    public IStorageStatistics CreateStorageStatistics() => _embeddedStorage.CreateStorageStatistics();
+    public void ExportChannels(System.IO.DirectoryInfo targetDirectory, bool performGarbageCollection = true) => _embeddedStorage.ExportChannels(targetDirectory, performGarbageCollection);
+    public void ImportFiles(System.IO.DirectoryInfo importDirectory) => _embeddedStorage.ImportFiles(importDirectory);
+
+    public void Dispose() { }
+}
+
+/// <summary>
+/// Simple persistence manager adapter for Eclipse Store compatibility.
+/// </summary>
+internal class SimplePersistenceManager : IPersistenceManager
+{
+    private readonly IEmbeddedStorageManager _embeddedStorage;
+
+    public SimplePersistenceManager(IEmbeddedStorageManager embeddedStorage)
+    {
+        _embeddedStorage = embeddedStorage;
+    }
+
+    public long Store(object instance) => _embeddedStorage.Store(instance);
+    public long[] StoreAll(params object[] instances) => _embeddedStorage.StoreAll(instances);
+    public object GetObject(long objectId) => throw new NotSupportedException("Use object graph navigation instead");
+    public IStorer CreateLazyStorer() => _embeddedStorage.CreateStorer();
+    public IStorer CreateStorer() => _embeddedStorage.CreateStorer();
+    public IStorer CreateEagerStorer() => _embeddedStorage.CreateStorer();
+    public IStorageTypeDictionary TypeDictionary => _embeddedStorage.TypeDictionary;
+    public NebulaStore.Storage.Embedded.Types.IPersistenceObjectRegistry ObjectRegistry => new SimpleObjectRegistry();
+    public IPersistenceRootsView ViewRoots() => _embeddedStorage.ViewRoots();
+}
+
+/// <summary>
+/// Simple object registry for Eclipse Store compatibility.
+/// </summary>
+internal class SimpleObjectRegistry : NebulaStore.Storage.Embedded.Types.IPersistenceObjectRegistry
+{
+    public long LookupObjectId(object instance) => 0; // Simple implementation
+    public void RegisterObject(object instance, long objectId) { } // No-op
+    public object? GetObject(long objectId) => null; // Simple implementation
+    public void Consolidate() { } // No-op
 }

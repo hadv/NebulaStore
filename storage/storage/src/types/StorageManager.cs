@@ -766,17 +766,23 @@ internal class BasicDatabase : IDatabase
 /// </summary>
 internal class BasicStorageStatistics : IStorageStatistics
 {
-    public int TotalFileCount { get; }
-    public long TotalFileSize { get; }
-    public long LiveDataSize { get; }
-    public DateTime CreationTimestamp { get; }
+    public long TotalObjectCount { get; }
+    public long TotalStorageSize { get; }
+    public int DataFileCount { get; }
+    public int TransactionFileCount { get; }
+    public long LiveDataLength { get; }
+    public DateTime CreationTime { get; }
+    public DateTime LastModificationTime { get; }
 
     public BasicStorageStatistics(int totalFileCount, long totalFileSize, long liveDataSize)
     {
-        TotalFileCount = totalFileCount;
-        TotalFileSize = totalFileSize;
-        LiveDataSize = liveDataSize;
-        CreationTimestamp = DateTime.UtcNow;
+        TotalObjectCount = 0; // Not available in simple implementation
+        TotalStorageSize = totalFileSize;
+        DataFileCount = totalFileCount;
+        TransactionFileCount = 0; // Not available in simple implementation
+        LiveDataLength = liveDataSize;
+        CreationTime = DateTime.UtcNow;
+        LastModificationTime = DateTime.UtcNow;
     }
 }
 

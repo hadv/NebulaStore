@@ -41,7 +41,7 @@ public class StorageTypeDictionaryTests
 
         // Assert
         Assert.NotNull(handler);
-        Assert.Equal(customType, handler.Type);
+        Assert.Equal(customType, handler.HandledType);
         Assert.True(handler.TypeId >= 1000); // Custom types start at 1000
         
         // Should be retrievable
@@ -89,7 +89,7 @@ public class StorageTypeDictionaryTests
         var handler = typeDictionary.RegisterType(customType);
 
         // Act
-        var retrievedHandler = typeDictionary.GetTypeHandler(handler.TypeName);
+        var retrievedHandler = typeDictionary.GetTypeHandler(handler.HandledType.FullName ?? handler.HandledType.Name);
 
         // Assert
         Assert.Same(handler, retrievedHandler);
@@ -268,7 +268,7 @@ public class StorageTypeDictionaryTests
 
         // Assert
         Assert.NotNull(handler);
-        Assert.Equal(customType, handler.Type);
+        Assert.Equal(customType, handler.HandledType);
         Assert.True(typeDictionary.IsTypeRegistered(customType));
     }
 
