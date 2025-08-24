@@ -167,7 +167,7 @@ public interface IGigaMapBuilder<T> where T : class
 /// <summary>
 /// Provides factory methods for creating GigaMap builders and instances.
 /// </summary>
-public static class GigaMap
+public static class GigaMapFactory
 {
     /// <summary>
     /// Creates a new GigaMap builder.

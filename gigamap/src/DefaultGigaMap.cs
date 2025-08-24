@@ -2,7 +2,6 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
 using NebulaStore.Storage;
 using NebulaStore.Storage.Embedded.Types;
 
@@ -177,6 +176,47 @@ public class DefaultGigaMap<T> : IGigaMap<T> where T : class
                     _entities.Remove(kvp.Key);
                     _indices.InternalRemove(kvp.Key, entity);
                     return kvp.Key;
+                }
+            }
+
+            return -1;
+        }
+    }
+
+    public long Remove<TKey>(T entity, IIndexer<T, TKey> indexer)
+    {
+        if (entity == null)
+            throw new ArgumentNullException(nameof(entity));
+        if (indexer == null)
+            throw new ArgumentNullException(nameof(indexer));
+
+        lock (_lock)
+        {
+            EnsureMutable();
+
+            // Find the entity using the indexer
+            var key = indexer.Index(entity);
+            var bitmapIndex = _indices.Bitmap.Get(indexer);
+            if (bitmapIndex == null)
+                throw new InvalidOperationException($"No bitmap index found for indexer '{indexer.Name}'");
+
+            var entityIds = bitmapIndex.GetEntityIds(key);
+            if (!entityIds.Any())
+                return -1;
+
+            // Find the matching entity
+            foreach (var entityId in entityIds)
+            {
+                if (_entities.TryGetValue(entityId, out var storedEntity) &&
+                    ReferenceEquals(entity, storedEntity))
+                {
+                    // Remove from entities
+                    _entities.Remove(entityId);
+
+                    // Remove from indices
+                    _indices.InternalRemove(entityId, entity);
+
+                    return entityId;
                 }
             }
 
@@ -386,12 +426,11 @@ public class DefaultGigaMap<T> : IGigaMap<T> where T : class
         return Query().And(stringIndexName, key);
     }
 
-    public async Task<long> StoreAsync()
+    public long Store()
     {
         if (_storageConnection == null)
         {
             // If no storage connection is set, return 0 (no persistence)
-            await Task.CompletedTask;
             return 0;
         }
 
@@ -444,6 +483,51 @@ public class DefaultGigaMap<T> : IGigaMap<T> where T : class
     }
 
     IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+
+    public void Iterate(Action<T> action)
+    {
+        if (action == null)
+            throw new ArgumentNullException(nameof(action));
+
+        lock (_lock)
+        {
+            foreach (var entity in _entities.Values)
+            {
+                action(entity);
+            }
+        }
+    }
+
+    public void IterateIndexed(Action<long, T> action)
+    {
+        if (action == null)
+            throw new ArgumentNullException(nameof(action));
+
+        lock (_lock)
+        {
+            foreach (var kvp in _entities)
+            {
+                action(kvp.Key, kvp.Value);
+            }
+        }
+    }
+
+    public string ToString(int elementCount)
+    {
+        return ToString(elementCount, 0);
+    }
+
+    public string ToString(int elementCount, int offset)
+    {
+        lock (_lock)
+        {
+            if (_entities.Count == 0)
+                return "[]";
+
+            var elements = _entities.Values.Skip(offset).Take(elementCount);
+            return "[" + string.Join(", ", elements) + "]";
+        }
+    }
 
     public void Dispose()
     {

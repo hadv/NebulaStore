@@ -1,7 +1,6 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Threading.Tasks;
 
 namespace NebulaStore.GigaMap;
 
@@ -82,6 +81,14 @@ public interface IGigaMap<T> : IEnumerable<T>, IDisposable where T : class
     /// <returns>The previously mapped id of the entity, or -1 if none was removed</returns>
     /// <exception cref="InvalidOperationException">If no bitmap index is present</exception>
     long Remove(T entity);
+
+    /// <summary>
+    /// Removes the specified entity using the given indexer for identification.
+    /// </summary>
+    /// <param name="entity">The entity to be removed</param>
+    /// <param name="indexer">The indexer to use for identification</param>
+    /// <returns>The previously mapped id of the entity, or -1 if none was removed</returns>
+    long Remove<TKey>(T entity, IIndexer<T, TKey> indexer);
 
     /// <summary>
     /// Removes all entities, effectively clearing all data from this collection.
@@ -219,10 +226,37 @@ public interface IGigaMap<T> : IEnumerable<T>, IDisposable where T : class
     /// </summary>
     /// <returns>The objectId of this instance</returns>
     /// <exception cref="InvalidOperationException">If this instance wasn't stored once initially by a storing context</exception>
-    Task<long> StoreAsync();
+    long Store();
 
     /// <summary>
     /// Provides this set Equalator instance of this GigaMap.
     /// </summary>
     IEqualityComparer<T> EqualityComparer { get; }
+
+    /// <summary>
+    /// Iterates over all entities in this GigaMap.
+    /// </summary>
+    /// <param name="action">The action to perform on each entity</param>
+    void Iterate(Action<T> action);
+
+    /// <summary>
+    /// Iterates over all entities in this GigaMap with their entity IDs.
+    /// </summary>
+    /// <param name="action">The action to perform on each entity ID and entity</param>
+    void IterateIndexed(Action<long, T> action);
+
+    /// <summary>
+    /// Returns a string representation of this GigaMap with a limited number of elements.
+    /// </summary>
+    /// <param name="elementCount">The maximum number of elements to include</param>
+    /// <returns>A string representation</returns>
+    string ToString(int elementCount);
+
+    /// <summary>
+    /// Returns a string representation of this GigaMap with a limited number of elements starting from an offset.
+    /// </summary>
+    /// <param name="elementCount">The maximum number of elements to include</param>
+    /// <param name="offset">The offset to start from</param>
+    /// <returns>A string representation</returns>
+    string ToString(int elementCount, int offset);
 }
