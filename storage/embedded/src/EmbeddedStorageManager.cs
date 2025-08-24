@@ -399,7 +399,7 @@ public class EmbeddedStorageManager : IEmbeddedStorageManager, IMonitorableStora
     public IGigaMapBuilder<T> CreateGigaMap<T>() where T : class
     {
         ThrowIfDisposed();
-        return new StorageAwareGigaMapBuilder<T>(_connection);
+        return new AfsGigaMapBuilder<T>(_connection, _configuration);
     }
 
     public IGigaMap<T>? GetGigaMap<T>() where T : class
@@ -424,6 +424,14 @@ public class EmbeddedStorageManager : IEmbeddedStorageManager, IMonitorableStora
         lock (_gigaMapLock)
         {
             _gigaMaps[typeof(T)] = gigaMap;
+
+            // If this is an AFS-enabled storage and the GigaMap isn't already AFS-aware,
+            // wrap it with AFS capabilities
+            if (_configuration.UseAfs && gigaMap is not AfsGigaMap<T>)
+            {
+                var afsGigaMap = new AfsGigaMap<T>(gigaMap, _connection);
+                _gigaMaps[typeof(T)] = afsGigaMap;
+            }
         }
     }
 
@@ -431,21 +439,22 @@ public class EmbeddedStorageManager : IEmbeddedStorageManager, IMonitorableStora
     {
         ThrowIfDisposed();
 
+        var storeTasks = new List<Task>();
+
         lock (_gigaMapLock)
         {
             foreach (var kvp in _gigaMaps)
             {
                 if (kvp.Value is IGigaMap<object> gigaMap)
                 {
-                    // Store the GigaMap using the existing storage system
-                    // For now, we'll use the basic Store method
-                    // In a full implementation, this would be more sophisticated
-                    Store(gigaMap);
+                    // Use async storage for better performance
+                    storeTasks.Add(Task.Run(() => gigaMap.Store()));
                 }
             }
         }
 
-        await Task.CompletedTask;
+        // Wait for all GigaMaps to be stored
+        await Task.WhenAll(storeTasks);
     }
 
     #region Eclipse Store Compatibility Methods
@@ -513,17 +522,20 @@ public class EmbeddedStorageManager : IEmbeddedStorageManager, IMonitorableStora
 }
 
 /// <summary>
-/// A GigaMap builder that automatically sets the storage connection.
+/// AFS-aware GigaMap builder that creates GigaMaps with automatic AFS integration.
+/// This follows Eclipse Store's pattern of transparent storage integration.
 /// </summary>
 /// <typeparam name="T">The entity type</typeparam>
-internal class StorageAwareGigaMapBuilder<T> : IGigaMapBuilder<T> where T : class
+internal class AfsGigaMapBuilder<T> : IGigaMapBuilder<T> where T : class
 {
     private readonly IStorageConnection _storageConnection;
+    private readonly IEmbeddedStorageConfiguration _configuration;
     private readonly GigaMapBuilder<T> _innerBuilder;
 
-    public StorageAwareGigaMapBuilder(IStorageConnection storageConnection)
+    public AfsGigaMapBuilder(IStorageConnection storageConnection, IEmbeddedStorageConfiguration configuration)
     {
         _storageConnection = storageConnection ?? throw new ArgumentNullException(nameof(storageConnection));
+        _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
         _innerBuilder = new GigaMapBuilder<T>();
     }
 
@@ -651,6 +663,12 @@ internal class StorageAwareGigaMapBuilder<T> : IGigaMapBuilder<T> where T : clas
         if (gigaMap is DefaultGigaMap<T> defaultGigaMap)
         {
             defaultGigaMap.SetStorageConnection(_storageConnection);
+        }
+
+        // If AFS is enabled, wrap the GigaMap with AFS capabilities
+        if (_configuration.UseAfs)
+        {
+            return new AfsGigaMap<T>(gigaMap, _storageConnection);
         }
 
         return gigaMap;
