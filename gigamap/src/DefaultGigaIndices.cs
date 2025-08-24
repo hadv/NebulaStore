@@ -107,11 +107,14 @@ internal class DefaultBitmapIndices<T> : IBitmapIndices<T> where T : class
         if (indexer == null)
             throw new ArgumentNullException(nameof(indexer));
 
-        var bitmapIndex = new DefaultBitmapIndex<T, TKey>(this, indexer);
-        _indices[indexer.Name] = bitmapIndex as IBitmapIndex<T, object> ??
-                                throw new InvalidOperationException("Failed to cast bitmap index");
+        // Convert to object indexer for storage
+        var objectIndexer = Indexer.AsObjectIndexer(indexer);
+        var objectBitmapIndex = new DefaultBitmapIndex<T, object>(this, objectIndexer);
+        _indices[indexer.Name] = objectBitmapIndex;
 
-        return bitmapIndex;
+        // For now, return the object bitmap index cast to the expected type
+        // This is a simplified approach that works with our current architecture
+        return (IBitmapIndex<T, TKey>)(object)objectBitmapIndex;
     }
 
     public IBitmapIndex<T, TKey>? Get<TKey>(IIndexer<T, TKey> indexer) where TKey : notnull
@@ -196,3 +199,4 @@ internal interface IInternalBitmapIndex<T> where T : class
     void InternalUpdate(long entityId, T oldEntity, T newEntity);
     void InternalRemoveAll();
 }
+

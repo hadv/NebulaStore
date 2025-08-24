@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using NebulaStore.GigaMap.Performance;
 
 namespace NebulaStore.GigaMap;
 
@@ -52,11 +51,8 @@ internal class DefaultGigaQuery<T> : IGigaQuery<T> where T : class
         if (index == null)
             throw new ArgumentException($"Index '{stringIndexName}' not found", nameof(stringIndexName));
 
-        // Check if the index is for string keys by checking the KeyType
-        if (index.Indexer.KeyType != typeof(string))
-            throw new InvalidOperationException($"Index '{stringIndexName}' is not a string index");
-
-        return new DefaultConditionBuilder<T, string>(this, new ObjectIndexIdentifierWrapper<T, string>(index));
+        // Allow any index to be queried with string keys - create a flexible wrapper
+        return new DefaultConditionBuilder<T, string>(this, new FlexibleStringIndexWrapper<T>(index));
     }
 
     public IGigaQuery<T> And(string stringIndexName, string key)

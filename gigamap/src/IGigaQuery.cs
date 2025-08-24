@@ -285,11 +285,7 @@ public interface IBitmapResult
     /// <returns>A negated result</returns>
     IBitmapResult Not(long totalEntityCount);
 
-    /// <summary>
-    /// Optimizes the result for better performance.
-    /// </summary>
-    /// <returns>An optimized result</returns>
-    IBitmapResult Optimize();
+
 }
 
 /// <summary>

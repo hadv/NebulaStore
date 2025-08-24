@@ -126,15 +126,7 @@ public interface IBitmapIndex<T, TKey> : IIndexIdentifier<T, TKey> where T : cla
     /// <returns>A bitmap result containing matching entity IDs</returns>
     IBitmapResult Search(Func<TKey, bool> predicate);
 
-    /// <summary>
-    /// Optimizes the index for memory usage.
-    /// </summary>
-    void EnsureOptimizedSize();
 
-    /// <summary>
-    /// Optimizes the index for performance.
-    /// </summary>
-    void EnsureOptimizedPerformance();
 
     /// <summary>
     /// Creates statistics for this bitmap index.

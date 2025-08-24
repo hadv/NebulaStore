@@ -50,17 +50,7 @@ internal class DefaultBitmapIndex<T, TKey> : IBitmapIndex<T, TKey>, IInternalBit
         return new DefaultBitmapResult(matchingEntityIds);
     }
 
-    public void EnsureOptimizedSize()
-    {
-        // In a full implementation, this would compress bitmap data
-        // For now, this is a no-op
-    }
 
-    public void EnsureOptimizedPerformance()
-    {
-        // In a full implementation, this would decompress bitmap data
-        // For now, this is a no-op
-    }
 
     public IBitmapIndexStatistics<T> CreateStatistics()
     {
@@ -251,9 +241,5 @@ internal class DefaultBitmapResult : IBitmapResult
         return new DefaultBitmapResult(complement);
     }
 
-    public IBitmapResult Optimize()
-    {
-        // In a full implementation, this would optimize the bitmap representation
-        return this;
-    }
+
 }

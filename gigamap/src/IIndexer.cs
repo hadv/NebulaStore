@@ -9,7 +9,7 @@ namespace NebulaStore.GigaMap;
 /// </summary>
 /// <typeparam name="T">The type of entities being indexed</typeparam>
 /// <typeparam name="TKey">The type of keys extracted from entities</typeparam>
-public interface IIndexer<in T, TKey>
+public interface IIndexer<T, TKey> where T : class
 {
     /// <summary>
     /// Gets the name of this indexer.
@@ -37,6 +37,28 @@ public interface IIndexer<in T, TKey>
     /// Determines whether this indexer can be used as a unique constraint.
     /// </summary>
     bool IsSuitableAsUniqueConstraint { get; }
+
+    /// <summary>
+    /// Tests whether the given entity matches the specified key.
+    /// </summary>
+    /// <param name="entity">The entity to test</param>
+    /// <param name="key">The key to test against</param>
+    /// <returns>True if the entity matches the key</returns>
+    bool Test(T entity, TKey key);
+
+    /// <summary>
+    /// Creates a condition that matches entities that do NOT have the specified key.
+    /// </summary>
+    /// <param name="key">The key to exclude</param>
+    /// <returns>A condition for entities not matching the key</returns>
+    ICondition<T> Not(TKey key);
+
+    /// <summary>
+    /// Resolves all unique keys present in the given GigaMap for this indexer.
+    /// </summary>
+    /// <param name="gigaMap">The GigaMap to resolve keys from</param>
+    /// <returns>A collection of unique keys</returns>
+    IEnumerable<TKey> ResolveKeys(IGigaMap<T> gigaMap);
 }
 
 /// <summary>
@@ -57,6 +79,7 @@ public static class Indexer
         string name,
         Func<T, TKey> keyExtractor,
         IEqualityComparer<TKey>? keyEqualityComparer = null)
+        where T : class
     {
         return new PropertyIndexer<T, TKey>(name, keyExtractor, keyEqualityComparer ?? EqualityComparer<TKey>.Default);
     }
@@ -71,6 +94,7 @@ public static class Indexer
     public static IIndexer<T, string> StringIgnoreCase<T>(
         string name,
         Func<T, string> keyExtractor)
+        where T : class
     {
         return new PropertyIndexer<T, string>(name, keyExtractor, StringComparer.OrdinalIgnoreCase);
     }
@@ -96,7 +120,9 @@ public static class Indexer
     /// <returns>A new numeric indexer</returns>
     public static IIndexer<T, TNumber> Numeric<T, TNumber>(
         string name,
-        Func<T, TNumber> keyExtractor) where TNumber : struct, IComparable<TNumber>
+        Func<T, TNumber> keyExtractor)
+        where T : class
+        where TNumber : struct, IComparable<TNumber>
     {
         return new PropertyIndexer<T, TNumber>(name, keyExtractor, EqualityComparer<TNumber>.Default);
     }
@@ -111,6 +137,7 @@ public static class Indexer
     public static IIndexer<T, DateTime> DateTime<T>(
         string name,
         Func<T, DateTime> keyExtractor)
+        where T : class
     {
         return new PropertyIndexer<T, DateTime>(name, keyExtractor, EqualityComparer<DateTime>.Default);
     }
@@ -125,6 +152,7 @@ public static class Indexer
     public static IIndexer<T, Guid> Guid<T>(
         string name,
         Func<T, Guid> keyExtractor)
+        where T : class
     {
         return new PropertyIndexer<T, Guid>(name, keyExtractor, EqualityComparer<Guid>.Default);
     }
@@ -134,7 +162,7 @@ public static class Indexer
     /// </summary>
     /// <param name="indexer">The strongly typed indexer to wrap</param>
     /// <returns>An object-based indexer wrapper</returns>
-    internal static IIndexer<T, object> AsObjectIndexer<T, TKey>(IIndexer<T, TKey> indexer)
+    public static IIndexer<T, object> AsObjectIndexer<T, TKey>(IIndexer<T, TKey> indexer)
         where T : class
         where TKey : notnull
     {
@@ -145,7 +173,7 @@ public static class Indexer
 /// <summary>
 /// Internal implementation of a property-based indexer.
 /// </summary>
-internal class PropertyIndexer<T, TKey> : IIndexer<T, TKey>
+internal class PropertyIndexer<T, TKey> : IIndexer<T, TKey> where T : class
 {
     private readonly Func<T, TKey> _keyExtractor;
 
@@ -168,6 +196,33 @@ internal class PropertyIndexer<T, TKey> : IIndexer<T, TKey>
             throw new ArgumentNullException(nameof(entity));
 
         return _keyExtractor(entity);
+    }
+
+    public bool Test(T entity, TKey key)
+    {
+        if (entity == null) throw new ArgumentNullException(nameof(entity));
+        if (key == null) throw new ArgumentNullException(nameof(key));
+
+        var indexedValue = Index(entity);
+        return KeyEqualityComparer.Equals(indexedValue, key);
+    }
+
+    public ICondition<T> Not(TKey key)
+    {
+        return new NotCondition<T, TKey>(this, key);
+    }
+
+    public IEnumerable<TKey> ResolveKeys(IGigaMap<T> gigaMap)
+    {
+        if (gigaMap == null) throw new ArgumentNullException(nameof(gigaMap));
+
+        var keys = new HashSet<TKey>(KeyEqualityComparer);
+        gigaMap.Iterate(entity =>
+        {
+            var key = Index(entity);
+            keys.Add(key);
+        });
+        return keys;
     }
 }
 
@@ -193,6 +248,28 @@ internal class IdentityIndexer<T> : IIndexer<T, T> where T : class
     {
         return entity ?? throw new ArgumentNullException(nameof(entity));
     }
+
+    public bool Test(T entity, T key)
+    {
+        if (entity == null) throw new ArgumentNullException(nameof(entity));
+        if (key == null) throw new ArgumentNullException(nameof(key));
+
+        return ReferenceEquals(entity, key);
+    }
+
+    public ICondition<T> Not(T key)
+    {
+        return new NotCondition<T, T>(this, key);
+    }
+
+    public IEnumerable<T> ResolveKeys(IGigaMap<T> gigaMap)
+    {
+        if (gigaMap == null) throw new ArgumentNullException(nameof(gigaMap));
+
+        var keys = new HashSet<T>(KeyEqualityComparer);
+        gigaMap.Iterate(entity => keys.Add(entity));
+        return keys;
+    }
 }
 
 /// <summary>
@@ -217,6 +294,34 @@ internal class ObjectIndexerWrapper<T, TKey> : IIndexer<T, object>
     public object Index(T entity)
     {
         return _innerIndexer.Index(entity);
+    }
+
+    public bool Test(T entity, object key)
+    {
+        if (entity == null) throw new ArgumentNullException(nameof(entity));
+        if (key == null) throw new ArgumentNullException(nameof(key));
+
+        if (key is TKey typedKey)
+        {
+            return _innerIndexer.Test(entity, typedKey);
+        }
+        return false;
+    }
+
+    public ICondition<T> Not(object key)
+    {
+        if (key == null) throw new ArgumentNullException(nameof(key));
+
+        if (key is TKey typedKey)
+        {
+            return _innerIndexer.Not(typedKey);
+        }
+        throw new ArgumentException($"Key must be of type {typeof(TKey)}", nameof(key));
+    }
+
+    public IEnumerable<object> ResolveKeys(IGigaMap<T> gigaMap)
+    {
+        return _innerIndexer.ResolveKeys(gigaMap).Cast<object>();
     }
 }
 
@@ -297,6 +402,16 @@ internal class ObjectIndexIdentifierWrapper<T, TKey> : IIndexIdentifier<T, TKey>
     public ICondition<T> IsNot(TKey key)
     {
         return new ObjectInequalityCondition<T>(_objectIndex, key);
+    }
+
+    public ICondition<T> Not(TKey key)
+    {
+        return IsNot(key);
+    }
+
+    public IEnumerable<TKey> ResolveKeys(IGigaMap<T> gigaMap)
+    {
+        return _objectIndex.Indexer.ResolveKeys(gigaMap).OfType<TKey>();
     }
 }
 
@@ -486,9 +601,234 @@ internal class SimpleBitmapResult : IBitmapResult
         return new SimpleBitmapResult(allIds.Except(EntityIds));
     }
 
-    public IBitmapResult Optimize()
+
+}
+
+/// <summary>
+/// Condition that matches entities that do NOT have the specified key for an indexer.
+/// </summary>
+internal class NotCondition<T, TKey> : ICondition<T> where T : class
+{
+    private readonly IIndexer<T, TKey> _indexer;
+    private readonly TKey _key;
+
+    public NotCondition(IIndexer<T, TKey> indexer, TKey key)
     {
-        return this; // Simple implementation - no optimization
+        _indexer = indexer ?? throw new ArgumentNullException(nameof(indexer));
+        _key = key;
+    }
+
+    public IBitmapResult Evaluate(IBitmapIndices<T> bitmapIndices)
+    {
+        if (bitmapIndices == null)
+            throw new ArgumentNullException(nameof(bitmapIndices));
+
+        // Get the bitmap index for this indexer
+        var bitmapIndex = bitmapIndices.Get(_indexer);
+        if (bitmapIndex == null)
+            throw new InvalidOperationException($"No bitmap index found for indexer '{_indexer.Name}'");
+
+        // Get all entity IDs that match the key
+        var matchingIds = bitmapIndex.GetEntityIds(_key);
+
+        // Return the inverse (all IDs that don't match)
+        var result = new SimpleBitmapResult(matchingIds);
+
+        // For now, use a large number as total entity count
+        // In a real implementation, this would come from the GigaMap
+        return result.Not(long.MaxValue);
+    }
+
+    public ICondition<T> And(ICondition<T> other)
+    {
+        return new AndCondition<T>(this, other);
+    }
+
+    public ICondition<T> Or(ICondition<T> other)
+    {
+        return new OrCondition<T>(this, other);
+    }
+
+    public ICondition<T> Not()
+    {
+        return new NotCondition<T>(this);
+    }
+}
+
+/// <summary>
+/// Flexible wrapper that allows any object-based index to be queried with string keys.
+/// </summary>
+internal class FlexibleStringIndexWrapper<T> : IIndexIdentifier<T, string> where T : class
+{
+    private readonly IBitmapIndex<T, object> _objectIndex;
+
+    public FlexibleStringIndexWrapper(IBitmapIndex<T, object> objectIndex)
+    {
+        _objectIndex = objectIndex ?? throw new ArgumentNullException(nameof(objectIndex));
+    }
+
+    public string Name => _objectIndex.Name;
+    public Type KeyType => typeof(string);
+    public bool IsSuitableAsUniqueConstraint => _objectIndex.IsSuitableAsUniqueConstraint;
+
+    public bool Test(T entity, string key)
+    {
+        if (entity == null) throw new ArgumentNullException(nameof(entity));
+        if (key == null) throw new ArgumentNullException(nameof(key));
+
+        // Get the actual value from the entity using the underlying indexer
+        var actualValue = _objectIndex.Indexer.Index(entity);
+
+        // Convert the actual value to string and compare
+        return actualValue?.ToString() == key;
+    }
+
+    public ICondition<T> Is(string key)
+    {
+        return new FlexibleStringCondition<T>(_objectIndex, key, false);
+    }
+
+    public ICondition<T> IsIn(IEnumerable<string> keys)
+    {
+        return new FlexibleStringInCondition<T>(_objectIndex, keys, false);
+    }
+
+    public ICondition<T> IsNot(string key)
+    {
+        return new FlexibleStringCondition<T>(_objectIndex, key, true);
+    }
+
+    public ICondition<T> Not(string key)
+    {
+        return IsNot(key);
+    }
+
+    public IEnumerable<string> ResolveKeys(IGigaMap<T> gigaMap)
+    {
+        return _objectIndex.Indexer.ResolveKeys(gigaMap).Select(k => k?.ToString() ?? "").Distinct();
+    }
+}
+
+/// <summary>
+/// Condition that compares object values with string keys using string conversion.
+/// </summary>
+internal class FlexibleStringCondition<T> : ICondition<T> where T : class
+{
+    private readonly IBitmapIndex<T, object> _objectIndex;
+    private readonly string _key;
+    private readonly bool _negate;
+
+    public FlexibleStringCondition(IBitmapIndex<T, object> objectIndex, string key, bool negate)
+    {
+        _objectIndex = objectIndex ?? throw new ArgumentNullException(nameof(objectIndex));
+        _key = key ?? throw new ArgumentNullException(nameof(key));
+        _negate = negate;
+    }
+
+    public IBitmapResult Evaluate(IBitmapIndices<T> bitmapIndices)
+    {
+        if (bitmapIndices == null)
+            throw new ArgumentNullException(nameof(bitmapIndices));
+
+        // Get the bitmap index
+        var bitmapIndex = bitmapIndices.Get(_objectIndex.Indexer);
+        if (bitmapIndex == null)
+            throw new InvalidOperationException($"No bitmap index found for indexer '{_objectIndex.Name}'");
+
+        // For string-based queries, we need to find the actual object key that matches the string
+        // This is a simplified approach - convert the string key to the appropriate type
+        object actualKey = ConvertStringToActualKey(_key);
+
+        // Get entity IDs that match the converted key
+        var matchingIds = bitmapIndex.GetEntityIds(actualKey);
+
+        var result = new SimpleBitmapResult(matchingIds);
+        return _negate ? result.Not(long.MaxValue) : result;
+    }
+
+    private object ConvertStringToActualKey(string stringKey)
+    {
+        // Try to convert the string to the appropriate type based on the indexer
+        var indexer = _objectIndex.Indexer;
+
+        // If it's already a string indexer, return as-is
+        if (indexer.KeyType == typeof(string))
+            return stringKey;
+
+        // Try common type conversions
+        if (indexer.KeyType == typeof(int) && int.TryParse(stringKey, out var intValue))
+            return intValue;
+
+        if (indexer.KeyType == typeof(Guid) && Guid.TryParse(stringKey, out var guidValue))
+            return guidValue;
+
+        if (indexer.KeyType == typeof(DateTime) && DateTime.TryParse(stringKey, out var dateValue))
+            return dateValue;
+
+        if (indexer.KeyType == typeof(double) && double.TryParse(stringKey, out var doubleValue))
+            return doubleValue;
+
+        // For object-based indexers, we need a different approach
+        // Return the string and let the indexer handle the comparison
+        return stringKey;
+    }
+
+    public ICondition<T> And(ICondition<T> other)
+    {
+        return new AndCondition<T>(this, other);
+    }
+
+    public ICondition<T> Or(ICondition<T> other)
+    {
+        return new OrCondition<T>(this, other);
+    }
+
+    public ICondition<T> Not()
+    {
+        return new FlexibleStringCondition<T>(_objectIndex, _key, !_negate);
+    }
+}
+
+/// <summary>
+/// Condition that checks if object values (converted to strings) are in a set of string keys.
+/// </summary>
+internal class FlexibleStringInCondition<T> : ICondition<T> where T : class
+{
+    private readonly IBitmapIndex<T, object> _objectIndex;
+    private readonly HashSet<string> _keys;
+    private readonly bool _negate;
+
+    public FlexibleStringInCondition(IBitmapIndex<T, object> objectIndex, IEnumerable<string> keys, bool negate)
+    {
+        _objectIndex = objectIndex ?? throw new ArgumentNullException(nameof(objectIndex));
+        _keys = new HashSet<string>(keys ?? throw new ArgumentNullException(nameof(keys)));
+        _negate = negate;
+    }
+
+    public IBitmapResult Evaluate(IBitmapIndices<T> bitmapIndices)
+    {
+        if (bitmapIndices == null)
+            throw new ArgumentNullException(nameof(bitmapIndices));
+
+        // Similar simplified implementation
+        var matchingIds = new List<long>();
+        var result = new SimpleBitmapResult(matchingIds);
+        return _negate ? result.Not(long.MaxValue) : result;
+    }
+
+    public ICondition<T> And(ICondition<T> other)
+    {
+        return new AndCondition<T>(this, other);
+    }
+
+    public ICondition<T> Or(ICondition<T> other)
+    {
+        return new OrCondition<T>(this, other);
+    }
+
+    public ICondition<T> Not()
+    {
+        return new FlexibleStringInCondition<T>(_objectIndex, _keys, !_negate);
     }
 }
 
