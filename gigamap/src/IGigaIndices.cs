@@ -129,6 +129,11 @@ public interface IBitmapIndex<T, TKey> : IIndexIdentifier<T, TKey> where T : cla
 
 
     /// <summary>
+    /// Gets the number of unique keys in this index.
+    /// </summary>
+    int Size { get; }
+
+    /// <summary>
     /// Creates statistics for this bitmap index.
     /// </summary>
     /// <returns>Statistics about the index</returns>

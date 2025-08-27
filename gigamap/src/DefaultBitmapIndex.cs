@@ -13,13 +13,14 @@ internal class DefaultBitmapIndex<T, TKey> : IBitmapIndex<T, TKey>, IInternalBit
 {
     private readonly IBitmapIndices<T> _parent;
     private readonly IIndexer<T, TKey> _indexer;
-    private readonly Dictionary<TKey, HashSet<long>> _keyToEntityIds = new();
+    private readonly Dictionary<TKey, HashSet<long>> _keyToEntityIds;
     private readonly Dictionary<long, TKey> _entityIdToKey = new();
 
     public DefaultBitmapIndex(IBitmapIndices<T> parent, IIndexer<T, TKey> indexer)
     {
         _parent = parent ?? throw new ArgumentNullException(nameof(parent));
         _indexer = indexer ?? throw new ArgumentNullException(nameof(indexer));
+        _keyToEntityIds = new Dictionary<TKey, HashSet<long>>(indexer.KeyEqualityComparer);
     }
 
     public IBitmapIndices<T> Parent => _parent;
@@ -31,6 +32,8 @@ internal class DefaultBitmapIndex<T, TKey> : IBitmapIndex<T, TKey>, IInternalBit
     public Type KeyType => _indexer.KeyType;
 
     public bool IsSuitableAsUniqueConstraint => _indexer.IsSuitableAsUniqueConstraint;
+
+    public int Size => _keyToEntityIds.Count;
 
     public IBitmapResult Search(Func<TKey, bool> predicate)
     {

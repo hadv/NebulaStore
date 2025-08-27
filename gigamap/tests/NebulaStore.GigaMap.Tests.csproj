@@ -29,7 +29,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Remove="BitmapIndexTests.cs" />
     <Compile Remove="ConstraintTests.cs" />
     <Compile Remove="GigaMapBuilderTests.cs" />
     <Compile Remove="GigaMapCrudTests.cs" />
