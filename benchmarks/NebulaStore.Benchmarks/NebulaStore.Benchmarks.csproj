@@ -1,0 +1,44 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net9.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <AssemblyTitle>NebulaStore Performance Benchmarks</AssemblyTitle>
+    <AssemblyDescription>Performance comparison between NebulaStore and MySQL for large-scale data operations</AssemblyDescription>
+    <AssemblyVersion>1.0.0</AssemblyVersion>
+    <FileVersion>1.0.0</FileVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- NebulaStore Dependencies -->
+    <ProjectReference Include="../../storage/embedded/NebulaStore.Storage.Embedded.csproj" />
+    <ProjectReference Include="../../storage/embedded-configuration/NebulaStore.Storage.EmbeddedConfiguration.csproj" />
+    <ProjectReference Include="../../storage/storage/NebulaStore.Storage.csproj" />
+
+    <!-- Entity Framework Core for PostgreSQL -->
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.0" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.0">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="9.0.0" />
+
+    <!-- Serialization -->
+    <PackageReference Include="MessagePack" Version="3.1.4" />
+
+    <!-- JSON Serialization -->
+    <PackageReference Include="System.Text.Json" Version="9.0.0" />
+
+    <!-- Performance and Diagnostics -->
+    <PackageReference Include="System.Diagnostics.PerformanceCounter" Version="9.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="README.md">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+</Project>
