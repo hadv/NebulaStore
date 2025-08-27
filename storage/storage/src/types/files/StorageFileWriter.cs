@@ -2,18 +2,43 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using NebulaStore.Storage.Embedded.Types.Transactions;
 using NebulaStore.Storage.Embedded.Types.Exceptions;
 
 namespace NebulaStore.Storage.Embedded.Types.Files;
 
 /// <summary>
 /// Default implementation of IStorageFileWriter for writing data to storage files.
+/// Includes Eclipse Store-style transaction logging for ACID compliance and crash recovery.
 /// </summary>
 public class StorageFileWriter : IStorageFileWriter
 {
     #region Private Fields
 
     private readonly object _lock = new object();
+    private readonly TransactionLogManager? _transactionLogManager;
+    private readonly int _channelIndex;
+    private bool _disposed;
+
+    #endregion
+
+    #region Constructor
+
+    /// <summary>
+    /// Initializes a new instance of the StorageFileWriter class.
+    /// </summary>
+    /// <param name="channelIndex">The channel index.</param>
+    /// <param name="storageDirectory">The storage directory for transaction logs.</param>
+    public StorageFileWriter(int channelIndex, string? storageDirectory = null)
+    {
+        _channelIndex = channelIndex;
+
+        // Only create transaction log manager if storage directory is provided
+        if (!string.IsNullOrEmpty(storageDirectory))
+        {
+            _transactionLogManager = new TransactionLogManager(channelIndex, storageDirectory);
+        }
+    }
 
     #endregion
 
@@ -26,28 +51,48 @@ public class StorageFileWriter : IStorageFileWriter
         if (dataBuffers == null)
             throw new ArgumentNullException(nameof(dataBuffers));
 
+        ThrowIfDisposed();
+
         lock (_lock)
         {
             var totalBytesWritten = 0L;
             var startPosition = file.Size;
+            var transactionId = _transactionLogManager?.BeginTransaction() ?? 0;
 
-            foreach (var buffer in dataBuffers)
+            try
             {
-                if (buffer != null && buffer.Length > 0)
+                foreach (var buffer in dataBuffers)
                 {
-                    if (file is StorageLiveDataFile dataFile)
+                    if (buffer != null && buffer.Length > 0)
                     {
-                        var bytesWritten = dataFile.WriteData(buffer);
-                        totalBytesWritten += bytesWritten;
-                    }
-                    else
-                    {
-                        throw new StorageFileException($"Unsupported file type: {file.GetType()}");
+                        if (file is StorageLiveDataFile dataFile)
+                        {
+                            var bytesWritten = dataFile.WriteData(buffer);
+                            totalBytesWritten += bytesWritten;
+                        }
+                        else
+                        {
+                            throw new StorageFileException($"Unsupported file type: {file.GetType()}");
+                        }
                     }
                 }
-            }
 
-            return startPosition; // Return the position where writing started
+                // Log the store operation if transaction logging is enabled
+                if (_transactionLogManager != null && totalBytesWritten > 0)
+                {
+                    var objectIds = new List<long> { file.Number }; // Simplified - in real implementation, track actual object IDs
+                    _transactionLogManager.LogStoreOperation(transactionId, file.Number, startPosition, totalBytesWritten, objectIds);
+                    _transactionLogManager.CommitTransaction(transactionId);
+                }
+
+                return startPosition; // Return the position where writing started
+            }
+            catch
+            {
+                // Rollback transaction on failure
+                _transactionLogManager?.RollbackTransaction(transactionId);
+                throw;
+            }
         }
     }
 
@@ -170,11 +215,26 @@ public class StorageFileWriter : IStorageFileWriter
         if (dataFile == null)
             throw new ArgumentNullException(nameof(dataFile));
 
+        ThrowIfDisposed();
+
         lock (_lock)
         {
-            // Write transaction entry for file creation
-            // This would typically write a transaction log entry
-            // For now, this is a placeholder
+            // Use new transaction logging system if available
+            if (_transactionLogManager != null)
+            {
+                var transactionId = _transactionLogManager.BeginTransaction();
+                try
+                {
+                    _transactionLogManager.LogCreateOperation(transactionId, dataFile.Number, dataFile.ToString() ?? "");
+                    _transactionLogManager.CommitTransaction(transactionId);
+                }
+                catch
+                {
+                    _transactionLogManager.RollbackTransaction(transactionId);
+                    throw;
+                }
+            }
+            // Legacy placeholder for compatibility
         }
     }
 
@@ -284,10 +344,44 @@ public class StorageFileWriter : IStorageFileWriter
     /// <summary>
     /// Creates a new StorageFileWriter instance.
     /// </summary>
+    /// <param name="channelIndex">The channel index.</param>
+    /// <param name="storageDirectory">The storage directory for transaction logs.</param>
     /// <returns>A new StorageFileWriter instance.</returns>
-    public static StorageFileWriter Create()
+    public static StorageFileWriter Create(int channelIndex = 0, string? storageDirectory = null)
     {
-        return new StorageFileWriter();
+        return new StorageFileWriter(channelIndex, storageDirectory);
+    }
+
+    #endregion
+
+    #region Public Methods
+
+    /// <summary>
+    /// Disposes the storage file writer and releases transaction log resources.
+    /// </summary>
+    public void Dispose()
+    {
+        if (_disposed)
+            return;
+
+        lock (_lock)
+        {
+            _transactionLogManager?.Dispose();
+            _disposed = true;
+        }
+    }
+
+    #endregion
+
+    #region Private Methods
+
+    /// <summary>
+    /// Throws if the writer is disposed.
+    /// </summary>
+    private void ThrowIfDisposed()
+    {
+        if (_disposed)
+            throw new ObjectDisposedException(nameof(StorageFileWriter));
     }
 
     #endregion
