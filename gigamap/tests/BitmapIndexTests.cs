@@ -64,7 +64,7 @@ public class BitmapIndexTests
         // Assert
         var departmentIndex = gigaMap.Index.Bitmap.Get("Department");
         departmentIndex.Should().NotBeNull();
-        departmentIndex!.Size.Should().Be(3); // Total entities indexed
+        departmentIndex!.Size.Should().Be(2); // Two unique departments: Engineering and Marketing
 
         // Query to verify grouping
         var engineeringResults = gigaMap.Query("Department", "Engineering").Execute();

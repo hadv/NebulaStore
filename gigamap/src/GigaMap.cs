@@ -9,6 +9,22 @@ namespace NebulaStore.GigaMap;
 public static class GigaMap
 {
     /// <summary>
+    /// Creates a new GigaMap builder for the specified entity type.
+    /// This provides the Eclipse Store-compatible builder pattern.
+    ///
+    /// Usage:
+    /// var gigaMap = GigaMap.Builder&lt;Person&gt;()
+    ///     .WithBitmapIndex(Indexer.Property&lt;Person, string&gt;("Email", p => p.Email))
+    ///     .WithBitmapIndex(Indexer.Property&lt;Person, int&gt;("Age", p => p.Age))
+    ///     .Build();
+    /// </summary>
+    /// <typeparam name="T">The type of entities to store</typeparam>
+    /// <returns>A new GigaMap builder instance</returns>
+    public static IGigaMapBuilder<T> Builder<T>() where T : class
+    {
+        return new GigaMapBuilder<T>();
+    }
+    /// <summary>
     /// Creates a new GigaMap instance for the specified entity type.
     /// This version uses LINQ for querying, similar to how Eclipse Store uses Java Stream API.
     /// 

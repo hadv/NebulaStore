@@ -30,6 +30,10 @@ internal class DefaultBitmapIndexStatistics<T, TKey> : IBitmapIndexStatistics<T>
 
     public int EntryCount => _keyStatistics.Count;
 
+    public int TotalEntityCount => (int)_keyStatistics.Values.Sum(s => s.EntityCount);
+
+    public int UniqueKeyCount => EntryCount;
+
     public int TotalDataMemorySize => _keyStatistics.Values.Sum(s => s.TotalDataMemorySize);
 
     public IReadOnlyDictionary<object, IKeyStatistics> KeyStatistics => _keyStatistics;
@@ -63,8 +67,20 @@ internal class DefaultBitmapIndexStatistics<T, TKey> : IBitmapIndexStatistics<T>
 
     private Dictionary<object, HashSet<long>> GetKeyToEntityIdsMapping(DefaultBitmapIndex<T, TKey> defaultIndex)
     {
-        // In a real implementation, this would access the internal data structure
-        // For now, return an empty dictionary as a placeholder
+        // Access the internal data through reflection since we need the actual data
+        var field = typeof(DefaultBitmapIndex<T, TKey>).GetField("_keyToEntityIds",
+            System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+
+        if (field?.GetValue(defaultIndex) is Dictionary<TKey, HashSet<long>> internalData)
+        {
+            var result = new Dictionary<object, HashSet<long>>();
+            foreach (var kvp in internalData)
+            {
+                result[kvp.Key!] = kvp.Value;
+            }
+            return result;
+        }
+
         return new Dictionary<object, HashSet<long>>();
     }
 

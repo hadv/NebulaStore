@@ -315,6 +315,16 @@ public interface IBitmapIndexStatistics<T> where T : class
     int EntryCount { get; }
 
     /// <summary>
+    /// Gets the total number of entities across all keys in the index.
+    /// </summary>
+    int TotalEntityCount { get; }
+
+    /// <summary>
+    /// Gets the number of unique keys in the index (alias for EntryCount).
+    /// </summary>
+    int UniqueKeyCount { get; }
+
+    /// <summary>
     /// Gets the total memory size used by the index data.
     /// </summary>
     int TotalDataMemorySize { get; }
