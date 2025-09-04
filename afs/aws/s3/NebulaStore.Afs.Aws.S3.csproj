@@ -1,0 +1,37 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <LangVersion>latest</LangVersion>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <WarningsAsErrors />
+    <WarningsNotAsErrors>CS1591</WarningsNotAsErrors>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <AssemblyTitle>NebulaStore Abstract File System AWS S3</AssemblyTitle>
+    <AssemblyDescription>AWS S3 adapter for NebulaStore Abstract File System</AssemblyDescription>
+    <AssemblyCompany>NebulaStore</AssemblyCompany>
+    <AssemblyProduct>NebulaStore</AssemblyProduct>
+    <Copyright>Copyright © NebulaStore 2025</Copyright>
+    <AssemblyVersion>1.0.0.0</AssemblyVersion>
+    <FileVersion>1.0.0.0</FileVersion>
+    <RootNamespace>NebulaStore.Afs.Aws.S3</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="test/**/*.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../../blobstore/NebulaStore.Afs.Blobstore.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="AWSSDK.S3" Version="3.7.400.44" />
+  </ItemGroup>
+
+</Project>
