@@ -217,12 +217,60 @@ var config = EmbeddedStorageConfiguration.New()
 - Proper authentication (service account key, application default credentials, etc.)
 - `Google.Cloud.Firestore` NuGet package
 
+### AWS S3 Storage
+
+**Type**: `"s3"`
+
+AWS S3 provides scalable object storage with global availability:
+
+```csharp
+using Amazon;
+using Amazon.S3;
+using NebulaStore.Afs.Aws.S3;
+
+// Create S3 client
+var s3Client = new AmazonS3Client("access-key", "secret-key", RegionEndpoint.USEast1);
+
+// Create S3 configuration
+var s3Config = AwsS3Configuration.New()
+    .SetCredentials("access-key", "secret-key")
+    .SetRegion(RegionEndpoint.USEast1)
+    .SetUseCache(true);
+
+// Use with embedded storage
+var config = EmbeddedStorageConfiguration.New()
+    .SetStorageDirectory("s3-storage")
+    .SetUseAfs(true)
+    .SetAfsStorageType("s3")
+    .SetAfsConnectionString("my-bucket-name")
+    .Build();
+
+using var s3Storage = EmbeddedStorage.StartWithAfs(config);
+
+// Direct S3 connector usage
+using var connector = AwsS3Connector.New(s3Client, s3Config);
+using var fileSystem = BlobStoreFileSystem.New(connector);
+```
+
+**Requirements:**
+- AWS account with S3 access
+- Proper authentication (access keys, IAM roles, etc.)
+- `AWSSDK.S3` NuGet package
+- S3 bucket created for storage
+
+**Features:**
+- Unlimited storage capacity
+- Global availability and durability
+- Multiple storage classes for cost optimization
+- Server-side encryption support
+- S3-compatible services support (MinIO, etc.)
+
 ### Future Storage Types
 
 The AFS architecture supports additional storage backends:
 - **NIO**: Java NIO-based file operations
 - **SQL**: Database-backed storage
-- **Cloud**: AWS S3, Azure Blob, Google Cloud Storage
+- **Azure Blob**: Microsoft Azure Blob Storage
 - **Redis**: In-memory storage with persistence
 - **Custom**: Implement `IBlobStoreConnector` for custom backends
 
