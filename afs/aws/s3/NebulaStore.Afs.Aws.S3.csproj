@@ -8,7 +8,7 @@
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <WarningsAsErrors />
-    <WarningsNotAsErrors>CS1591</WarningsNotAsErrors>
+    <WarningsNotAsErrors>CS1591;NU1603</WarningsNotAsErrors>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -31,7 +31,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="AWSSDK.S3" Version="3.7.300" />
+    <PackageReference Include="AWSSDK.S3" Version="3.7.401" />
   </ItemGroup>
 
 </Project>
