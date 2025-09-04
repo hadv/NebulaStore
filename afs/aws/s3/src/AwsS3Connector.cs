@@ -385,8 +385,15 @@ public class AwsS3Connector : BlobStoreConnectorBase
             using var response = _s3Client.GetObjectAsync(request).Result;
             using var stream = response.ResponseStream;
             var buffer = new byte[blobLength];
-            stream.Read(buffer, 0, (int)blobLength);
-            result.AddRange(buffer);
+            var totalRead = 0;
+            while (totalRead < blobLength)
+            {
+                var bytesRead = stream.Read(buffer, totalRead, (int)blobLength - totalRead);
+                if (bytesRead == 0)
+                    break;
+                totalRead += bytesRead;
+            }
+            result.AddRange(buffer.Take(totalRead));
 
             currentOffset += blobSize;
             remainingLength -= blobLength;
@@ -432,8 +439,7 @@ public class AwsS3Connector : BlobStoreConnectorBase
         {
             BucketName = file.Container,
             Key = blobKey,
-            InputStream = new MemoryStream(allData),
-            ContentLength = totalSize
+            InputStream = new MemoryStream(allData)
         };
 
         _s3Client.PutObjectAsync(request).Wait();
