@@ -73,7 +73,7 @@ public class AwsS3Connector : BlobStoreConnectorBase
     public override long GetFileSize(BlobStorePath file)
     {
         EnsureNotDisposed();
-        _pathValidator.Validate(file);
+        file.Validate(_pathValidator);
 
         try
         {
@@ -89,7 +89,7 @@ public class AwsS3Connector : BlobStoreConnectorBase
     public override bool DirectoryExists(BlobStorePath directory)
     {
         EnsureNotDisposed();
-        _pathValidator.Validate(directory);
+        directory.Validate(_pathValidator);
 
         try
         {
@@ -119,7 +119,7 @@ public class AwsS3Connector : BlobStoreConnectorBase
     public override bool FileExists(BlobStorePath file)
     {
         EnsureNotDisposed();
-        _pathValidator.Validate(file);
+        file.Validate(_pathValidator);
 
         try
         {
@@ -135,7 +135,7 @@ public class AwsS3Connector : BlobStoreConnectorBase
     public override void VisitChildren(BlobStorePath directory, IBlobStorePathVisitor visitor)
     {
         EnsureNotDisposed();
-        _pathValidator.Validate(directory);
+        directory.Validate(_pathValidator);
 
         var childKeys = GetChildKeys(directory);
         var prefix = GetChildKeysPrefix(directory);
@@ -166,7 +166,7 @@ public class AwsS3Connector : BlobStoreConnectorBase
     public override bool IsEmpty(BlobStorePath directory)
     {
         EnsureNotDisposed();
-        _pathValidator.Validate(directory);
+        directory.Validate(_pathValidator);
 
         var request = new ListObjectsV2Request
         {
@@ -182,7 +182,7 @@ public class AwsS3Connector : BlobStoreConnectorBase
     public override bool CreateDirectory(BlobStorePath directory)
     {
         EnsureNotDisposed();
-        _pathValidator.Validate(directory);
+        directory.Validate(_pathValidator);
 
         var containerKey = GetContainerKey(directory);
         if (string.IsNullOrEmpty(containerKey) || containerKey == BlobStorePath.Separator)
@@ -204,7 +204,7 @@ public class AwsS3Connector : BlobStoreConnectorBase
     public override bool CreateFile(BlobStorePath file)
     {
         EnsureNotDisposed();
-        _pathValidator.Validate(file);
+        file.Validate(_pathValidator);
 
         // S3 doesn't require explicit file creation
         return true;
@@ -213,7 +213,7 @@ public class AwsS3Connector : BlobStoreConnectorBase
     public override bool DeleteFile(BlobStorePath file)
     {
         EnsureNotDisposed();
-        _pathValidator.Validate(file);
+        file.Validate(_pathValidator);
 
         var blobs = GetBlobs(file).ToList();
         if (!blobs.Any())
@@ -346,7 +346,7 @@ public class AwsS3Connector : BlobStoreConnectorBase
     public override byte[] ReadData(BlobStorePath file, long offset, long length)
     {
         EnsureNotDisposed();
-        _pathValidator.Validate(file);
+        file.Validate(_pathValidator);
 
         var blobs = GetBlobs(file);
         if (!blobs.Any())
@@ -406,7 +406,7 @@ public class AwsS3Connector : BlobStoreConnectorBase
     public override long WriteData(BlobStorePath file, IEnumerable<byte[]> sourceBuffers)
     {
         EnsureNotDisposed();
-        _pathValidator.Validate(file);
+        file.Validate(_pathValidator);
 
         // Ensure parent directory exists
         var parentPath = file.ParentPath;
@@ -442,8 +442,8 @@ public class AwsS3Connector : BlobStoreConnectorBase
     public override void MoveFile(BlobStorePath sourceFile, BlobStorePath targetFile)
     {
         EnsureNotDisposed();
-        _pathValidator.Validate(sourceFile);
-        _pathValidator.Validate(targetFile);
+        sourceFile.Validate(_pathValidator);
+        targetFile.Validate(_pathValidator);
 
         CopyFile(sourceFile, targetFile, 0, -1);
         DeleteFile(sourceFile);
@@ -452,8 +452,8 @@ public class AwsS3Connector : BlobStoreConnectorBase
     public override long CopyFile(BlobStorePath sourceFile, BlobStorePath targetFile, long offset, long length)
     {
         EnsureNotDisposed();
-        _pathValidator.Validate(sourceFile);
-        _pathValidator.Validate(targetFile);
+        sourceFile.Validate(_pathValidator);
+        targetFile.Validate(_pathValidator);
 
         var data = ReadData(sourceFile, offset, length);
         WriteData(targetFile, new[] { data });
@@ -463,7 +463,7 @@ public class AwsS3Connector : BlobStoreConnectorBase
     public override void TruncateFile(BlobStorePath file, long newLength)
     {
         EnsureNotDisposed();
-        _pathValidator.Validate(file);
+        file.Validate(_pathValidator);
 
         if (newLength < 0)
         {

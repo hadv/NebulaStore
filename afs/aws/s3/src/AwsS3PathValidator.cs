@@ -1,5 +1,6 @@
 using System.Text.RegularExpressions;
 using NebulaStore.Afs.Blobstore;
+using NebulaStore.Afs.Blobstore.Types;
 
 namespace NebulaStore.Afs.Aws.S3;
 
@@ -7,7 +8,7 @@ namespace NebulaStore.Afs.Aws.S3;
 /// Path validator for AWS S3 bucket names and object keys.
 /// Implements AWS S3 naming conventions and restrictions.
 /// </summary>
-public interface IAwsS3PathValidator : BlobStorePath.IValidator
+public interface IAwsS3PathValidator : IAfsPathValidator
 {
     /// <summary>
     /// Creates a new AWS S3 path validator.
@@ -26,14 +27,21 @@ public class AwsS3PathValidator : IAwsS3PathValidator
     private static readonly Regex IpAddressRegex = new(@"^((0|1\d?\d?|2[0-4]?\d?|25[0-5]?|[3-9]\d?)\.){3}(0|1\d?\d?|2[0-4]?\d?|25[0-5]?|[3-9]\d?)$", RegexOptions.Compiled);
 
     /// <summary>
-    /// Validates the specified blob store path for AWS S3 compliance.
+    /// Validates the specified path for AWS S3 compliance.
     /// </summary>
     /// <param name="path">The path to validate</param>
     /// <exception cref="ArgumentException">Thrown when the path is invalid</exception>
-    public void Validate(BlobStorePath path)
+    public void Validate(IAfsPath path)
     {
-        ValidateBucketName(path.Container);
-        ValidateObjectKey(path);
+        if (path is BlobStorePath blobPath)
+        {
+            ValidateBucketName(blobPath.Container);
+            ValidateObjectKey(blobPath);
+        }
+        else
+        {
+            throw new ArgumentException("Path must be a BlobStorePath for S3 validation", nameof(path));
+        }
     }
 
     /// <summary>
