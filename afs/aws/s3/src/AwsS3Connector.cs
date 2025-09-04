@@ -2,6 +2,7 @@ using System.Text.RegularExpressions;
 using Amazon.S3;
 using Amazon.S3.Model;
 using NebulaStore.Afs.Blobstore;
+using NebulaStore.Afs.Blobstore.Types;
 
 namespace NebulaStore.Afs.Aws.S3;
 
