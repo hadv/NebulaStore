@@ -1,3 +1,4 @@
+using System;
 using NebulaStore.Storage.EmbeddedConfiguration;
 
 namespace NebulaStore.Afs.GoogleCloud.Firestore;

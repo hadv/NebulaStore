@@ -23,20 +23,25 @@ public static class EmbeddedStorageFirestoreExtensions
         string? storageDirectory = null,
         bool useCache = true)
     {
-        // For now, we'll use the standard embedded storage with a note that
-        // full Firestore integration requires additional setup
+        if (string.IsNullOrEmpty(projectId))
+            throw new ArgumentException("Project ID cannot be null or empty", nameof(projectId));
+
+        // Create configuration with Firestore AFS backend
         var config = EmbeddedStorageConfiguration.New()
             .SetStorageDirectory(storageDirectory ?? "firestore-storage")
+            .SetUseAfs(true)
+            .SetAfsStorageType("firestore")
+            .SetAfsConnectionString(projectId)
+            .SetAfsUseCache(useCache)
             .Build();
 
-        // TODO: Implement full Firestore integration with custom storage connection
-        // For now, this creates a standard storage manager
+        // Start with AFS using Firestore connector
         return EmbeddedStorage.Foundation(config).Start();
     }
 
     /// <summary>
     /// Creates and starts an embedded storage manager with Google Cloud Firestore and root object.
-    /// Note: This creates a storage manager that uses Firestore directly, bypassing the standard AFS system.
+    /// This method configures the storage to use Firestore as the backend through the AFS system.
     /// </summary>
     /// <param name="root">The root object</param>
     /// <param name="projectId">The Google Cloud Project ID</param>
@@ -49,10 +54,19 @@ public static class EmbeddedStorageFirestoreExtensions
         string? storageDirectory = null,
         bool useCache = true)
     {
+        if (string.IsNullOrEmpty(projectId))
+            throw new ArgumentException("Project ID cannot be null or empty", nameof(projectId));
+
+        // Create configuration with Firestore AFS backend
         var config = EmbeddedStorageConfiguration.New()
             .SetStorageDirectory(storageDirectory ?? "firestore-storage")
+            .SetUseAfs(true)
+            .SetAfsStorageType("firestore")
+            .SetAfsConnectionString(projectId)
+            .SetAfsUseCache(useCache)
             .Build();
 
+        // Start with AFS using Firestore connector
         return EmbeddedStorage.Foundation(config).Start(root);
     }
 

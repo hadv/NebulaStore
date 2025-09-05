@@ -243,4 +243,58 @@ public static class EmbeddedStorage
 
         return Foundation(config).Start(root);
     }
+
+    /// <summary>
+    /// Creates and starts an embedded storage manager using Google Cloud Firestore as the backend.
+    /// </summary>
+    /// <param name="projectId">The Google Cloud Project ID</param>
+    /// <param name="storageDirectory">The storage directory name (optional, defaults to "firestore-storage")</param>
+    /// <param name="useCache">Whether to enable caching (default: true)</param>
+    /// <returns>A started storage manager instance using Firestore</returns>
+    public static IEmbeddedStorageManager StartWithFirestore(
+        string projectId,
+        string? storageDirectory = null,
+        bool useCache = true)
+    {
+        if (string.IsNullOrEmpty(projectId))
+            throw new ArgumentException("Project ID cannot be null or empty", nameof(projectId));
+
+        var config = EmbeddedStorageConfiguration.New()
+            .SetStorageDirectory(storageDirectory ?? "firestore-storage")
+            .SetUseAfs(true)
+            .SetAfsStorageType("firestore")
+            .SetAfsConnectionString(projectId)
+            .SetAfsUseCache(useCache)
+            .Build();
+
+        return Foundation(config).Start();
+    }
+
+    /// <summary>
+    /// Creates and starts an embedded storage manager using Google Cloud Firestore as the backend with a root object.
+    /// </summary>
+    /// <param name="root">The root object</param>
+    /// <param name="projectId">The Google Cloud Project ID</param>
+    /// <param name="storageDirectory">The storage directory name (optional, defaults to "firestore-storage")</param>
+    /// <param name="useCache">Whether to enable caching (default: true)</param>
+    /// <returns>A started storage manager instance using Firestore</returns>
+    public static IEmbeddedStorageManager StartWithFirestore(
+        object? root,
+        string projectId,
+        string? storageDirectory = null,
+        bool useCache = true)
+    {
+        if (string.IsNullOrEmpty(projectId))
+            throw new ArgumentException("Project ID cannot be null or empty", nameof(projectId));
+
+        var config = EmbeddedStorageConfiguration.New()
+            .SetStorageDirectory(storageDirectory ?? "firestore-storage")
+            .SetUseAfs(true)
+            .SetAfsStorageType("firestore")
+            .SetAfsConnectionString(projectId)
+            .SetAfsUseCache(useCache)
+            .Build();
+
+        return Foundation(config).Start(root);
+    }
 }

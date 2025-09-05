@@ -22,6 +22,48 @@ public class FirestoreExample
     }
 
     /// <summary>
+    /// Example using the simple convenience method.
+    /// </summary>
+    public static void SimpleFirestoreExample()
+    {
+        Console.WriteLine("=== Simple Firestore Example ===");
+
+        try
+        {
+            // Start storage with Firestore backend - simplest approach
+            using var storage = EmbeddedStorage.StartWithFirestore("your-project-id");
+
+            // Create and store data
+            var root = storage.Root<Person>();
+            if (root == null)
+            {
+                root = new Person
+                {
+                    Name = "Alice Smith",
+                    Age = 28,
+                    Email = "alice.smith@example.com"
+                };
+                storage.SetRoot(root);
+            }
+            else
+            {
+                root.Age = 29; // Birthday!
+            }
+
+            storage.StoreRoot();
+            Console.WriteLine($"Stored person: {root.Name}, Age: {root.Age}");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error: {ex.Message}");
+            Console.WriteLine("Make sure you have:");
+            Console.WriteLine("1. A Google Cloud Project with Firestore enabled");
+            Console.WriteLine("2. Proper authentication configured");
+            Console.WriteLine("3. The Google.Cloud.Firestore package installed");
+        }
+    }
+
+    /// <summary>
     /// Example using the configuration-based approach.
     /// </summary>
     public static void ConfigurationBasedExample()
@@ -37,7 +79,7 @@ public class FirestoreExample
 
         try
         {
-            // Start storage with Firestore backend
+            // Start storage with Firestore backend using configuration
             using var storage = EmbeddedStorage.Foundation(config).Start();
 
             // Create and store data
