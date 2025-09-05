@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Threading.Tasks;
 using MessagePack;
 using NebulaStore.Storage;
@@ -212,8 +213,124 @@ public class AfsStorageConnection : IStorageConnection
             "blobstore" => new LocalBlobStoreConnector(
                 configuration.AfsConnectionString ?? configuration.StorageDirectory,
                 configuration.AfsUseCache),
+            "firestore" => CreateFirestoreConnector(configuration),
+            "azure.storage" => CreateAzureStorageConnector(configuration),
+            "s3" => CreateS3Connector(configuration),
             _ => throw new NotSupportedException($"AFS storage type '{configuration.AfsStorageType}' is not supported")
         };
+    }
+
+    /// <summary>
+    /// Creates a Google Cloud Firestore connector.
+    /// </summary>
+    /// <param name="configuration">The storage configuration</param>
+    /// <returns>The Firestore connector</returns>
+    private static IBlobStoreConnector CreateFirestoreConnector(IEmbeddedStorageConfiguration configuration)
+    {
+        try
+        {
+            // Use reflection to avoid hard dependency on Google Cloud Firestore
+            var firestoreAssembly = System.Reflection.Assembly.LoadFrom("NebulaStore.Afs.GoogleCloud.Firestore.dll");
+            var connectorType = firestoreAssembly.GetType("NebulaStore.Afs.GoogleCloud.Firestore.GoogleCloudFirestoreConnector");
+
+            if (connectorType == null)
+                throw new TypeLoadException("GoogleCloudFirestoreConnector type not found");
+
+            // Create FirestoreDb instance
+            var firestoreDbType = Type.GetType("Google.Cloud.Firestore.FirestoreDb, Google.Cloud.Firestore");
+            if (firestoreDbType == null)
+                throw new TypeLoadException("Google.Cloud.Firestore.FirestoreDb type not found. Make sure Google.Cloud.Firestore package is installed.");
+
+            var createMethod = firestoreDbType.GetMethod("Create", new[] { typeof(string) });
+            if (createMethod == null)
+                throw new MethodAccessException("FirestoreDb.Create method not found");
+
+            var projectId = configuration.AfsConnectionString ?? throw new ArgumentException("Project ID must be specified in AfsConnectionString for Firestore storage");
+            var firestoreDb = createMethod.Invoke(null, new object[] { projectId });
+
+            // Create connector
+            var factoryMethod = configuration.AfsUseCache
+                ? connectorType.GetMethod("Caching", new[] { firestoreDbType })
+                : connectorType.GetMethod("New", new[] { firestoreDbType });
+
+            if (factoryMethod == null)
+                throw new MethodAccessException($"GoogleCloudFirestoreConnector factory method not found");
+
+            var connector = factoryMethod.Invoke(null, new[] { firestoreDb });
+            return (IBlobStoreConnector)connector!;
+        }
+        catch (Exception ex) when (!(ex is ArgumentException))
+        {
+            throw new NotSupportedException(
+                "Google Cloud Firestore connector could not be created. " +
+                "Make sure NebulaStore.Afs.GoogleCloud.Firestore and Google.Cloud.Firestore packages are installed.", ex);
+        }
+    }
+
+    /// <summary>
+    /// Creates an Azure Storage connector.
+    /// </summary>
+    /// <param name="configuration">The storage configuration</param>
+    /// <returns>The Azure Storage connector</returns>
+    private static IBlobStoreConnector CreateAzureStorageConnector(IEmbeddedStorageConfiguration configuration)
+    {
+        try
+        {
+            // Use reflection to avoid hard dependency on Azure Storage
+            var azureAssembly = System.Reflection.Assembly.LoadFrom("NebulaStore.Afs.Azure.Storage.dll");
+            var connectorType = azureAssembly.GetType("NebulaStore.Afs.Azure.Storage.AzureStorageConnector");
+
+            if (connectorType == null)
+                throw new TypeLoadException("AzureStorageConnector type not found");
+
+            var connectionString = configuration.AfsConnectionString ?? throw new ArgumentException("Connection string must be specified in AfsConnectionString for Azure storage");
+
+            var factoryMethod = connectorType.GetMethod("FromConnectionString", new[] { typeof(string), typeof(bool) });
+            if (factoryMethod == null)
+                throw new MethodAccessException("AzureStorageConnector.FromConnectionString method not found");
+
+            var connector = factoryMethod.Invoke(null, new object[] { connectionString, configuration.AfsUseCache });
+            return (IBlobStoreConnector)connector!;
+        }
+        catch (Exception ex) when (!(ex is ArgumentException))
+        {
+            throw new NotSupportedException(
+                "Azure Storage connector could not be created. " +
+                "Make sure NebulaStore.Afs.Azure.Storage and Azure.Storage.Blobs packages are installed.", ex);
+        }
+    }
+
+    /// <summary>
+    /// Creates an AWS S3 connector.
+    /// </summary>
+    /// <param name="configuration">The storage configuration</param>
+    /// <returns>The S3 connector</returns>
+    private static IBlobStoreConnector CreateS3Connector(IEmbeddedStorageConfiguration configuration)
+    {
+        try
+        {
+            // Use reflection to avoid hard dependency on AWS S3
+            var s3Assembly = System.Reflection.Assembly.LoadFrom("NebulaStore.Afs.Aws.S3.dll");
+            var connectorType = s3Assembly.GetType("NebulaStore.Afs.Aws.S3.AwsS3Connector");
+
+            if (connectorType == null)
+                throw new TypeLoadException("AwsS3Connector type not found");
+
+            var bucketName = configuration.AfsConnectionString ?? throw new ArgumentException("Bucket name must be specified in AfsConnectionString for S3 storage");
+
+            var factoryMethod = connectorType.GetMethod("FromBucketName", new[] { typeof(string), typeof(bool) });
+            if (factoryMethod == null)
+                throw new MethodAccessException("AwsS3Connector.FromBucketName method not found");
+
+            var connector = factoryMethod.Invoke(null, new object[] { bucketName, configuration.AfsUseCache });
+            return (IBlobStoreConnector)connector!;
+        }
+        catch (Exception ex) when (!(ex is ArgumentException))
+        {
+            throw new NotSupportedException(
+                "AWS S3 connector could not be created. " +
+                "Make sure NebulaStore.Afs.Aws.S3 and AWSSDK.S3 packages are installed.", ex);
+        }
     }
 
     /// <summary>

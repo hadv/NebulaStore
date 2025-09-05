@@ -51,7 +51,7 @@ The module structure exactly mirrors the Eclipse Store Java repository for famil
 - ✅ **`afs/blobstore`** - Complete Abstract File System blob storage backend
 - ✅ **`afs/aws/s3`** - Complete AWS S3 storage backend
 - ✅ **`afs/azure/storage`** - Complete Azure Storage backend
-- 🚧 **`afs/googlecloud/firestore`** - Google Cloud Firestore integration (in progress)
+- ✅ **`afs/googlecloud/firestore`** - Complete Google Cloud Firestore integration
 - ✅ **`gigamap/gigamap`** - Complete high-performance indexed collections with:
   - ✅ **Advanced indexing system** (bitmap, hash, unique indices)
   - ✅ **Full LINQ support** for querying (Eclipse Store compatible)
@@ -125,7 +125,7 @@ The .NET implementation maintains the same module structure, interfaces, and des
 - ✅ **Blob storage** support for large object handling
 - ✅ **AWS S3** storage backend for cloud storage
 - ✅ **Azure Storage** backend for Microsoft cloud
-- 🚧 **Google Cloud Firestore** integration (in progress)
+- ✅ **Google Cloud Firestore** integration
 
 ## Architecture
 
