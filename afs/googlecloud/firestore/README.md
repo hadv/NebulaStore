@@ -25,27 +25,63 @@ You must also have:
 ### Basic Usage
 
 ```csharp
-using Google.Cloud.Firestore;
-using NebulaStore.Afs.GoogleCloud.Firestore;
 using NebulaStore.Storage.Embedded;
 
-// Create Firestore connection
-var firestore = FirestoreDb.Create("your-project-id");
+// Simple Firestore storage - easiest way to get started
+using var storage = EmbeddedStorage.StartWithFirestore("your-project-id");
 
-// Create AFS configuration with Firestore
+// Use storage normally
+var root = storage.Root<MyDataClass>();
+if (root == null)
+{
+    root = new MyDataClass { SomeProperty = "value" };
+    storage.SetRoot(root);
+}
+else
+{
+    root.SomeProperty = "updated value";
+}
+storage.StoreRoot();
+```
+
+### Configuration-Based Usage
+
+```csharp
+using NebulaStore.Afs.GoogleCloud.Firestore;
+using NebulaStore.Storage.Embedded;
+using NebulaStore.Storage.EmbeddedConfiguration;
+
+// Using configuration builder with Firestore extension
 var config = EmbeddedStorageConfiguration.New()
-    .SetStorageDirectory("firestore-storage")
-    .SetUseAfs(true)
-    .SetAfsStorageType("firestore")
-    .SetAfsConnectionString("your-project-id")
+    .UseFirestore("your-project-id", "my-storage", useCache: true)
+    .SetChannelCount(4)
     .Build();
 
-using var storage = EmbeddedStorage.StartWithAfs(config);
+using var storage = EmbeddedStorage.Foundation(config).Start();
 
 // Use storage normally
 var root = storage.Root<MyDataClass>();
 root.SomeProperty = "value";
 storage.StoreRoot();
+```
+
+### Alternative Convenience Methods
+
+```csharp
+using NebulaStore.Afs.GoogleCloud.Firestore;
+
+// Using the Firestore extensions directly
+using var storage1 = EmbeddedStorageFirestoreExtensions.StartWithFirestore("your-project-id");
+
+// With a root object
+var myData = new MyDataClass { SomeProperty = "initial value" };
+using var storage2 = EmbeddedStorageFirestoreExtensions.StartWithFirestore(myData, "your-project-id");
+
+// With custom settings
+using var storage3 = EmbeddedStorageFirestoreExtensions.StartWithFirestore(
+    "your-project-id",
+    "custom-storage-name",
+    useCache: false);
 ```
 
 ### Direct AFS Usage
