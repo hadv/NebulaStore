@@ -36,7 +36,7 @@ The module structure exactly mirrors the Eclipse Store Java repository for famil
 | `afs/blobstore` | `afs/blobstore/` | ✅ Complete |
 | `afs/aws/s3` | `afs/aws/s3/` | ✅ Complete |
 | `afs/azure/storage` | `afs/azure/storage/` | ✅ Complete |
-| `afs/googlecloud/firestore` | `afs/googlecloud/firestore/` | 🚧 In Progress |
+| `afs/googlecloud/firestore` | `afs/googlecloud/firestore/` | ✅ Complete |
 | `gigamap/gigamap` | `gigamap/` | ✅ Complete |
 
 ## 🚧 Eclipse Store Migration Progress
@@ -80,7 +80,7 @@ This project ports code from the [Eclipse Store Java repository](https://github.
 - **Java Source**: [`afs/blobstore`](https://github.com/eclipse-store/store/tree/main/afs/blobstore) → **C# Port**: `afs/blobstore/`
 - **Java Source**: [`afs/aws/s3`](https://github.com/eclipse-store/store/tree/main/afs/aws/s3) → **C# Port**: `afs/aws/s3/`
 - **Java Source**: [`afs/azure/storage`](https://github.com/eclipse-store/store/tree/main/afs/azure/storage) → **C# Port**: `afs/azure/storage/`
-- **Java Source**: [`afs/googlecloud/firestore`](https://github.com/eclipse-store/store/tree/main/afs/googlecloud/firestore) → **C# Port**: `afs/googlecloud/firestore/` (in progress)
+- **Java Source**: [`afs/googlecloud/firestore`](https://github.com/eclipse-store/store/tree/main/afs/googlecloud/firestore) → **C# Port**: `afs/googlecloud/firestore/`
 - **Java Source**: [`gigamap/gigamap`](https://github.com/eclipse-store/store/tree/main/gigamap/gigamap) → **C# Port**: `gigamap/`
 
 The .NET implementation maintains the same module structure, interfaces, and design patterns as the original Eclipse Store Java code while adapting to .NET conventions and leveraging C# language features.
@@ -157,8 +157,8 @@ NebulaStore follows the Eclipse Store module structure:
       - **src/** - Azure Storage connector and extensions
       - **test/** - Azure Storage integration tests
       - **NebulaStore.Afs.Azure.Storage.csproj** - Project file
-  - **googlecloud/** - Google Cloud storage backends (in progress)
-    - **firestore/** - Google Cloud Firestore integration (in progress)
+  - **googlecloud/** - Google Cloud storage backends
+    - **firestore/** - Google Cloud Firestore integration
       - **src/** - Firestore connector and extensions
       - **test/** - Firestore integration tests
       - **NebulaStore.Afs.GoogleCloud.Firestore.csproj** - Project file
@@ -339,6 +339,25 @@ var azureConfig = EmbeddedStorageConfiguration.New()
 using var azureStorage = EmbeddedStorage.Foundation(azureConfig).Start();
 ```
 
+#### Google Cloud Firestore Usage
+
+```csharp
+using NebulaStore.Afs.GoogleCloud.Firestore;
+using NebulaStore.Storage.Embedded;
+using NebulaStore.Storage.EmbeddedConfiguration;
+
+// Start with Google Cloud Firestore
+using var storage = EmbeddedStorage.StartWithFirestore("your-project-id");
+
+// Custom Firestore configuration
+var firestoreConfig = EmbeddedStorageConfiguration.New()
+    .UseFirestore("your-project-id", "my-storage", useCache: true)
+    .SetChannelCount(4)
+    .Build();
+
+using var firestoreStorage = EmbeddedStorage.Foundation(firestoreConfig).Start();
+```
+
 #### Custom Root Object
 ```csharp
 var myRoot = new MyDataClass { SomeProperty = "initial" };
@@ -406,6 +425,15 @@ The `examples/` directory contains comprehensive examples demonstrating NebulaSt
   - Nested transaction support
   - Crash recovery and data integrity validation
   - Transaction logging and performance monitoring
+
+### ☁️ Cloud Storage Examples
+- **`FirestoreExample.cs`** - **NEW!** Google Cloud Firestore integration including:
+  - Simple Firestore storage setup and configuration
+  - Configuration-based approach with custom settings
+  - Direct AFS usage for advanced scenarios
+  - Batch operations and large object handling
+- **`AzureStorageExample.cs`** - Azure Storage backend demonstrations
+- **`S3Example.cs`** - AWS S3 storage backend examples
 
 ### 🔍 Advanced Querying Examples
 - **`GigaMapAdvancedExample.cs`** - **NEW!** Advanced features including:

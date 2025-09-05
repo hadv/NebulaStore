@@ -20,15 +20,18 @@ public static class FirestoreExample
 
         try
         {
+            SimpleFirestoreExample();
+            Console.WriteLine();
+
             BasicFirestoreExample();
             Console.WriteLine();
-            
+
             CustomFirestoreConfigurationExample();
             Console.WriteLine();
-            
+
             DirectFirestoreUsageExample();
             Console.WriteLine();
-            
+
             AdvancedFirestoreExample();
         }
         catch (Exception ex)
@@ -41,21 +44,57 @@ public static class FirestoreExample
         }
     }
 
+    private static void SimpleFirestoreExample()
+    {
+        Console.WriteLine("0. Simple Firestore Example");
+        Console.WriteLine("----------------------------");
+
+        try
+        {
+            Console.WriteLine("Starting storage with Firestore backend (simple approach)...");
+
+            // Use the new convenience method - fully integrated!
+            using var storage = EmbeddedStorage.StartWithFirestore("your-project-id");
+
+            // Create and store data
+            var root = storage.Root<Person>();
+            if (root == null)
+            {
+                root = new Person
+                {
+                    Name = "Simple Example User",
+                    Age = 25,
+                    Email = "simple@example.com"
+                };
+                storage.SetRoot(root);
+            }
+            else
+            {
+                root.Age += 1; // Another year older
+            }
+
+            storage.StoreRoot();
+            Console.WriteLine($"Successfully stored: {root.Name}, Age: {root.Age}");
+            Console.WriteLine("✓ Firestore integration is working!");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error: {ex.Message}");
+            Console.WriteLine("This is expected if Firestore is not properly configured.");
+        }
+    }
+
     private static void BasicFirestoreExample()
     {
         Console.WriteLine("1. Basic Firestore Example");
         Console.WriteLine("---------------------------");
 
-        // Note: This example shows the API design for Firestore integration
-        // Full integration requires additional implementation
-        Console.WriteLine("Creating Firestore connector...");
+        try
+        {
+            Console.WriteLine("Starting storage with Firestore backend...");
 
-        // Create Firestore connector directly
-        using var connector = EmbeddedStorageFirestoreExtensions.CreateFirestoreConnector("your-project-id");
-        using var fileSystem = BlobStoreFileSystem.New(connector);
-
-        // For demonstration, we'll use standard storage
-        using var storage = EmbeddedStorageFirestoreExtensions.StartWithFirestore("your-project-id");
+            // Use the Firestore extensions method - fully integrated!
+            using var storage = EmbeddedStorageFirestoreExtensions.StartWithFirestore("your-project-id");
 
         // Create and store data
         var library = storage.Root<Library>();
