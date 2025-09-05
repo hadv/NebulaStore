@@ -1,12 +1,12 @@
 # NebulaStore
 
 [![CI](https://github.com/hadv/NebulaStore/actions/workflows/ci.yml/badge.svg)](https://github.com/hadv/NebulaStore/actions/workflows/ci.yml)
-[![Tests](https://img.shields.io/badge/tests-129%20passing-brightgreen)](https://github.com/hadv/NebulaStore/actions)
-[![Migration](https://img.shields.io/badge/Eclipse%20Store%20Migration-Complete-success)](https://github.com/hadv/NebulaStore)
+[![Tests](https://img.shields.io/badge/tests-158%20passing-brightgreen)](https://github.com/hadv/NebulaStore/actions)
+[![Migration](https://img.shields.io/badge/Eclipse%20Store%20Migration-In%20Progress-yellow)](https://github.com/hadv/NebulaStore)
 
-A complete .NET port of [Eclipse Store](https://github.com/eclipse-store/store) - Ultra-fast pure object graph persistence with advanced features. **Migration Complete!** ✅
+A .NET port of [Eclipse Store](https://github.com/eclipse-store/store) - Ultra-fast pure object graph persistence. **Migration In Progress** 🚧
 
-NebulaStore provides .NET developers with the same high-performance, pure object graph storage capabilities that Eclipse Store offers to Java developers, plus advanced features like GigaMap indexed collections, ACID transactions, and comprehensive performance optimizations.
+NebulaStore provides .NET developers with high-performance, pure object graph storage capabilities similar to Eclipse Store for Java developers. This project is actively porting core Eclipse Store modules to .NET.
 
 ## Overview
 
@@ -20,6 +20,8 @@ This project ports the following Eclipse Store modules from the [original Java r
 - **storage/embedded-configuration** - Configuration system
 - **storage/storage** - Core storage types and interfaces
 - **afs/blobstore** - Abstract File System blob storage backend
+- **afs/aws/s3** - AWS S3 storage backend
+- **afs/azure/storage** - Azure Storage backend
 - **gigamap/gigamap** - High-performance in-memory data structure with advanced indexing and performance optimizations
 
 The module structure exactly mirrors the Eclipse Store Java repository for familiarity and consistency.
@@ -32,39 +34,41 @@ The module structure exactly mirrors the Eclipse Store Java repository for famil
 | `storage/embedded-configuration` | `storage/embedded-configuration/` | ✅ Complete |
 | `storage/storage` | `storage/storage/` | ✅ Complete |
 | `afs/blobstore` | `afs/blobstore/` | ✅ Complete |
-| `afs/googlecloud/firestore` | `afs/googlecloud/firestore/` | ✅ Complete |
+| `afs/aws/s3` | `afs/aws/s3/` | ✅ Complete |
+| `afs/azure/storage` | `afs/azure/storage/` | ✅ Complete |
+| `afs/googlecloud/firestore` | `afs/googlecloud/firestore/` | 🚧 In Progress |
 | `gigamap/gigamap` | `gigamap/` | ✅ Complete |
 
-## 🎉 Eclipse Store Migration Complete - Production Ready!
+## 🚧 Eclipse Store Migration Progress
 
-**✅ Eclipse Store Migration: 100% Complete** - Successfully ported all core Eclipse Store functionality to .NET with full API compatibility and advanced features including ACID transactions, high-performance indexing, and comprehensive querying capabilities.
+**Current Status: Core Modules Complete** - Successfully ported essential Eclipse Store functionality to .NET with working storage engine, configuration system, and high-performance collections.
 
-### 🚀 Core Modules - All Complete
+### 🚀 Core Modules Status
 
-- ✅ **`storage/embedded`** - Complete embedded storage engine with ACID transactions
+- ✅ **`storage/embedded`** - Complete embedded storage engine
 - ✅ **`storage/embedded-configuration`** - Complete configuration system
 - ✅ **`storage/storage`** - Complete core storage types and interfaces
 - ✅ **`afs/blobstore`** - Complete Abstract File System blob storage backend
-- ✅ **`afs/googlecloud/firestore`** - Complete Google Cloud Firestore integration
+- ✅ **`afs/aws/s3`** - Complete AWS S3 storage backend
+- ✅ **`afs/azure/storage`** - Complete Azure Storage backend
+- 🚧 **`afs/googlecloud/firestore`** - Google Cloud Firestore integration (in progress)
 - ✅ **`gigamap/gigamap`** - Complete high-performance indexed collections with:
   - ✅ **Advanced indexing system** (bitmap, hash, unique indices)
   - ✅ **Full LINQ support** for querying (Eclipse Store compatible)
   - ✅ **Performance optimizations** (bulk operations, compression, caching)
-  - ✅ **ACID transaction support** with logging and recovery
-  - ✅ **Comprehensive test suite** (129 tests passing - 100% success rate)
-  - ✅ **Production-ready** with full Eclipse Store API compatibility
+  - ✅ **Comprehensive test suite** (158 tests passing - 100% success rate)
 
-### 🎯 Production Ready Features
+### 🎯 Available Features
 
-- ✅ **Full Eclipse Store API compatibility**
-- ✅ **ACID transaction support** with logging and recovery
+- ✅ **Core Eclipse Store API compatibility**
+- ✅ **Pure object graph persistence** without ORM overhead
 - ✅ **Advanced querying** with LINQ (equivalent to Java Stream API)
 - ✅ **High-performance indexing** with bitmap and hash indices
-- ✅ **Case-insensitive string indexing** with proper equality comparers
+- ✅ **Case-insensitive string indexing** with proper equality handling
 - ✅ **Comprehensive statistics** and performance monitoring
 - ✅ **Memory-efficient** data structures and operations
 - ✅ **Thread-safe operations** with proper synchronization
-- ✅ **Crash recovery** and data integrity validation
+- ✅ **Multiple storage backends** (local, AWS S3, Azure Storage)
 
 ## Source Code References
 
@@ -74,12 +78,14 @@ This project ports code from the [Eclipse Store Java repository](https://github.
 - **Java Source**: [`storage/embedded-configuration`](https://github.com/eclipse-store/store/tree/main/storage/embedded-configuration) → **C# Port**: `storage/embedded-configuration/`
 - **Java Source**: [`storage/storage`](https://github.com/eclipse-store/store/tree/main/storage/storage) → **C# Port**: `storage/storage/`
 - **Java Source**: [`afs/blobstore`](https://github.com/eclipse-store/store/tree/main/afs/blobstore) → **C# Port**: `afs/blobstore/`
-- **Java Source**: [`afs/googlecloud/firestore`](https://github.com/eclipse-store/store/tree/main/afs/googlecloud/firestore) → **C# Port**: `afs/googlecloud/firestore/`
+- **Java Source**: [`afs/aws/s3`](https://github.com/eclipse-store/store/tree/main/afs/aws/s3) → **C# Port**: `afs/aws/s3/`
+- **Java Source**: [`afs/azure/storage`](https://github.com/eclipse-store/store/tree/main/afs/azure/storage) → **C# Port**: `afs/azure/storage/`
+- **Java Source**: [`afs/googlecloud/firestore`](https://github.com/eclipse-store/store/tree/main/afs/googlecloud/firestore) → **C# Port**: `afs/googlecloud/firestore/` (in progress)
 - **Java Source**: [`gigamap/gigamap`](https://github.com/eclipse-store/store/tree/main/gigamap/gigamap) → **C# Port**: `gigamap/`
 
 The .NET implementation maintains the same module structure, interfaces, and design patterns as the original Eclipse Store Java code while adapting to .NET conventions and leveraging C# language features.
 
-## ✨ Features - Complete Eclipse Store Implementation
+## ✨ Features - Core Eclipse Store Implementation
 
 ### 🏗️ Core Storage Engine
 - ✅ **Pure object graph persistence** - Direct object storage without ORM overhead
@@ -88,13 +94,6 @@ The .NET implementation maintains the same module structure, interfaces, and des
 - ✅ **Embedded storage manager** with builder pattern configuration
 - ✅ **Type handler system** for custom serialization and complex types
 - ✅ **Lazy query traversal** for efficient data access
-
-### 🔒 ACID Transaction System
-- ✅ **Full ACID compliance** - Atomicity, Consistency, Isolation, Durability
-- ✅ **Transaction logging** with automatic recovery mechanisms
-- ✅ **Data integrity validation** with checksums and consistency checks
-- ✅ **Crash recovery** capabilities for data consistency
-- ✅ **Nested transactions** support for complex operations
 
 ### 🚀 Advanced Querying & Indexing
 - ✅ **GigaMap indexed collections** - High-performance data structures
@@ -124,7 +123,9 @@ The .NET implementation maintains the same module structure, interfaces, and des
 - ✅ **Local file system** storage with configurable options
 - ✅ **Abstract File System (AFS)** for pluggable storage backends
 - ✅ **Blob storage** support for large object handling
-- ✅ **Google Cloud Firestore** integration for cloud storage
+- ✅ **AWS S3** storage backend for cloud storage
+- ✅ **Azure Storage** backend for Microsoft cloud
+- 🚧 **Google Cloud Firestore** integration (in progress)
 
 ## Architecture
 
@@ -146,8 +147,18 @@ NebulaStore follows the Eclipse Store module structure:
     - **src/** - Core AFS blobstore implementation
     - **test/** - Unit tests for blobstore functionality
     - **NebulaStore.Afs.Blobstore.csproj** - Project file
-  - **googlecloud/** - Google Cloud storage backends
-    - **firestore/** - Google Cloud Firestore integration
+  - **aws/** - AWS storage backends
+    - **s3/** - AWS S3 integration
+      - **src/** - S3 connector and extensions
+      - **test/** - S3 integration tests
+      - **NebulaStore.Afs.Aws.S3.csproj** - Project file
+  - **azure/** - Azure storage backends
+    - **storage/** - Azure Storage integration
+      - **src/** - Azure Storage connector and extensions
+      - **test/** - Azure Storage integration tests
+      - **NebulaStore.Afs.Azure.Storage.csproj** - Project file
+  - **googlecloud/** - Google Cloud storage backends (in progress)
+    - **firestore/** - Google Cloud Firestore integration (in progress)
       - **src/** - Firestore connector and extensions
       - **test/** - Firestore integration tests
       - **NebulaStore.Afs.GoogleCloud.Firestore.csproj** - Project file
@@ -203,8 +214,11 @@ dotnet test afs/blobstore/test/
 # Run AFS integration tests
 dotnet test afs/tests/
 
-# Run Firestore tests (requires emulator or actual Firestore)
-dotnet test afs/googlecloud/firestore/test/
+# Run AWS S3 tests
+dotnet test afs/aws/s3/test/
+
+# Run Azure Storage tests
+dotnet test afs/azure/storage/test/
 
 # Run GigaMap performance tests and benchmarks
 dotnet test gigamap/tests/
@@ -213,7 +227,7 @@ dotnet test gigamap/tests/
 dotnet test tests/NebulaStore.Core.Tests/
 ```
 
-### 🚀 Using NebulaStore - Complete Eclipse Store API
+### 🚀 Using NebulaStore - Core Eclipse Store API
 
 #### Simple Usage
 ```csharp
@@ -233,7 +247,7 @@ storage.StoreRoot();
 var results = storage.Query<SomeType>().Where(x => x.Condition).ToList();
 ```
 
-#### Advanced GigaMap Usage (Advanced Features)
+#### Advanced GigaMap Usage
 ```csharp
 using NebulaStore.GigaMap;
 
@@ -291,56 +305,44 @@ var afsConfig = EmbeddedStorageConfiguration.New()
 using var afsStorage = EmbeddedStorage.StartWithAfs(afsConfig);
 ```
 
-#### Google Cloud Firestore Usage
-
-**Prerequisites:**
-- Google Cloud Project with Firestore enabled
-- Service Account with appropriate permissions (`Cloud Datastore User` role minimum)
-- Authentication configured (see authentication methods below)
+#### AWS S3 Usage
 
 ```csharp
-using NebulaStore.Afs.GoogleCloud.Firestore;
-using Google.Cloud.Firestore;
+using NebulaStore.Afs.Aws.S3;
 
-// Method 1: Using Service Account Key
-var firestore = new FirestoreDbBuilder
-{
-    ProjectId = "your-project-id",
-    CredentialsPath = "path/to/service-account-key.json"
-}.Build();
+// Start with S3 storage
+using var storage = EmbeddedStorage.StartWithS3("my-bucket", "storage-prefix");
 
-// Method 2: Using Application Default Credentials (ADC)
-Environment.SetEnvironmentVariable("GOOGLE_APPLICATION_CREDENTIALS", "path/to/service-account-key.json");
-var firestore = FirestoreDb.Create("your-project-id");
-
-// Start with Firestore
-using var storage = EmbeddedStorageFirestoreExtensions.StartWithFirestore("your-project-id");
-
-// Custom Firestore configuration
-var firestoreConfig = EmbeddedStorageConfiguration.New()
-    .UseFirestore("your-project-id", "my-storage-collection")
+// Custom S3 configuration
+var s3Config = EmbeddedStorageConfiguration.New()
+    .UseS3("my-bucket", "storage-prefix")
     .SetChannelCount(4)
     .Build();
 
-using var firestoreStorage = EmbeddedStorage.Foundation(firestoreConfig).Start();
+using var s3Storage = EmbeddedStorage.Foundation(s3Config).Start();
+```
+
+#### Azure Storage Usage
+
+```csharp
+using NebulaStore.Afs.Azure.Storage;
+
+// Start with Azure Storage
+using var storage = EmbeddedStorage.StartWithAzure("connection-string", "container-name");
+
+// Custom Azure configuration
+var azureConfig = EmbeddedStorageConfiguration.New()
+    .UseAzureStorage("connection-string", "container-name")
+    .SetChannelCount(4)
+    .Build();
+
+using var azureStorage = EmbeddedStorage.Foundation(azureConfig).Start();
 ```
 
 #### Custom Root Object
 ```csharp
 var myRoot = new MyDataClass { SomeProperty = "initial" };
 using var storage = EmbeddedStorage.Start(myRoot, "storage-dir");
-```
-
-#### Batch Operations
-```csharp
-using var storer = storage.CreateStorer();
-var objectIds = storer.StoreAll(obj1, obj2, obj3);
-storer.Commit();
-```
-
-#### Backup & Restore
-```csharp
-await storage.CreateBackupAsync("backup-directory");
 ```
 
 #### Monitoring & Metrics
@@ -360,36 +362,16 @@ Console.WriteLine($"Cached Entities: {cacheMonitor.EntityCount}");
 monitoringManager.StorageManagerMonitor.IssueFullGarbageCollection();
 ```
 
-#### ACID Transactions (Advanced Features)
+#### Batch Operations
 ```csharp
-using NebulaStore.Storage.Embedded;
+using var storer = storage.CreateStorer();
+var objectIds = storer.StoreAll(obj1, obj2, obj3);
+storer.Commit();
+```
 
-// ACID transaction support with automatic logging
-using var storage = EmbeddedStorage.Start();
-
-// Transaction with automatic rollback on failure
-try
-{
-    using var transaction = storage.BeginTransaction();
-
-    // Multiple operations in single transaction
-    var person1 = new Person { Name = "Alice", Age = 30 };
-    var person2 = new Person { Name = "Bob", Age = 25 };
-
-    storage.Store(person1);
-    storage.Store(person2);
-
-    // Commit all changes atomically
-    transaction.Commit();
-}
-catch (Exception)
-{
-    // Automatic rollback on exception
-    // Data integrity maintained
-}
-
-// Crash recovery - automatic on startup
-// Transaction logs ensure data consistency
+#### Backup & Restore
+```csharp
+await storage.CreateBackupAsync("backup-directory");
 ```
 
 #### Performance Monitoring & Statistics
@@ -415,7 +397,7 @@ monitoringManager.StorageManagerMonitor.IssueFullGarbageCollection();
 
 ## 📚 Examples - Complete Feature Demonstrations
 
-The `examples/` directory contains comprehensive examples demonstrating all NebulaStore features including Phase 4 advanced capabilities:
+The `examples/` directory contains comprehensive examples demonstrating NebulaStore features:
 
 ### 🏗️ Core Storage Examples
 - **`EmbeddedStorageExample.cs`** - Basic storage operations, configuration, and batch processing
@@ -467,32 +449,29 @@ dotnet run -- --example Production
 
 - **[Monitoring Documentation](storage/storage/src/monitoring/README.md)** - Comprehensive guide to the monitoring system
 - **[Configuration Guide](storage/embedded-configuration/README.md)** - Storage configuration options
-- **[GigaMap Advanced Features](gigamap/README.md)** - **NEW!** Complete guide to advanced features
-- **[Transaction System Guide](docs/transactions.md)** - **NEW!** ACID transaction documentation
-- **[Performance Optimization](docs/performance.md)** - **NEW!** Performance tuning and optimization guide
+- **[GigaMap Advanced Features](gigamap/README.md)** - Complete guide to advanced features
 - **[API Documentation](docs/)** - Generated API documentation
 
-## 🎉 Eclipse Store Migration Complete - What's Next?
+## 🚧 Eclipse Store Migration Status
 
-**NebulaStore Eclipse Store migration is now 100% complete!** 🚀
+**Current Progress: Core Functionality Complete** 🚀
 
-The migration successfully brings all core Eclipse Store functionality to .NET, providing a complete, production-ready embedded database solution.
+The migration has successfully implemented essential Eclipse Store functionality for .NET, providing a solid foundation for object graph persistence.
 
-### ✅ What You Get
-- **Full Eclipse Store compatibility** - Drop-in replacement for Java Eclipse Store
-- **Production-ready stability** - 129 tests passing with comprehensive coverage
-- **Advanced features** - ACID transactions, advanced querying, high-performance indexing
+### ✅ What's Available
+- **Core Eclipse Store compatibility** - Essential APIs ported to .NET
+- **Stable foundation** - 158 tests passing with good coverage
+- **High-performance indexing** - GigaMap collections with advanced features
 - **Native .NET integration** - Built specifically for .NET runtime and patterns
-- **Performance optimized** - Bulk operations, caching, compression, monitoring
+- **Multiple storage backends** - Local, AWS S3, Azure Storage support
 
-### 🚀 Ready for Production Use
-NebulaStore is now ready for production deployment with:
-- ✅ **Complete feature parity** with Eclipse Store Java
-- ✅ **ACID transaction support** for data integrity
+### 🎯 Current Capabilities
+NebulaStore currently provides:
+- ✅ **Core object graph persistence** without ORM overhead
 - ✅ **High-performance indexing** with GigaMap collections
 - ✅ **Comprehensive monitoring** and performance tracking
-- ✅ **Multiple storage backends** (local, AFS, Google Cloud Firestore)
-- ✅ **Full test coverage** and validation
+- ✅ **Multiple storage backends** (local, AFS, AWS S3, Azure Storage)
+- ✅ **Solid test coverage** and validation
 
 ### 🤝 Contributing
 The core migration is complete, but we welcome contributions for:
@@ -509,4 +488,4 @@ The core migration is complete, but we welcome contributions for:
 
 ---
 
-**🎯 Eclipse Store for .NET - Mission Accomplished!** NebulaStore provides the same ultra-fast, pure object graph persistence that Eclipse Store offers to Java developers, now available for the .NET ecosystem with full feature parity and native C# integration.
+**🎯 Eclipse Store for .NET - Core Implementation Complete!** NebulaStore provides ultra-fast, pure object graph persistence similar to Eclipse Store for Java developers, now available for the .NET ecosystem with core functionality and native C# integration.
