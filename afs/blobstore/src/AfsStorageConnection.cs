@@ -216,6 +216,7 @@ public class AfsStorageConnection : IStorageConnection
             "firestore" => CreateFirestoreConnector(configuration),
             "azure.storage" => CreateAzureStorageConnector(configuration),
             "s3" => CreateS3Connector(configuration),
+            "redis" => CreateRedisConnector(configuration),
             _ => throw new NotSupportedException($"AFS storage type '{configuration.AfsStorageType}' is not supported")
         };
     }
@@ -330,6 +331,43 @@ public class AfsStorageConnection : IStorageConnection
             throw new NotSupportedException(
                 "AWS S3 connector could not be created. " +
                 "Make sure NebulaStore.Afs.Aws.S3 and AWSSDK.S3 packages are installed.", ex);
+        }
+    }
+
+    /// <summary>
+    /// Creates a Redis connector.
+    /// </summary>
+    /// <param name="configuration">The storage configuration</param>
+    /// <returns>The Redis connector</returns>
+    private static IBlobStoreConnector CreateRedisConnector(IEmbeddedStorageConfiguration configuration)
+    {
+        try
+        {
+            // Use reflection to avoid hard dependency on Redis
+            var redisAssembly = System.Reflection.Assembly.LoadFrom("NebulaStore.Afs.Redis.dll");
+            var connectorType = redisAssembly.GetType("NebulaStore.Afs.Redis.RedisConnector");
+
+            if (connectorType == null)
+                throw new TypeLoadException("RedisConnector type not found");
+
+            var connectionString = configuration.AfsConnectionString ?? "localhost:6379";
+
+            // Use the factory method that takes connection string and database number
+            var factoryMethod = configuration.AfsUseCache
+                ? connectorType.GetMethod("Caching", new[] { typeof(string), typeof(int) })
+                : connectorType.GetMethod("New", new[] { typeof(string), typeof(int) });
+
+            if (factoryMethod == null)
+                throw new MethodAccessException("RedisConnector factory method not found");
+
+            var connector = factoryMethod.Invoke(null, new object[] { connectionString, 0 });
+            return (IBlobStoreConnector)connector!;
+        }
+        catch (Exception ex) when (!(ex is ArgumentException))
+        {
+            throw new NotSupportedException(
+                "Redis connector could not be created. " +
+                "Make sure NebulaStore.Afs.Redis and StackExchange.Redis packages are installed.", ex);
         }
     }
 

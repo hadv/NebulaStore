@@ -1,0 +1,36 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <PackageId>NebulaStore.Afs.Redis</PackageId>
+    <PackageVersion>1.0.0</PackageVersion>
+    <Authors>NebulaStore Contributors</Authors>
+    <Description>Redis connector for NebulaStore Abstract File System (AFS)</Description>
+    <PackageTags>NebulaStore;AFS;Redis;Storage</PackageTags>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <RepositoryUrl>https://github.com/hadv/NebulaStore</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <GenerateTargetFrameworkAttribute>false</GenerateTargetFrameworkAttribute>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\blobstore\NebulaStore.Afs.Blobstore.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="StackExchange.Redis" Version="2.8.16" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Remove="test/**" />
+    <EmbeddedResource Remove="test/**" />
+    <None Remove="test/**" />
+  </ItemGroup>
+
+</Project>
+

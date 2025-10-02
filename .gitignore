@@ -63,3 +63,8 @@ TestResults/
 *-storage/
 storage/data.msgpack
 storage/root.msgpack
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
