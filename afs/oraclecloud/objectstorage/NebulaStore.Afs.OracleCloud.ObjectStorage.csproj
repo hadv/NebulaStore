@@ -1,0 +1,39 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <LangVersion>latest</LangVersion>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <WarningsAsErrors />
+    <WarningsNotAsErrors>CS1591;NU1603</WarningsNotAsErrors>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <AssemblyTitle>NebulaStore Abstract File System Oracle Cloud Object Storage</AssemblyTitle>
+    <AssemblyDescription>Oracle Cloud Infrastructure Object Storage adapter for NebulaStore Abstract File System</AssemblyDescription>
+    <AssemblyCompany>NebulaStore</AssemblyCompany>
+    <AssemblyProduct>NebulaStore</AssemblyProduct>
+    <Copyright>Copyright © NebulaStore 2025</Copyright>
+    <AssemblyVersion>1.0.0.0</AssemblyVersion>
+    <FileVersion>1.0.0.0</FileVersion>
+    <RootNamespace>NebulaStore.Afs.OracleCloud.ObjectStorage</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="test/**/*.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../../blobstore/NebulaStore.Afs.Blobstore.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="OCI.DotNetSDK.Objectstorage" Version="121.0.0" />
+    <PackageReference Include="OCI.DotNetSDK.Common" Version="121.0.0" />
+  </ItemGroup>
+
+</Project>
+
